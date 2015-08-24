@@ -11,9 +11,12 @@ set -e
 # Configuration:
 DST_HOSTS="/etc/hosts"
 DST_IP="0.0.0.0"
+# NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
+#       can occur when using traceroute, netstat and the like.
 HEADER="
 127.0.0.1 $(uname -n) localhost
 255.255.255.255 broadcasthost
+0.0.0.0 0.0.0.0
 "
 SOURCES=(
 	"http://winhelp2002.mvps.org/hosts.txt"
