@@ -2,6 +2,8 @@
 # Author:
 #  Héctor Molinero Fernández <me@znt.se>.
 #
+# Modified by:
+#  pyamsoft <pyam(dot)soft(at)gmail(dot)com>
 
 # Exit on errors:
 set -e
@@ -10,17 +12,8 @@ set -e
 DST_HOSTS="/etc/hosts"
 DST_IP="0.0.0.0"
 HEADER="
-127.0.0.1 localhost
-127.0.1.1 $(uname -n)
+127.0.0.1 $(uname -n) localhost
 255.255.255.255 broadcasthost
-::1 localhost
-::1 ip6-localhost
-::1 ip6-loopback
-fe00::0 ip6-localnet
-ff00::0 ip6-mcastprefix
-ff02::1 ip6-allnodes
-ff02::2 ip6-allrouters
-ff02::3 ip6-allhosts
 "
 SOURCES=(
 	"http://winhelp2002.mvps.org/hosts.txt"
@@ -35,7 +28,6 @@ WHITELIST=(
 	"example.org"
 )
 BLACKLIST=(
-	"totallyrandom.domain"
 )
 
 # Messages:
