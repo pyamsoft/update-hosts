@@ -6,7 +6,10 @@
 #  pyamsoft <pyam(dot)soft(at)gmail(dot)com>
 
 # Exit on errors:
-set -e
+# For more information about these particular options, see
+#    https://stackoverflow.com/questions/13468481/when-to-use-set-e
+set -eu
+set -o pipefail
 
 # Configuration:
 DST_HOSTS="/etc/hosts"
@@ -92,6 +95,7 @@ infoMsg() {
 }
 
 # Process begins:
+BLOCKLIST=""
 actionMsg "Configuration:"
 infoMsg "Hosts location: $DST_HOSTS"
 infoMsg "Destination IP: $DST_IP"
