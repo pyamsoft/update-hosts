@@ -157,7 +157,16 @@ HEADER=$(echo -e "# <header>$HEADER# </header>")
 HEADER=$(echo -e "# $(date --rfc-2822)\n$HEADER")
 HOSTS=$(echo -e "$HEADER\n# <blocklist>\n$BLOCKLIST\n# </blocklist>")
 
+# Backup original hosts file
+actionMsg2 "Creating backup of original hosts file..."
+if [ $EUID -ne 0 ]; then
+	sudo cp /etc/hosts /etc/hosts.backup.$(date +%Y%m%d)
+else
+	cp /etc/hosts /etc/hosts.backup.$(date +%Y%m%d)
+fi
+
 # Write to disk:
+actionMsg "Installing new hosts file..."
 if [ $EUID -ne 0 ]; then
 	echo "$HOSTS" | sudo tee $DST_HOSTS > /dev/null
 else
