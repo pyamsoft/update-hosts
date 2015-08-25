@@ -99,8 +99,8 @@ infoMsg() {
 
 checkForBinary() {
 	if ! which $1 > /dev/null 2>&1; then
-		echo "The $1 binary is required for operation of this script."
-		echo "Please install $1 onto your system."
+		echo "The '$1' binary is required for operation of this script."
+		echo "Please install '$1' onto your system."
 		exit 1
 	fi
 }
