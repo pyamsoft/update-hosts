@@ -22,12 +22,12 @@ This will increase the security of your computer and save bandwidth.
 1. Clone the git repository:  
 	git clone https://github.com/pyamsoft/hosts-update
 
-2. Checkout the custom git branch:  
-	git checkout custom
+2. Checkout the master git branch:  
+	git checkout master
 
 ## Using wget
 1. Download the raw file from the github.com URL:  
-	wget -qO- https://raw.githubusercontent.com/pyamsoft/hosts-update/custom/hosts-update
+	wget -qO- https://raw.githubusercontent.com/pyamsoft/hosts-update/master/hosts-update
 
 **Note:** be sure to regularly update the hosts file for new additions or
 download the script and create a scheduled task.
@@ -58,5 +58,5 @@ issue ticket.
 ## License
 
 MIT  
-See the [license](https://raw.githubusercontent.com/pyamsoft/hosts-update/custom/LICENSE) file.
+See the [license](https://raw.githubusercontent.com/pyamsoft/hosts-update/master/LICENSE) file.
 
