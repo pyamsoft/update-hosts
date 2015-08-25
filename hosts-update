@@ -193,4 +193,6 @@ else
 	echo "$HOSTS" | tee $DST_HOSTS > /dev/null
 fi
 
-actionMsg "$(echo "$BLOCKLIST" | wc -l) hosts added!"
+OLD_HOSTS_NUMBER=$(wc -l < /etc/hosts.backup.$(date +%Y%m%d))
+NEW_HOSTS_NUMBER=$(wc -l < /etc/hosts)
+echo -e "\e[1;33m + \e[1;32m$NEW_HOSTS_NUMBER \e[0mhosts added! (\e[1;32m + \e[1;34m$((NEW_HOSTS_NUMBER - OLD_HOSTS_NUMBER)) \e[0m)"
