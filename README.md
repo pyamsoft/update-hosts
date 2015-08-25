@@ -55,10 +55,6 @@ issues. If you encounter a problem with hosts-update of which no such
 issue already exists please feel free to help the developer by creating an  
 issue ticket.
 
-Please note that only issues relating to the use of the named 'custom' branch  
-will be supported. For any issues with the actual script itself, please  
-attempt to contact the original author.
-
 ## License
 
 MIT  
