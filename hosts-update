@@ -97,6 +97,26 @@ infoMsg() {
 	echo -e "   - $1"
 }
 
+checkForBinary() {
+	if ! which $1 > /dev/null 2>&1; then
+		echo "The $1 binary is required for operation of this script."
+		echo "Please install $1 onto your system."
+		exit 1
+	fi
+}
+
+# Check for required binaries, exit out if they are not present
+checkForBinary wget
+checkForBinary sed
+checkForBinary grep
+checkForBinary sort
+checkForBinary awk
+checkForBinary tee
+checkForBinary cp
+checkForBinary wc
+# echo is a shell builtin but is also commonly part of coreutils, the
+# actual binary is not neccessary as the builtin exists
+
 # Process begins:
 BLOCKLIST=""
 actionMsg "Configuration:"
