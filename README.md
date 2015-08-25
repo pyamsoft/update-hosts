@@ -10,6 +10,7 @@ sources.
 - http://www.malwaredomainlist.com/hostslist/hosts.txt
 - http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
 - http://adaway.org/hosts.txt
+- http://malwaredomains.lehigh.edu/files/justdomains
 
 ## What is this for?
 To prevent your computer from connecting to domains who serve ads and malware.  
