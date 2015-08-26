@@ -258,7 +258,7 @@ installNewHostsFile() {
 printHostsFileDifferences() {
 	local OLD_HOSTS_NUMBER=$(wc -l < "$DST_HOSTS.backup.$(date +%Y%m%d)")
 	local NEW_HOSTS_NUMBER=$(wc -l < $DST_HOSTS)
-	printf "%b + %b%s %bhosts added! (%b + %b%s %b)" \
+	printf "%b + %b%s %bhosts added! (%b + %b%s %b)\n" \
 		"\e[1;33m" "\e[1;32m" "$NEW_HOSTS_NUMBER" \
 		"\e[0m" "\e[1;32m" "\e[1;34m" \
 		"$((NEW_HOSTS_NUMBER - OLD_HOSTS_NUMBER))" "\e[0m"
