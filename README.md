@@ -1,6 +1,25 @@
 # hosts-update
+This is a fork of the original hosts-update repository by zant95 on GitHub.  
+You can find the original here: http://github.com/zant95/hosts-update
+
 This script, designed for GNU/Linux, generates a hosts file based on multiple
 sources.
+
+
+## Why Fork
+This fork is mainly maintained for personal use by myself, pyamsoft.  
+I have pushed the changes to this fork incase anyone else desires to use  
+my modifications. Much of the actual parsing code will be the same as the  
+original, as I am not the strongest when it comes to regexes and string  
+parsing.
+
+The main differences being:
+
+- Predefined blacklist of the pinion.gg domain, which is a common source of  
+  intrusive advertisements Counter Strike: Global Offensive.
+- Creates a backup of the original hosts file before overwriting.
+- Only supports IPv4 addresses, aliases the system hostname to localhost  
+  instead of a different address.
 
 ## Hosts Sources
 
@@ -20,14 +39,14 @@ This will increase the security of your computer and save bandwidth.
 ### Using Git
 
 1. Clone the git repository:  
-	git clone https://github.com/pyamsoft/hosts-update
+    git clone https://github.com/pyamsoft/hosts-update
 
 2. Checkout the master git branch:  
-	git checkout master
+    git checkout master
 
 ## Using wget
 1. Download the raw file from the github.com URL:  
-	wget -qO- https://raw.githubusercontent.com/pyamsoft/hosts-update/master/hosts-update
+    wget -qO- https://raw.githubusercontent.com/pyamsoft/hosts-update/master/hosts-update
 
 **Note:** be sure to regularly update the hosts file for new additions or
 download the script and create a scheduled task.
