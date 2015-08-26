@@ -15,6 +15,7 @@ set -o pipefail
 BLOCKLIST="" # Leave this blank
 HOSTS="" # Leave this blank
 DST_HOSTS="/etc/hosts"
+DST_BACKUP="$DST_HOSTS.backup.$(date +%Y%m%d)"
 DST_IP="0.0.0.0"
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
 #       can occur when using traceroute, netstat and the like.
@@ -235,9 +236,9 @@ generateNewHostsFile() {
 backupOldHostsFile() {
 	infoMsg "Creating backup of original hosts file..."
 	if [ $EUID -ne 0 ]; then
-		sudo cp $DST_HOSTS "$DST_HOSTS.backup.$(date +%Y%m%d)"
+		sudo cp $DST_HOSTS $DST_BACKUP
 	else
-		cp $DST_HOSTS "$DST_HOSTS.backup.$(date +%Y%m%d)"
+		cp $DST_HOSTS $DST_BACKUP
 	fi
 }
 
@@ -254,10 +255,22 @@ installNewHostsFile() {
 }
 
 ##
+# Fixes permission on file to 644
+##
+fixFilePermissons() {
+	infoMsg "Fixing permissions for file $1..."
+	if [ $EUID -ne 0 ]; then
+		sudo chmod 644 $1
+	else
+		chmod 644 $1
+	fi
+}
+
+##
 # Print the differences between the number of hosts in each file
 ##
 printHostsFileDifferences() {
-	local OLD_HOSTS_NUMBER=$(wc -l < "$DST_HOSTS.backup.$(date +%Y%m%d)")
+	local OLD_HOSTS_NUMBER=$(wc -l < $DST_BACKUP)
 	local NEW_HOSTS_NUMBER=$(wc -l < $DST_HOSTS)
 	printf "%b + %b%s %bhosts added! (%b + %b%s %b)\n" \
 		"\e[1;33m" "\e[1;32m" "$NEW_HOSTS_NUMBER" \
@@ -279,6 +292,7 @@ checkForBinary tee
 checkForBinary cp
 checkForBinary wc
 checkForBinary printf
+checkForBinary chmod
 
 # Process begins:
 actionMsg "Configuration:"
@@ -302,5 +316,7 @@ generateNewHostsFile
 actionMsg "Generating hosts file..."
 backupOldHostsFile
 installNewHostsFile
+fixFilePermissons $DST_HOSTS
+fixFilePermissons $DST_BACKUP
 printHostsFileDifferences
 
