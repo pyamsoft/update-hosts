@@ -12,6 +12,8 @@ set -eu
 set -o pipefail
 
 # Configuration:
+BLOCKLIST="" # Leave this blank
+HOSTS="" # Leave this blank
 DST_HOSTS="/etc/hosts"
 DST_IP="0.0.0.0"
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
@@ -87,17 +89,23 @@ BLACKLIST=(
 	"www.pinion.gg"
 )
 
-# Messages:
+##
+# Display a general message
+##
 actionMsg() {
 	echo -e "\e[1;33m + \e[1;32m$1 \e[0m"
 }
-actionMsg2() {
-	echo -e "\e[1;35m + \e[1;34m$1 \e[0m"
-}
+
+##
+# Display an information snippet
+##
 infoMsg() {
 	echo -e "   - $1"
 }
 
+##
+# Check the environment path for the given binary, exit if it is not found
+##
 checkForBinary() {
 	if ! which $1 > /dev/null 2>&1; then
 		echo "The '$1' binary is required for operation of this script."
@@ -105,6 +113,152 @@ checkForBinary() {
 		exit 1
 	fi
 }
+
+##
+# Print out the user configuration
+##
+printConfig() {
+	infoMsg "Hosts location: $DST_HOSTS"
+	infoMsg "Destination IP: $DST_IP"
+}
+
+##
+# Sources list parsing
+##
+downloadSources() {
+	for URL in "${SOURCES[@]}"; do
+		infoMsg "$URL"
+		local CONTENT=$(wget -T 10 -qO- "$URL")
+		BLOCKLIST=$(echo -e "$BLOCKLIST\n$CONTENT")
+		unset CONTENT
+	done
+}
+
+##
+# Change EOL from DOS to Unix format
+##
+changeEOL() {
+	infoMsg "Change EOL to Unix format"
+	BLOCKLIST=$(echo "$BLOCKLIST" | sed 's/\r//g')
+}
+
+##
+# Only select lines which contain a host, do not select comments/other
+##
+selectHostLines() {
+	infoMsg "Select only hosts lines"
+	local IP_REGEX='([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+'
+	local DOMAIN_REGEX='([\p{L}0-9_-]{1,63}\.)+\p{L}[\p{L}0-9_-]{1,62}(?=[[:space:]#]|$)'
+	BLOCKLIST=$(echo "$BLOCKLIST" | grep -Po "(^($IP_REGEX)|^)$DOMAIN_REGEX")
+	unset IP_REGEX DOMAIN_REGEX
+
+}
+
+##
+# Remove any predefined destinations, as they may be untrustworthy
+##
+removeUntrustedDomain() {
+	infoMsg "Remove old destination"
+	BLOCKLIST=$(echo "$BLOCKLIST" | sed -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g')
+}
+
+##
+# Remove any entries containing the localhost, as it will be added by the header later on
+##
+removeLocalEntries() {
+	infoMsg "Remove local entries"
+	BLOCKLIST=$(echo "$BLOCKLIST" | grep -Ev '^(localhost|localhost.localdomain|local|broadcasthost)$')
+}
+
+##
+# Apply the user whitelist
+##
+applyWhitelist() {
+	infoMsg "Apply whitelist"
+	for DOMAIN in "${WHITELIST[@]}"; do
+		BLOCKLIST=$(echo "$BLOCKLIST" | grep -Fxv "$DOMAIN")
+	done
+}
+
+##
+# Apply the user blacklist
+##
+applyBlacklist() {
+	infoMsg "Apply blacklist"
+	for DOMAIN in "${BLACKLIST[@]}"; do
+		BLOCKLIST=$(echo -e "$BLOCKLIST\n$DOMAIN")
+	done
+}
+
+##
+# Remove duplicate entries
+##
+removeDuplicates() {
+	infoMsg "Remove duplicate entries"
+	BLOCKLIST=$(echo "$BLOCKLIST" | awk '!a[$0]++')
+}
+
+##
+# Sort the entries by string numerical value
+##
+sortEntries() {
+	infoMsg "Sort entries"
+	BLOCKLIST=$(echo "$BLOCKLIST" | sort -n)
+}
+
+##
+# Add the configured destination, by default the zero address
+##
+addNewDestination() {
+	infoMsg "Add new destination"
+	BLOCKLIST=$(echo "$BLOCKLIST" | sed "s/^/$DST_IP /g")
+}
+
+##
+# Parse the header and create the new hosts file
+##
+generateNewHostsFile() {
+	HEADER=$(echo -e "# <header>$HEADER# </header>")
+	HEADER=$(echo -e "# $(date --rfc-2822)\n$HEADER")
+	HOSTS=$(echo -e "$HEADER\n# <blocklist>\n$BLOCKLIST\n# </blocklist>")
+}
+
+##
+# Backup original hosts file
+##
+backupOldHostsFile() {
+	infoMsg "Creating backup of original hosts file..."
+	if [ $EUID -ne 0 ]; then
+		sudo cp $DST_HOSTS "$DST_HOSTS.backup.$(date +%Y%m%d)"
+	else
+		cp $DST_HOSTS "$DST_HOSTS.backup.$(date +%Y%m%d)"
+	fi
+}
+
+##
+# Install the new hosts file to the destination
+##
+installNewHostsFile() {
+	infoMsg "Installing new hosts file..."
+	if [ $EUID -ne 0 ]; then
+		echo "$HOSTS" | sudo tee $DST_HOSTS > /dev/null
+	else
+		echo "$HOSTS" | tee $DST_HOSTS > /dev/null
+	fi
+}
+
+##
+# Print the differences between the number of hosts in each file
+##
+printHostsFileDifferences() {
+	local OLD_HOSTS_NUMBER=$(wc -l < "$DST_HOSTS.backup.$(date +%Y%m%d)")
+	local NEW_HOSTS_NUMBER=$(wc -l < $DST_HOSTS)
+	echo -e "\e[1;33m + \e[1;32m$NEW_HOSTS_NUMBER \e[0mhosts added! (\e[1;32m + \e[1;34m$((NEW_HOSTS_NUMBER - OLD_HOSTS_NUMBER)) \e[0m)"
+	unset OLD_HOSTS_NUMBER NEW_HOSTS_NUMBER
+}
+
+
+# Script begins here
 
 # Check for required binaries, exit out if they are not present
 checkForBinary wget
@@ -119,67 +273,26 @@ checkForBinary wc
 # actual binary is not neccessary as the builtin exists
 
 # Process begins:
-BLOCKLIST=""
 actionMsg "Configuration:"
-infoMsg "Hosts location: $DST_HOSTS"
-infoMsg "Destination IP: $DST_IP"
+printConfig
 
-# Sources list parsing
 actionMsg "Downloading sources lists..."
-for URL in "${SOURCES[@]}"; do
-	infoMsg "$URL"
-	CONTENT=$(wget -T 10 -qO- "$URL")
-	BLOCKLIST=$(echo -e "$BLOCKLIST\n$CONTENT")
-done
+downloadSources
 
-# Parse any hosts files which contain comments/other non-domain entries
-actionMsg2 "Parsing sources lists..."
-infoMsg "Change EOL to Unix format"
-BLOCKLIST=$(echo "$BLOCKLIST" | sed 's/\r//g')
-infoMsg "Select only hosts lines"
-IP_REGEX='([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+'
-DOMAIN_REGEX='([\p{L}0-9_-]{1,63}\.)+\p{L}[\p{L}0-9_-]{1,62}(?=[[:space:]#]|$)'
-BLOCKLIST=$(echo "$BLOCKLIST" | grep -Po "(^($IP_REGEX)|^)$DOMAIN_REGEX")
-infoMsg "Remove old destination"
-BLOCKLIST=$(echo "$BLOCKLIST" | sed -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g')
-infoMsg "Remove local entries"
-BLOCKLIST=$(echo "$BLOCKLIST" | grep -Ev '^(localhost|localhost.localdomain|local|broadcasthost)$')
-infoMsg "Apply whitelist"
-for DOMAIN in "${WHITELIST[@]}"; do
-	BLOCKLIST=$(echo "$BLOCKLIST" | grep -Fxv "$DOMAIN")
-done
-infoMsg "Apply blacklist"
-for DOMAIN in "${BLACKLIST[@]}"; do
-	BLOCKLIST=$(echo -e "$BLOCKLIST\n$DOMAIN")
-done
-infoMsg "Remove duplicate entries"
-BLOCKLIST=$(echo "$BLOCKLIST" | awk '!a[$0]++')
-infoMsg "Sort entries"
-BLOCKLIST=$(echo "$BLOCKLIST" | sort -n)
-infoMsg "Add new destination"
-BLOCKLIST=$(echo "$BLOCKLIST" | sed "s/^/$DST_IP /g")
+actionMsg "Parsing sources lists..."
+changeEOL
+selectHostLines
+removeUntrustedDomain
+removeLocalEntries
+applyWhitelist
+applyBlacklist
+removeDuplicates
+sortEntries
+addNewDestination
+generateNewHostsFile
 
 actionMsg "Generating hosts file..."
-HEADER=$(echo -e "# <header>$HEADER# </header>")
-HEADER=$(echo -e "# $(date --rfc-2822)\n$HEADER")
-HOSTS=$(echo -e "$HEADER\n# <blocklist>\n$BLOCKLIST\n# </blocklist>")
+backupOldHostsFile
+installNewHostsFile
+printHostsFileDifferences
 
-# Backup original hosts file
-actionMsg2 "Creating backup of original hosts file..."
-if [ $EUID -ne 0 ]; then
-	sudo cp $DST_HOSTS "$DST_HOSTS.backup.$(date +%Y%m%d)"
-else
-	cp $DST_HOSTS "$DST_HOSTS.backup.$(date +%Y%m%d)"
-fi
-
-# Write to disk:
-actionMsg "Installing new hosts file..."
-if [ $EUID -ne 0 ]; then
-	echo "$HOSTS" | sudo tee $DST_HOSTS > /dev/null
-else
-	echo "$HOSTS" | tee $DST_HOSTS > /dev/null
-fi
-
-OLD_HOSTS_NUMBER=$(wc -l < "$DST_HOSTS.backup.$(date +%Y%m%d)")
-NEW_HOSTS_NUMBER=$(wc -l < $DST_HOSTS)
-echo -e "\e[1;33m + \e[1;32m$NEW_HOSTS_NUMBER \e[0mhosts added! (\e[1;32m + \e[1;34m$((NEW_HOSTS_NUMBER - OLD_HOSTS_NUMBER)) \e[0m)"
