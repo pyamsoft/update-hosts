@@ -24,6 +24,10 @@ HEADER="
 SOURCES=(
 	"http://winhelp2002.mvps.org/hosts.txt"
 	"http://someonewhocares.org/hosts/hosts"
+	# hosts-file.net has been experiencing 503 errors the past couple of days,
+	# which will make the script fail out when attempting to pull from it.
+	# Sit tight, as there is not much one can do other than comment out the
+	# hosts-file.net URL when it is not working.
 	"http://hosts-file.net/ad_servers.txt"
 	"http://www.malwaredomainlist.com/hostslist/hosts.txt"
 	"http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext"
