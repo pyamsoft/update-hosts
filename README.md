@@ -40,8 +40,9 @@ specific system.
     ./hosts-update
 
 ## Disclaimer
-This script replaces the "/etc/hosts" file of your system. I am not  
-responsible for any damage or loss, always make backups.
+This script replaces the "/etc/hosts" file of your system. It will create a  
+backup of the existing hosts file before hand. This being said, please be sure  
+to be careful when modifying the hosts file.
 
 ## Questions
 
