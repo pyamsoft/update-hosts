@@ -129,6 +129,11 @@ downloadSources() {
 	for URL in "${SOURCES[@]}"; do
 		infoMsg "$URL"
 		local CONTENT=$(wget -T 10 -qO- "$URL")
+		# Inform user if the download fails or has no content
+		if [[ "$CONTENT" = "" ]]; then
+			printf "\t%s\n" "URL: '$URL' failed to download or is empty."
+			# exit 1
+		fi
 		BLOCKLIST=$(echo -e "$BLOCKLIST\n$CONTENT")
 		unset CONTENT
 	done
