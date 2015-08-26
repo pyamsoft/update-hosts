@@ -30,7 +30,8 @@ SOURCES=(
 	# which will make the script fail out when attempting to pull from it.
 	# Sit tight, as there is not much one can do other than comment out the
 	# hosts-file.net URL when it is not working.
-	"http://hosts-file.net/ad_servers.txt"
+	# "http://hosts-file.net/ad_servers.txt" # Ad servers only
+	"http://hosts-file.net/download/hosts.txt" # The full host list, blocks malicious domains
 	"http://www.malwaredomainlist.com/hostslist/hosts.txt"
 	"http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext"
 	"http://adaway.org/hosts.txt"
