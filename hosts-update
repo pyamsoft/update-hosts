@@ -28,9 +28,6 @@ SOURCES=(
 	"http://www.malwaredomainlist.com/hostslist/hosts.txt"
 	"http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext"
 	"http://adaway.org/hosts.txt"
-)
-
-JUSTDOMAIN_SOURCES=(
 	"http://malwaredomains.lehigh.edu/files/justdomains"
 )
 
@@ -136,25 +133,11 @@ actionMsg2 "Parsing sources lists..."
 infoMsg "Change EOL to Unix format"
 BLOCKLIST=$(echo "$BLOCKLIST" | sed 's/\r//g')
 infoMsg "Select only hosts lines"
-BLOCKLIST=$(echo "$BLOCKLIST" | grep -Eo '^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+[^#[:space:]]+$')
+IP_REGEX='([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+'
+DOMAIN_REGEX='([\p{L}0-9_-]{1,63}\.)+\p{L}[\p{L}0-9_-]{1,62}(?=[[:space:]#]|$)'
+BLOCKLIST=$(echo "$BLOCKLIST" | grep -Po "(^($IP_REGEX)|^)$DOMAIN_REGEX")
 infoMsg "Remove old destination"
 BLOCKLIST=$(echo "$BLOCKLIST" | sed -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g')
-
-# Now that parsing is done, any files containing ONLY domain names can also be parsed
-actionMsg "Downloading domain lists..."
-for URL in "${JUSTDOMAIN_SOURCES[@]}"; do
-	infoMsg "$URL"
-	CONTENT=$(wget -T 10 -qO- "$URL")
-	BLOCKLIST=$(echo -e "$BLOCKLIST\n$CONTENT")
-done
-
-# Change the EOL again just incase
-actionMsg2 "Parsing domain lists..."
-infoMsg "Change EOL to Unix format"
-BLOCKLIST=$(echo "$BLOCKLIST" | sed 's/\r//g')
-
-# Now work on all of the BLOCKLIST
-actionMsg "Parsing full blocklist..."
 infoMsg "Remove local entries"
 BLOCKLIST=$(echo "$BLOCKLIST" | grep -Ev '^(localhost|localhost.localdomain|local|broadcasthost)$')
 infoMsg "Apply whitelist"
