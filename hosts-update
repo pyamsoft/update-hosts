@@ -172,7 +172,7 @@ downloadSources() {
 ##
 changeEOL() {
 	infoMsg "Change EOL to Unix format"
-	BLOCKLIST=$(printf "%s\n" "$BLOCKLIST" | sed 's/\r//g')
+	BLOCKLIST=$(printf "%s\n" "$BLOCKLIST" | sed 's/$//')
 }
 
 ##
@@ -180,9 +180,9 @@ changeEOL() {
 ##
 selectHostLines() {
 	infoMsg "Select only hosts lines"
-	local IP_REGEX='([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+'
-	local DOMAIN_REGEX='([\p{L}0-9_-]{1,63}\.)+\p{L}[\p{L}0-9_-]{1,62}(?=[[:space:]#]|$)'
-	BLOCKLIST=$(printf "%s\n" "$BLOCKLIST" | grep -Po "(^($IP_REGEX)|^)$DOMAIN_REGEX")
+	local IP_REGEX='([0-9]{1,3}\.){3}[0-9]{1,3}[[:blank:]]+'
+	local DOMAIN_REGEX='([[:alnum:]_-]{1,63}\.)+[[:alpha:]][[:alnum:]_-]{1,62}'
+	BLOCKLIST=$(printf '%s\n' "$BLOCKLIST" | grep -oE "(^($IP_REGEX)|^)$DOMAIN_REGEX")
 	unset IP_REGEX DOMAIN_REGEX
 
 }
@@ -260,7 +260,7 @@ addNewDestination() {
 ##
 generateNewHostsFile() {
 	HEADER=$(printf "# <header>%s# </header>\n" "$HEADER")
-	HEADER=$(printf "# %s\n%s\n" "$(date --rfc-2822)" "$HEADER")
+	HEADER=$(printf "# %s\n%s\n" "$(date -R)" "$HEADER")
 	HOSTS=$(printf "%s\n# <blocklist>\n%s\n# </blocklist>" "$HEADER" "$BLOCKLIST")
 }
 
