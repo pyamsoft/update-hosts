@@ -18,14 +18,13 @@ The main differences being:
 - Predefined blacklist of the pinion.gg domain, which is a common source of  
   intrusive advertisements Counter Strike: Global Offensive.
 - Creates a backup of the original hosts file before overwriting.
-- Only supports IPv4 addresses, aliases the system hostname to localhost  
-  instead of a different address.
+- Only supports IPv4 addresses.
 
 ## Hosts Sources
 
 - http://winhelp2002.mvps.org/hosts.txt
 - http://someonewhocares.org/hosts/hosts
-- http://hosts-file.net/ad_servers.txt
+- http://hosts-file.net/download/hosts.txt
 - http://www.malwaredomainlist.com/hostslist/hosts.txt
 - http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
 - http://adaway.org/hosts.txt
