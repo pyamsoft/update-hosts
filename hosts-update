@@ -106,12 +106,25 @@ infoMsg() {
 }
 
 ##
+# Check the environment path for the either wget or curl, exit if it is not found
+##
+checkForDownloadAbility() {
+	if ! which curl > /dev/null 2>&1; then
+		if ! which wget > /dev/null 2>&1; then
+			printf "Either wget or curl are required for operation of this script\n"
+			printf "Please install either 'wget' or 'curl' onto your system.\n"
+			exit 1
+		fi
+	fi
+}
+
+##
 # Check the environment path for the given binary, exit if it is not found
 ##
 checkForBinary() {
 	if ! which $1 > /dev/null 2>&1; then
-		printf "The '%s' binary is required for operation of this script." "$1"
-		printf "Please install '%s' onto your system." "$1"
+		printf "The '%s' binary is required for operation of this script.\n" "$1"
+		printf "Please install '%s' onto your system.\n" "$1"
 		exit 1
 	fi
 }
@@ -128,17 +141,30 @@ printConfig() {
 # Sources list parsing
 ##
 downloadSources() {
+	# Check for curl, if not found, use wget, as the check for either
+	# Should have passed before this function
+	if which curl > /dev/null 2>&1; then
+		local DL_CLIENT="curl"
+		local CMD="$DL_CLIENT -fsSL --connect-timeout 40 --max-time 60"
+	else
+		local DL_CLIENT="wget"
+		local CMD="$DL_CLIENT -T 10 -qO-"
+	fi
+
+	# Use the $DL_CLIENT to download the hosts files
+	infoMsg "Using $DL_CLIENT for downloading"
 	for URL in "${SOURCES[@]}"; do
 		infoMsg "$URL"
-		local CONTENT=$(wget -T 10 -qO- "$URL")
+		local CONTENT=$($CMD $URL)
 		# Inform user if the download fails or has no content
-		if [[ "$CONTENT" = "" ]]; then
+		if [[ -z "$CONTENT" ]]; then
 			printf "\t%s\n" "URL: '$URL' failed to download or is empty."
 			# exit 1
 		fi
 		BLOCKLIST=$(printf "%s\n%s\n" "$BLOCKLIST" "$CONTENT")
 		unset CONTENT
 	done
+	unset CMD DL_CLIENT
 }
 
 ##
@@ -167,6 +193,14 @@ selectHostLines() {
 removeUntrustedDomain() {
 	infoMsg "Remove old destination"
 	BLOCKLIST=$(printf "%s\n" "$BLOCKLIST" | sed -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g')
+}
+
+##
+# Normalize all entries to lowercase strings
+##
+normalizeToLowercase() {
+	infoMsg 'Transform all entries to lowercase'
+	BLOCKLIST=$(printf "%s\n" "$BLOCKLIST" | awk '{print tolower($0)}')
 }
 
 ##
@@ -283,7 +317,7 @@ printHostsFileDifferences() {
 # Script begins here
 
 # Check for required binaries, exit out if they are not present
-checkForBinary wget
+checkForDownloadAbility
 checkForBinary sed
 checkForBinary grep
 checkForBinary sort
@@ -305,6 +339,7 @@ actionMsg "Parsing sources lists..."
 changeEOL
 selectHostLines
 removeUntrustedDomain
+normalizeToLowercase
 removeLocalEntries
 applyWhitelist
 applyBlacklist

@@ -53,6 +53,11 @@ git checkout master
 wget -qO- https://raw.githubusercontent.com/pyamsoft/hosts-update/master/hosts-update
 ```
 
+or  
+```
+curl -sL https://raw.githubusercontent.com/pyamsoft/hosts-update/master/hosts-update
+```
+
 **Note:** be sure to regularly update the hosts file for new additions or
 download the script and create a scheduled task.
 
