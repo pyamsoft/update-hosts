@@ -40,21 +40,14 @@ This will increase the security of your computer and save bandwidth.
 1. Clone the git repository:  
 ```
 git clone https://github.com/pyamsoft/hosts-update
-```
-
-2. Checkout the master git branch:  
-```
 git checkout master
 ```
 
-## Using wget
+## From the Shell
 1. Download the raw file from the github.com URL:  
 ```
-wget -qO- https://raw.githubusercontent.com/pyamsoft/hosts-update/master/hosts-update
-```
-
+wget -qO- https://raw.githubusercontent.com/pyamsoft/hosts-update/master/hosts-update  
 or  
-```
 curl -sL https://raw.githubusercontent.com/pyamsoft/hosts-update/master/hosts-update
 ```
 
