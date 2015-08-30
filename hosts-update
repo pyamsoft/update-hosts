@@ -27,10 +27,6 @@ HEADER="
 SOURCES=(
 	"http://winhelp2002.mvps.org/hosts.txt"
 	"http://someonewhocares.org/hosts/hosts"
-	# hosts-file.net has been experiencing 503 errors the past couple of days,
-	# which will make the script fail out when attempting to pull from it.
-	# Sit tight, as there is not much one can do other than comment out the
-	# hosts-file.net URL when it is not working.
 	# "http://hosts-file.net/ad_servers.txt" # Ad servers only
 	"http://hosts-file.net/download/hosts.txt" # The full host list, blocks malicious domains
 	"http://www.malwaredomainlist.com/hostslist/hosts.txt"
@@ -40,8 +36,10 @@ SOURCES=(
 )
 
 WHITELIST=(
-	"example.com"
-	"example.org"
+	# Fixes loading problems with some sites
+	"google-analytics.com"
+	"www.google-analytics.com"
+	"ssl.google-analytics.com"
 )
 # BLACKLIST DOMAINS
 #    agor.io: Jumpscare
@@ -226,9 +224,14 @@ applyWhitelist() {
 ##
 applyBlacklist() {
 	infoMsg "Apply blacklist"
+	# Cache the blacklist domains so that the entire block list
+	# does not have to be echoed each time.
+	local DOMAINS=""
 	for DOMAIN in "${BLACKLIST[@]}"; do
-		BLOCKLIST=$(printf "%s\n%s\n" "$BLOCKLIST" "$DOMAIN")
+		DOMAINS=$(printf "%s\n%s\n" "$DOMAINS" "$DOMAIN")
 	done
+	BLOCKLIST=$(printf "%s\n%s\n" "$BLOCKLIST" "$DOMAINS")
+	unset DOMAINS
 }
 
 ##
