@@ -37,9 +37,9 @@ SOURCES=(
 
 WHITELIST=(
 	# Fixes loading problems with some sites
-	"google-analytics.com"
-	"www.google-analytics.com"
-	"ssl.google-analytics.com"
+	# "google-analytics.com"
+	# "www.google-analytics.com"
+	# "ssl.google-analytics.com"
 )
 # BLACKLIST DOMAINS
 #    agor.io: Jumpscare
