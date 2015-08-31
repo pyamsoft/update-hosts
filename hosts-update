@@ -36,6 +36,9 @@ SOURCES=(
 )
 
 WHITELIST=(
+	# DO NOT REMOVE, WHITELIST must always contain an entry
+	# I use example.com as it will always route to an example webpage
+	"example.com"
 	# Fixes loading problems with some sites
 	# "google-analytics.com"
 	# "www.google-analytics.com"
