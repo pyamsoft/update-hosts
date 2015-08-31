@@ -357,7 +357,7 @@ generateNewHostsFile
 actionMsg "Generating hosts file..."
 backupOldHostsFile
 installNewHostsFile
-fixfilepermissons "${dst_hosts}"
-fixfilepermissons "${dst_backup}"
+fixFilePermissons "${dst_hosts}"
+fixFilePermissons "${dst_backup}"
 printHostsFileDifferences
 
