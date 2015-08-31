@@ -123,7 +123,7 @@ checkForDownloadAbility() {
 # Check the environment path for the given binary, exit if it is not found
 ##
 checkForBinary() {
-	if ! which $1 > /dev/null 2>&1; then
+	if ! which "$1" > /dev/null 2>&1; then
 		printf "The '%s' binary is required for operation of this script.\n" "$1"
 		printf "Please install '%s' onto your system.\n" "$1"
 		exit 1
@@ -156,13 +156,13 @@ downloadSources() {
 	infoMsg "Using $dl_client for downloading"
 	for url in "${sources[@]}"; do
 		infoMsg "$url"
-		local content=$($cmd $url)
+		local content="$($cmd $url)"
 		# Inform user if the download fails or has no content
 		if [[ -z "$content" ]]; then
 			printf "\t%s\n" "URL: '$url' failed to download or is empty."
 			# exit 1
 		fi
-		blocklist=$(printf "%s\n%s\n" "$blocklist" "$content")
+		blocklist="$(printf "%s\n%s\n" "$blocklist" "$content")"
 		unset content
 	done
 	unset cmd dl_client
@@ -173,7 +173,7 @@ downloadSources() {
 ##
 changeEOL() {
 	infoMsg "Change EOL to Unix format"
-	blocklist=$(printf "%s\n" "$blocklist" | sed 's/$//')
+	blocklist="$(printf "%s\n" "$blocklist" | sed 's/$//')"
 }
 
 ##
@@ -183,7 +183,7 @@ selectHostLines() {
 	infoMsg "Select only hosts lines"
 	local ip_regex='([0-9]{1,3}\.){3}[0-9]{1,3}[[:blank:]]+'
 	local domain_regex='([[:alnum:]_-]{1,63}\.)+[[:alpha:]][[:alnum:]_-]{1,62}'
-	blocklist=$(printf '%s\n' "$blocklist" | grep -oE "(^($ip_regex)|^)$domain_regex")
+	blocklist="$(printf '%s\n' "$blocklist" | grep -oE "(^($ip_regex)|^)$domain_regex")"
 	unset ip_regex domain_regex
 
 }
@@ -193,7 +193,7 @@ selectHostLines() {
 ##
 removeUntrustedDomain() {
 	infoMsg "Remove old destination"
-	blocklist=$(printf "%s\n" "$blocklist" | sed -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g')
+	blocklist="$(printf "%s\n" "$blocklist" | sed -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g')"
 }
 
 ##
@@ -201,7 +201,7 @@ removeUntrustedDomain() {
 ##
 normalizeToLowercase() {
 	infoMsg 'Transform all entries to lowercase'
-	blocklist=$(printf "%s\n" "$blocklist" | awk '{print tolower($0)}')
+	blocklist="$(printf "%s\n" "$blocklist" | awk '{print tolower($0)}')"
 }
 
 ##
@@ -209,7 +209,7 @@ normalizeToLowercase() {
 ##
 removeLocalEntries() {
 	infoMsg "Remove local entries"
-	blocklist=$(printf "%s\n" "$blocklist" | grep -Ev '^(localhost|localhost.localdomain|local|broadcasthost)$')
+	blocklist="$(printf "%s\n" "$blocklist" | grep -Ev '^(localhost|localhost.localdomain|local|broadcasthost)$')"
 }
 
 ##
@@ -218,7 +218,7 @@ removeLocalEntries() {
 applyWhitelist() {
 	infoMsg "Apply whitelist"
 	for domain in "${whitelist[@]}"; do
-		blocklist=$(printf "%s\n" "$blocklist" | grep -Fxv "$domain")
+		blocklist="$(printf "%s\n" "$blocklist" | grep -Fxv "$domain")"
 	done
 }
 
@@ -231,9 +231,9 @@ applyBlacklist() {
 	# does not have to be echoed each time.
 	local domains=""
 	for domain in "${blacklist[@]}"; do
-		domains=$(printf "%s\n%s\n" "$domains" "$domain")
+		domains="$(printf "%s\n%s\n" "$domains" "$domain")"
 	done
-	blocklist=$(printf "%s\n%s\n" "$blocklist" "$domains")
+	blocklist="$(printf "%s\n%s\n" "$blocklist" "$domains")"
 	unset domains
 }
 
@@ -242,7 +242,7 @@ applyBlacklist() {
 ##
 removeDuplicates() {
 	infoMsg "Remove duplicate entries"
-	blocklist=$(printf "%s\n" "$blocklist" | awk '!a[$0]++')
+	blocklist="$(printf "%s\n" "$blocklist" | awk '!a[$0]++')"
 }
 
 ##
@@ -250,7 +250,7 @@ removeDuplicates() {
 ##
 sortEntries() {
 	infoMsg "Sort entries"
-	blocklist=$(printf "%s\n" "$blocklist" | sort -n)
+	blocklist="$(printf "%s\n" "$blocklist" | sort -n)"
 }
 
 ##
@@ -258,16 +258,16 @@ sortEntries() {
 ##
 addNewDestination() {
 	infoMsg "Add new destination"
-	blocklist=$(printf "%s\n" "$blocklist" | sed "s/^/$dst_ip /g")
+	blocklist="$(printf "%s\n" "$blocklist" | sed "s/^/$dst_ip /g")"
 }
 
 ##
 # Parse the header and create the new hosts file
 ##
 generateNewHostsFile() {
-	header=$(printf "# <header>%s# </header>\n" "$header")
-	header=$(printf "# %s\n%s\n" "$(date)" "$header")
-	hosts=$(printf "%s\n# <blocklist>\n%s\n# </blocklist>" "$header" "$blocklist")
+	header="$(printf "# <header>%s# </header>\n" "$header")"
+	header="$(printf "# %s\n%s\n" "$(date)" "$header")"
+	hosts="$(printf "%s\n# <blocklist>\n%s\n# </blocklist>" "$header" "$blocklist")"
 }
 
 ##
@@ -275,10 +275,10 @@ generateNewHostsFile() {
 ##
 backupOldHostsFile() {
 	infoMsg "Creating backup of original hosts file..."
-	if [ $EUID -ne 0 ]; then
-		sudo cp $dst_hosts $dst_backup
+	if [ "$EUID" -ne 0 ]; then
+		sudo cp "$dst_hosts" "$dst_backup"
 	else
-		cp $dst_hosts $dst_backup
+		cp "$dst_hosts" "$dst_backup"
 	fi
 }
 
@@ -287,10 +287,10 @@ backupOldHostsFile() {
 ##
 installNewHostsFile() {
 	infoMsg "Installing new hosts file..."
-	if [ $EUID -ne 0 ]; then
-		printf "%s\n" "$hosts" | sudo tee $dst_hosts > /dev/null
+	if [ "$EUID" -ne 0 ]; then
+		printf "%s\n" "$hosts" | sudo tee "$dst_hosts" > /dev/null
 	else
-		printf "%s\n" "$hosts" | tee $dst_hosts > /dev/null
+		printf "%s\n" "$hosts" | tee "$dst_hosts" > /dev/null
 	fi
 }
 
@@ -299,10 +299,10 @@ installNewHostsFile() {
 ##
 fixFilePermissons() {
 	infoMsg "Fixing permissions for file $1..."
-	if [ $EUID -ne 0 ]; then
-		sudo chmod 644 $1
+	if [ "$EUID" -ne 0 ]; then
+		sudo chmod 644 "$1"
 	else
-		chmod 644 $1
+		chmod 644 "$1"
 	fi
 }
 
@@ -310,8 +310,8 @@ fixFilePermissons() {
 # Print the differences between the number of hosts in each file
 ##
 printHostsFileDifferences() {
-	local old_hosts_number=$(wc -l < $dst_backup)
-	local new_hosts_number=$(wc -l < $dst_hosts)
+	local old_hosts_number="$(wc -l < $dst_backup)"
+	local new_hosts_number="$(wc -l < $dst_hosts)"
 	printf "%b + %b%s %bhosts added! (%b + %b%s %b)\n" \
 		"\e[1;33m" "\e[1;32m" "$new_hosts_number" \
 		"\e[0m" "\e[1;32m" "\e[1;34m" \
@@ -357,7 +357,7 @@ generateNewHostsFile
 actionMsg "Generating hosts file..."
 backupOldHostsFile
 installNewHostsFile
-fixfilepermissons $dst_hosts
-fixfilepermissons $dst_backup
+fixfilepermissons "$dst_hosts"
+fixfilepermissons "$dst_backup"
 printHostsFileDifferences
 
