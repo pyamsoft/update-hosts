@@ -1,4 +1,4 @@
-# hosts-update
+# update-hosts
 This is a fork of the original hosts-update repository by zant95 on GitHub.  
 You can find the original here: http://github.com/zant95/hosts-update
 
@@ -39,16 +39,16 @@ This will increase the security of your computer and save bandwidth.
 
 1. Clone the git repository:  
 ```
-git clone https://github.com/pyamsoft/hosts-update
+git clone https://github.com/pyamsoft/update-hosts
 git checkout master
 ```
 
 ## From the Shell
 1. Download the raw file from the github.com URL:  
 ```
-wget -qO- https://raw.githubusercontent.com/pyamsoft/hosts-update/master/hosts-update  
+wget -qO- https://raw.githubusercontent.com/pyamsoft/update-hosts/master/update-hosts  
 or  
-curl -sL https://raw.githubusercontent.com/pyamsoft/hosts-update/master/hosts-update
+curl -sL https://raw.githubusercontent.com/pyamsoft/update-hosts/master/update-hosts
 ```
 
 **Note:** be sure to regularly update the hosts file for new additions or
@@ -60,7 +60,7 @@ specific system.
 2. Edit the white/black lists and add the wanted URLs.
 3. Run the script by invoking it from the command line like so:  
 ```
-./hosts-update
+./update-hosts
 ```
 
 ## Disclaimer
@@ -76,12 +76,12 @@ repository, or directed by email to pyamsoft @ pyam(dot)soft(at)gmail(dot)com
 ## Issues
 
 Check the issues page on GitHub for any notes about outstanding or existing  
-issues. If you encounter a problem with hosts-update of which no such  
+issues. If you encounter a problem with update-hosts of which no such  
 issue already exists please feel free to help the developer by creating an  
 issue ticket.
 
 ## License
 
 MIT  
-See the [license](https://raw.githubusercontent.com/pyamsoft/hosts-update/master/LICENSE) file.
+See the [license](https://raw.githubusercontent.com/pyamsoft/update-hosts/master/LICENSE) file.
 
