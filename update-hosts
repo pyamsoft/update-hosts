@@ -362,7 +362,7 @@ remove_local_entries
 apply_whitelist
 apply_blacklist
 remove_duplicates
-sorte_ntries
+sort_entries
 add_new_destination
 generate_new_hosts_file
 
