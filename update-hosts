@@ -96,21 +96,21 @@ blacklist=(
 ##
 # Display a general message
 ##
-actionMsg() {
+action_msg() {
 	printf "%b + %b%s%b\n" "\e[1;33m" "\e[1;32m" "$1" "\e[0m"
 }
 
 ##
 # Display an information snippet
 ##
-infoMsg() {
+info_msg() {
 	printf "   - %s\n" "$1"
 }
 
 ##
 # Check the environment path for the either wget or curl, exit if it is not found
 ##
-checkForDownloadAbility() {
+check_for_download_ability() {
 	if ! which curl > /dev/null 2>&1; then
 		if ! which wget > /dev/null 2>&1; then
 			printf "Either wget or curl are required for operation of this script\n"
@@ -123,7 +123,7 @@ checkForDownloadAbility() {
 ##
 # Check the environment path for the given binary, exit if it is not found
 ##
-checkForBinary() {
+check_for_binary() {
 	if ! which "$1" > /dev/null 2>&1; then
 		printf "The '%s' binary is required for operation of this script.\n" "$1"
 		printf "Please install '%s' onto your system.\n" "$1"
@@ -134,15 +134,15 @@ checkForBinary() {
 ##
 # Print out the user configuration
 ##
-printConfig() {
-	infoMsg "Hosts location: ${dst_hosts}"
-	infoMsg "Destination IP: ${dst_ip}"
+print_config() {
+	info_msg "Hosts location: ${dst_hosts}"
+	info_msg "Destination IP: ${dst_ip}"
 }
 
 ##
 # Sources list parsing
 ##
-downloadSources() {
+download_sources() {
 	# Check for curl, if not found, use wget, as the check for either
 	# Should have passed before this function
 	if which curl > /dev/null 2>&1; then
@@ -154,9 +154,9 @@ downloadSources() {
 	fi
 
 	# Use the $dl_client to download the hosts files
-	infoMsg "Using ${dl_client} for downloading"
+	info_msg "Using ${dl_client} for downloading"
 	for url in "${sources[@]}"; do
-		infoMsg "${url}"
+		info_msg "${url}"
 		local content=$(${cmd} "${url}")
 		# Inform user if the download fails or has no content
 		if [[ -z "$content" ]]; then
@@ -172,16 +172,16 @@ downloadSources() {
 ##
 # Change EOL from DOS to Unix format
 ##
-changeEOL() {
-	infoMsg "Change EOL to Unix format"
+change_eol() {
+	info_msg "Change EOL to Unix format"
 	blocklist=$(printf "%s\n" "${blocklist}" | sed 's/$//')
 }
 
 ##
 # Only select lines which contain a host, do not select comments/other
 ##
-selectHostLines() {
-	infoMsg "Select only hosts lines"
+select_host_lines() {
+	info_msg "Select only hosts lines"
 	local ip_regex='([0-9]{1,3}\.){3}[0-9]{1,3}[[:blank:]]+'
 	local domain_regex='([[:alnum:]_-]{1,63}\.)+[[:alpha:]][[:alnum:]_-]{1,62}'
 	blocklist=$(printf '%s\n' "${blocklist}" | grep -oE "(^(${ip_regex})|^)${domain_regex}")
@@ -192,32 +192,32 @@ selectHostLines() {
 ##
 # Remove any predefined destinations, as they may be untrustworthy
 ##
-removeUntrustedDomain() {
-	infoMsg "Remove old destination"
+remove_untrusted_domain() {
+	info_msg "Remove old destination"
 	blocklist=$(printf "%s\n" "${blocklist}" | sed -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g')
 }
 
 ##
 # Normalize all entries to lowercase strings
 ##
-normalizeToLowercase() {
-	infoMsg 'Transform all entries to lowercase'
+normalize_to_lowercase() {
+	info_msg 'Transform all entries to lowercase'
 	blocklist=$(printf "%s\n" "${blocklist}" | awk '{print tolower($0)}')
 }
 
 ##
 # Remove any entries containing the localhost, as it will be added by the header later on
 ##
-removeLocalEntries() {
-	infoMsg "Remove local entries"
+remove_local_entries() {
+	info_msg "Remove local entries"
 	blocklist=$(printf "%s\n" "${blocklist}" | grep -Ev '^(localhost|localhost.localdomain|local|broadcasthost)$')
 }
 
 ##
 # Apply the user whitelist
 ##
-applyWhitelist() {
-	infoMsg "Apply whitelist"
+apply_whitelist() {
+	info_msg "Apply whitelist"
 	for domain in "${whitelist[@]}"; do
 		blocklist=$(printf "%s\n" "${blocklist}" | grep -Fxv "${domain}")
 	done
@@ -226,7 +226,7 @@ applyWhitelist() {
 ##
 # Apply the user blacklist
 ##
-applyBlacklist() {
+apply_blacklist() {
 	infoMsg "Apply blacklist"
 	# Cache the blacklist domains so that the entire block list
 	# does not have to be echoed each time.
@@ -249,31 +249,31 @@ applyBlacklist() {
 ##
 # Remove duplicate entries
 ##
-removeDuplicates() {
-	infoMsg "Remove duplicate entries"
+remove_duplicates() {
+	info_msg "Remove duplicate entries"
 	blocklist=$(printf "%s\n" "${blocklist}" | awk '!a[$0]++')
 }
 
 ##
 # Sort the entries by string numerical value
 ##
-sortEntries() {
-	infoMsg "Sort entries"
+sort_entries() {
+	info_msg "Sort entries"
 	blocklist=$(printf "%s\n" "${blocklist}" | sort -n)
 }
 
 ##
 # Add the configured destination, by default the zero address
 ##
-addNewDestination() {
-	infoMsg "Add new destination"
+add_new_destination() {
+	info_msg "Add new destination"
 	blocklist=$(printf "%s\n" "${blocklist}" | sed "s/^/${dst_ip} /g")
 }
 
 ##
 # Parse the header and create the new hosts file
 ##
-generateNewHostsFile() {
+generate_new_hosts_file() {
 	header=$(printf "# <header>%s# </header>\n" "${header}")
 	header=$(printf "# %s\n%s\n" "$(date)" "${header}")
 	hosts=$(printf "%s\n# <blocklist>\n%s\n# </blocklist>" "${header}" "${blocklist}")
@@ -282,8 +282,8 @@ generateNewHostsFile() {
 ##
 # Backup original hosts file
 ##
-backupOldHostsFile() {
-	infoMsg "Creating backup of original hosts file..."
+backup_old_hosts_file() {
+	info_msg "Creating backup of original hosts file..."
 	if [ "${EUID}" -ne 0 ]; then
 		sudo cp "${dst_hosts}" "${dst_backup}"
 	else
@@ -294,8 +294,8 @@ backupOldHostsFile() {
 ##
 # Install the new hosts file to the destination
 ##
-installNewHostsFile() {
-	infoMsg "Installing new hosts file..."
+install_new_hosts_file() {
+	info_msg "Installing new hosts file..."
 	if [ "${EUID}" -ne 0 ]; then
 		printf "%s\n" "${hosts}" | sudo tee "${dst_hosts}" > /dev/null
 	else
@@ -306,8 +306,8 @@ installNewHostsFile() {
 ##
 # Fixes permission on file to 644
 ##
-fixFilePermissons() {
-	infoMsg "Fixing permissions for file $1..."
+fix_file_permissons() {
+	info_msg "Fixing permissions for file $1..."
 	if [ "${EUID}" -ne 0 ]; then
 		sudo chmod 644 "$1"
 	else
@@ -318,7 +318,7 @@ fixFilePermissons() {
 ##
 # Print the differences between the number of hosts in each file
 ##
-printHostsFileDifferences() {
+print_hosts_file_differences() {
 	local old_hosts_number=$(wc -l < ${dst_backup})
 	local new_hosts_number=$(wc -l < ${dst_hosts})
 	printf "%b + %b%s %bhosts added! (%b + %b%s %b)\n" \
@@ -332,41 +332,42 @@ printHostsFileDifferences() {
 # Script begins here
 
 # Check for required binaries, exit out if they are not present
-checkForDownloadAbility
-checkForBinary sed
-checkForBinary grep
-checkForBinary sort
-checkForBinary awk
-checkForBinary tee
-checkForBinary cp
-checkForBinary wc
-checkForBinary printf
-checkForBinary chmod
+check_for_download_ability
+check_for_binary sudo
+check_for_binary sed
+check_for_binary grep
+check_for_binary sort
+check_for_binary awk
+check_for_binary tee
+check_for_binary cp
+check_for_binary wc
+check_for_binary printf
+check_for_binary chmod
 
 # Process begins:
-actionMsg "Configuration:"
-printConfig
+action_msg "Configuration:"
+print_config
 
-actionMsg "Downloading sources lists..."
-downloadSources
+action_msg "Downloading sources lists..."
+download_sources
 
-actionMsg "Parsing sources lists..."
-changeEOL
-selectHostLines
-removeUntrustedDomain
-normalizeToLowercase
-removeLocalEntries
-applyWhitelist
-applyBlacklist
-removeDuplicates
-sortEntries
-addNewDestination
-generateNewHostsFile
+action_msg "Parsing sources lists..."
+change_eol
+select_host_lines
+remove_untrusted_domain
+normalize_to_lowercase
+remove_local_entries
+apply_whitelist
+apply_blacklist
+remove_duplicates
+sorte_ntries
+add_new_destination
+generate_new_hosts_file
 
-actionMsg "Generating hosts file..."
-backupOldHostsFile
-installNewHostsFile
-fixFilePermissons "${dst_hosts}"
-fixFilePermissons "${dst_backup}"
-printHostsFileDifferences
+action_msg "Generating hosts file..."
+backup_old_hosts_file
+install_new_hosts_file
+fix_file_permissons "${dst_hosts}"
+fix_file_permissons "${dst_backup}"
+print_hosts_file_differences
 
