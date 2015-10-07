@@ -227,7 +227,7 @@ apply_whitelist() {
 # Apply the user blacklist
 ##
 apply_blacklist() {
-	infoMsg "Apply blacklist"
+	info_msg "Apply blacklist"
 	# Cache the blacklist domains so that the entire block list
 	# does not have to be echoed each time.
 	# Fix an issue which adds a rogue newline into the blacklist,
@@ -333,7 +333,9 @@ print_hosts_file_differences() {
 
 # Check for required binaries, exit out if they are not present
 check_for_download_ability
-check_for_binary sudo
+if [ "{EUID}" -ne 0 ]; then
+        check_for_binary sudo
+fi
 check_for_binary sed
 check_for_binary grep
 check_for_binary sort
