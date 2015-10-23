@@ -20,7 +20,7 @@ readonly dst_backup="${dst_hosts}.backup.$(date +%Y%m%d)"
 readonly dst_ip="0.0.0.0"
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
 #       can occur when using traceroute, netstat and the like.
-readonly header="
+header="
 127.0.0.1 $(uname -n) localhost
 255.255.255.255 broadcasthost
 0.0.0.0 0.0.0.0
