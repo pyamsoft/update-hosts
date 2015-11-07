@@ -8,11 +8,13 @@
 # Exit on errors:
 # For more information about these particular options, see
 #    https://stackoverflow.com/questions/13468481/when-to-use-set-e
-set -eu
+set -u
 set -o pipefail
 
 # Configuration:
 readonly sudolock="/tmp/update-hosts.sudolock"
+temp_files=()
+pids="" # Leave blank
 blocklist="" # Leave this blank
 hosts="" # Leave this blank
 readonly dst_hosts="/etc/hosts"
@@ -29,8 +31,8 @@ readonly sources=(
 	"http://winhelp2002.mvps.org/hosts.txt"
 	"http://someonewhocares.org/hosts/hosts"
 	"http://hosts-file.net/ad_servers.txt" # Ad servers only
-	"http://hosts-file.net/download/hosts.txt" # The full host list, blocks malicious domains
-	"http://hosts-file.net/hphosts-partial.txt" # Any updates to the hosts-file.net hosts file since the point release
+	# "http://hosts-file.net/download/hosts.txt" # The full host list, blocks malicious domains
+	# "http://hosts-file.net/hphosts-partial.txt" # Any updates to the hosts-file.net hosts file since the point release
 	"http://www.malwaredomainlist.com/hostslist/hosts.txt"
 	"http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext"
 	"http://adaway.org/hosts.txt"
@@ -97,21 +99,24 @@ readonly blacklist=(
 ##
 # Display a general message
 ##
-function action_msg() {
+function action_msg()
+{
 	printf "%b + %b%s%b\n" "\e[1;33m" "\e[1;32m" "$1" "\e[0m"
 }
 
 ##
 # Display an information snippet
 ##
-function info_msg() {
+function info_msg()
+{
 	printf "   - %s\n" "$1"
 }
 
 ##
 # Check the environment path for the either wget or curl, exit if it is not found
 ##
-function check_for_download_ability() {
+function check_for_download_ability()
+{
 	if ! which curl > /dev/null 2>&1; then
 		if ! which wget > /dev/null 2>&1; then
 			printf "Either wget or curl are required for operation of this script\n"
@@ -124,7 +129,8 @@ function check_for_download_ability() {
 ##
 # Check the environment path for the given binary, exit if it is not found
 ##
-function check_for_binary() {
+function check_for_binary()
+{
 	if ! which "$1" > /dev/null 2>&1; then
 		printf "The '%s' binary is required for operation of this script.\n" "$1"
 		printf "Please install '%s' onto your system.\n" "$1"
@@ -135,45 +141,81 @@ function check_for_binary() {
 ##
 # Print out the user configuration
 ##
-function print_config() {
+function print_config()
+{
 	info_msg "Hosts location: ${dst_hosts}"
 	info_msg "Destination IP: ${dst_ip}"
 }
 
 ##
-# Sources list parsing
+# Decide what program to DL with
 ##
-function download_sources() {
+function decide_dl_client()
+{
 	# Check for curl, if not found, use wget, as the check for either
 	# Should have passed before this function
+        local cmd=
 	if which curl > /dev/null 2>&1; then
-		local dl_client="curl"
-		local cmd="${dl_client} -fsSL --connect-timeout 40 --max-time 60"
+		cmd="curl -fsSL --connect-timeout 40 --max-time 60"
 	else
-		local dl_client="wget"
-		local cmd="${dl_client} -T 10 -qO-"
+		cmd="wget -T 10 -qO-"
 	fi
+        printf "%s" "${cmd}"
+        unset cmd
+}
 
-	# Use the $dl_client to download the hosts files
-	info_msg "Using ${dl_client} for downloading"
-	for url in "${sources[@]}"; do
-		info_msg "${url}"
-		local content=$(${cmd} "${url}")
-		# Inform user if the download fails or has no content
-		if [[ -z "$content" ]]; then
-			printf "\t%s\n" "URL: '${url}' failed to download or is empty."
-			# exit 1
-		fi
-		blocklist=$(printf "%s\n%s\n" "${blocklist}" "${content}")
-		unset content
-	done
-	unset cmd dl_client
+##
+# Sources list parsing
+##
+function download_to_tempfile()
+{
+        # $1 cmd
+        # $2 url
+        # $3 tmpfile
+        local hostfile="$(printf "%s" "$($1 $2)")"
+        printf "%s\n" "${hostfile}" >> "$3"
+}
+
+##
+# Download the hosts file from each URL specified in source
+# Download runs in parallel in the background
+##
+function download_sources()
+{
+        # $1 cmd
+        local sources_size="${#sources[@]}"
+        for ((i=0; i<sources_size; i++)); do
+                temp_files[$i]="$(mktemp)"
+                local url="${sources[$i]}"
+                info_msg "Downloading from ${url}"
+                download_to_tempfile "$1" "${url}" "${temp_files[$i]}" &
+                unset url
+                pids="${pids} $!"
+        done
+
+        # Wait for all parallel downloads to finish
+        # Instead of taking a long time in total, this will only take as long
+        # as it takes for the longest download to complete
+        wait ${pids}
+
+        # Write the contents of each download to the blocklist
+        for hostfile in "${temp_files[@]}"; do
+                local content="$(cat ${hostfile})"
+                if [[ ! -z "${content}" ]]; then
+                        blocklist=$(printf "%s\n%s\n" "${blocklist}" "${content}")
+                fi
+
+                # Remove the temp file
+                rm -f "${hostfile}"
+                unset content
+        done
 }
 
 ##
 # Change EOL from DOS to Unix format
 ##
-function change_eol() {
+function change_eol()
+{
 	info_msg "Change EOL to Unix format"
 	blocklist=$(printf "%s\n" "${blocklist}" | sed 's/$//')
 }
@@ -181,7 +223,8 @@ function change_eol() {
 ##
 # Only select lines which contain a host, do not select comments/other
 ##
-function select_host_lines() {
+function select_host_lines()
+{
 	info_msg "Select only hosts lines"
 	local ip_regex='([0-9]{1,3}\.){3}[0-9]{1,3}[[:blank:]]+'
 	local domain_regex='([[:alnum:]_-]{1,63}\.)+[[:alpha:]][[:alnum:]_-]{1,62}'
@@ -193,7 +236,8 @@ function select_host_lines() {
 ##
 # Remove any predefined destinations, as they may be untrustworthy
 ##
-function remove_untrusted_domain() {
+function remove_untrusted_domain()
+{
 	info_msg "Remove old destination"
 	blocklist=$(printf "%s\n" "${blocklist}" | sed -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g')
 }
@@ -201,7 +245,8 @@ function remove_untrusted_domain() {
 ##
 # Normalize all entries to lowercase strings
 ##
-function normalize_to_lowercase() {
+function normalize_to_lowercase()
+{
 	info_msg 'Transform all entries to lowercase'
 	blocklist=$(printf "%s\n" "${blocklist}" | awk '{print tolower($0)}')
 }
@@ -209,7 +254,8 @@ function normalize_to_lowercase() {
 ##
 # Remove any entries containing the localhost, as it will be added by the header later on
 ##
-function remove_local_entries() {
+function remove_local_entries()
+{
 	info_msg "Remove local entries"
 	blocklist=$(printf "%s\n" "${blocklist}" | grep -Ev '^(localhost|localhost.localdomain|local|broadcasthost)$')
 }
@@ -217,7 +263,8 @@ function remove_local_entries() {
 ##
 # Apply the user whitelist
 ##
-function apply_whitelist() {
+function apply_whitelist()
+{
 	info_msg "Apply whitelist"
 	for domain in "${whitelist[@]}"; do
 		blocklist=$(printf "%s\n" "${blocklist}" | grep -Fxv "${domain}")
@@ -227,7 +274,8 @@ function apply_whitelist() {
 ##
 # Apply the user blacklist
 ##
-function apply_blacklist() {
+function apply_blacklist()
+{
 	info_msg "Apply blacklist"
 	# Cache the blacklist domains so that the entire block list
 	# does not have to be echoed each time.
@@ -250,7 +298,8 @@ function apply_blacklist() {
 ##
 # Remove duplicate entries
 ##
-function remove_duplicates() {
+function remove_duplicates()
+{
 	info_msg "Remove duplicate entries"
 	blocklist=$(printf "%s\n" "${blocklist}" | awk '!a[$0]++')
 }
@@ -258,7 +307,8 @@ function remove_duplicates() {
 ##
 # Sort the entries by string numerical value
 ##
-function sort_entries() {
+function sort_entries()
+{
 	info_msg "Sort entries"
 	blocklist=$(printf "%s\n" "${blocklist}" | sort -n)
 }
@@ -266,7 +316,8 @@ function sort_entries() {
 ##
 # Add the configured destination, by default the zero address
 ##
-function add_new_destination() {
+function add_new_destination()
+{
 	info_msg "Add new destination"
 	blocklist=$(printf "%s\n" "${blocklist}" | sed "s/^/${dst_ip} /g")
 }
@@ -274,7 +325,8 @@ function add_new_destination() {
 ##
 # Parse the header and create the new hosts file
 ##
-function generate_new_hosts_file() {
+function generate_new_hosts_file()
+{
 	header=$(printf "# <header>%s# </header>\n" "${header}")
 	header=$(printf "# %s\n%s\n" "$(date)" "${header}")
 	hosts=$(printf "%s\n# <blocklist>\n%s\n# </blocklist>" "${header}" "${blocklist}")
@@ -283,7 +335,8 @@ function generate_new_hosts_file() {
 ##
 # Backup original hosts file
 ##
-function backup_old_hosts_file() {
+function backup_old_hosts_file()
+{
 	info_msg "Creating backup of original hosts file..."
 	if [ "${EUID}" -ne 0 ]; then
 		sudo cp "${dst_hosts}" "${dst_backup}"
@@ -295,7 +348,8 @@ function backup_old_hosts_file() {
 ##
 # Install the new hosts file to the destination
 ##
-function install_new_hosts_file() {
+function install_new_hosts_file()
+{
 	info_msg "Installing new hosts file..."
 	if [ "${EUID}" -ne 0 ]; then
 		printf "%s\n" "${hosts}" | sudo tee "${dst_hosts}" > /dev/null
@@ -307,7 +361,8 @@ function install_new_hosts_file() {
 ##
 # Fixes permission on file to 644
 ##
-function fix_file_permissons() {
+function fix_file_permissons()
+{
 	info_msg "Fixing permissions for file $1..."
 	if [ "${EUID}" -ne 0 ]; then
 		sudo chmod 644 "$1"
@@ -319,7 +374,8 @@ function fix_file_permissons() {
 ##
 # Print the differences between the number of hosts in each file
 ##
-function print_hosts_file_differences() {
+function print_hosts_file_differences()
+{
 	local old_hosts_number=$(wc -l < ${dst_backup})
 	local new_hosts_number=$(wc -l < ${dst_hosts})
 	printf "%b + %b%s %bhosts added! (%b + %b%s %b)\n" \
@@ -341,6 +397,17 @@ function sudoloop()
 function cancel_sudoloop()
 {
         [[ -e "${sudolock}" ]] && rm -f "${sudolock}"
+
+        # Kill runaway pids
+        for p in ${pids}; do
+                kill "${p}" > /dev/null 2>&1
+        done
+
+        # rm leftover files
+        for hostfile in "${temp_files[@]}"; do
+                rm -f "${hostfile}" > /dev/null 2>&1
+        done
+
         exit 0
 }
 
@@ -362,6 +429,10 @@ check_for_binary wc
 check_for_binary printf
 check_for_binary chmod
 
+
+# Trap exit signals
+trap cancel_sudoloop INT
+
 if [[ "${EUID}" -ne 0 ]]; then
         check_for_binary sudo
 
@@ -370,9 +441,6 @@ if [[ "${EUID}" -ne 0 ]]; then
 
         # Start sudoloop
         sudoloop &
-
-        # Trap exit signals
-        trap cancel_sudoloop INT
 fi
 
 
@@ -381,7 +449,7 @@ action_msg "Configuration:"
 print_config
 
 action_msg "Downloading sources lists..."
-download_sources
+download_sources "$(decide_dl_client)"
 
 action_msg "Parsing sources lists..."
 change_eol
