@@ -172,8 +172,18 @@ function download_to_tempfile()
         # $1 cmd
         # $2 url
         # $3 tmpfile
+        info_msg "Downloading from $2\n"
         local hostfile="$(printf "%s" "$($1 $2)")"
-        printf "%s\n" "${hostfile}" >> "$3"
+        if [[ -z "${hostfile}" ]]; then
+                info_msg "  Failed to download from: $2"
+                return
+        fi
+        printf "%s\n" "${hostfile}" > "$3"
+        change_eol "$3" "$2"
+        select_host_lines "$3" "$2"
+        remove_untrusted_domain "$3" "$2"
+        normalize_to_lowercase "$3" "$2"
+        remove_local_entries "$3" "$2"
 }
 
 ##
@@ -187,7 +197,6 @@ function download_sources()
         for ((i=0; i<sources_size; i++)); do
                 temp_files[$i]="$(mktemp)"
                 local url="${sources[$i]}"
-                info_msg "Downloading from ${url}"
                 download_to_tempfile "$1" "${url}" "${temp_files[$i]}" &
                 unset url
                 pids="${pids} $!"
@@ -202,7 +211,11 @@ function download_sources()
         for hostfile in "${temp_files[@]}"; do
                 local content="$(cat ${hostfile})"
                 if [[ ! -z "${content}" ]]; then
-                        blocklist=$(printf "%s\n%s\n" "${blocklist}" "${content}")
+                        if [[ -z "${blocklist}" ]]; then
+                                blocklist=$(printf "%s\n" "${content}")
+                        else
+                                blocklist=$(printf "%s\n%s\n" "${blocklist}" "${content}")
+                        fi
                 fi
 
                 # Remove the temp file
@@ -214,10 +227,12 @@ function download_sources()
 ##
 # Change EOL from DOS to Unix format
 ##
-function change_eol()
-{
-	info_msg "Change EOL to Unix format"
-	blocklist=$(printf "%s\n" "${blocklist}" | sed 's/$//')
+function change_eol() {
+        # $1 file
+        # $2 url
+        info_msg "Change EOL to Unix format: $2 ($1)"
+	# blocklist=$(printf "%s\n" "${blocklist}" | sed 's/$//')
+	sed -r -i 's/$//' "$1"
 }
 
 ##
@@ -225,12 +240,22 @@ function change_eol()
 ##
 function select_host_lines()
 {
-	info_msg "Select only hosts lines"
+        # $1 file
+        # $2 url
+        info_msg "Select only hosts lines: $2 ($1)"
 	local ip_regex='([0-9]{1,3}\.){3}[0-9]{1,3}[[:blank:]]+'
 	local domain_regex='([[:alnum:]_-]{1,63}\.)+[[:alpha:]][[:alnum:]_-]{1,62}'
-	blocklist=$(printf '%s\n' "${blocklist}" | grep -oE "(^(${ip_regex})|^)${domain_regex}")
-	unset ip_regex domain_regex
+	# blocklist=$(printf '%s\n' "${blocklist}" | grep -oE "(^(${ip_regex})|^)${domain_regex}")
 
+        # KLUDGE
+        # This leaves trailing comments in lines, making it not as effective
+	# sed -n -i -r "/(^(${ip_regex})|^)${domain_regex}/p" "$1"
+        #
+        # This is an ugly workaround
+	local content=$(grep -oE "(^(${ip_regex})|^)${domain_regex}" "$1")
+        printf "$content" > "$1"
+        unset content
+	unset ip_regex domain_regex
 }
 
 ##
@@ -238,8 +263,11 @@ function select_host_lines()
 ##
 function remove_untrusted_domain()
 {
-	info_msg "Remove old destination"
-	blocklist=$(printf "%s\n" "${blocklist}" | sed -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g')
+        # $1 file
+        # $2 url
+        info_msg "Remove old destination: $2 ($1)"
+	# blocklist=$(printf "%s\n" "${blocklist}" | sed -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g')
+	sed -i -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g' "$1"
 }
 
 ##
@@ -247,8 +275,19 @@ function remove_untrusted_domain()
 ##
 function normalize_to_lowercase()
 {
-	info_msg 'Transform all entries to lowercase'
-	blocklist=$(printf "%s\n" "${blocklist}" | awk '{print tolower($0)}')
+        # $1 file
+        # $2 url
+        info_msg "Transform all entries to lowercase: $2 ($1)"
+	# blocklist=$(printf "%s\n" "${blocklist}" | awk '{print tolower($0)}')
+
+        # KLUDGE
+        # Awk for some reason stops parsing after 1024 lines
+	# awk -v tf="$1" '{print tolower($0) > tf}' "$1"
+        #
+        # This is an ugly work around
+        local content=$(awk '{print tolower($0)}' "$1")
+        printf "${content}" > "$1"
+        unset content
 }
 
 ##
@@ -256,8 +295,11 @@ function normalize_to_lowercase()
 ##
 function remove_local_entries()
 {
-	info_msg "Remove local entries"
-	blocklist=$(printf "%s\n" "${blocklist}" | grep -Ev '^(localhost|localhost.localdomain|local|broadcasthost)$')
+        # $1 file
+        # $2 url
+        info_msg "Remove local entries: $2 ($1)"
+	# blocklist=$(printf "%s\n" "${blocklist}" | grep -Ev '^(localhost|localhost.localdomain|local|broadcasthost)$')
+	sed -n -i -r '/^(localhost|localhost.localdomain|local|broadcasthost)$/!p' "$1"
 }
 
 ##
@@ -428,6 +470,8 @@ check_for_binary cp
 check_for_binary wc
 check_for_binary printf
 check_for_binary chmod
+check_for_binary mktemp
+check_for_binary cat
 
 
 # Trap exit signals
@@ -452,11 +496,6 @@ action_msg "Downloading sources lists..."
 download_sources "$(decide_dl_client)"
 
 action_msg "Parsing sources lists..."
-change_eol
-select_host_lines
-remove_untrusted_domain
-normalize_to_lowercase
-remove_local_entries
 apply_whitelist
 apply_blacklist
 remove_duplicates
