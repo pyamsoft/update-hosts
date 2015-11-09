@@ -219,9 +219,11 @@ function remove_local_entries() {
 ##
 function apply_whitelist() {
 	info_msg "Apply whitelist"
-	for domain in "${whitelist[@]}"; do
-		blocklist=$(printf "%s\n" "${blocklist}" | grep -Fxv "${domain}")
-	done
+        if [[ ! -z "${blocklist}" ]]; then
+                for domain in "${whitelist[@]}"; do
+                        blocklist=$(printf "%s\n" "${blocklist}" | grep -Fxv "${domain}")
+                done
+        fi
 }
 
 ##
@@ -243,7 +245,11 @@ function apply_blacklist() {
 			domains=$(printf "%s\n%s\n" "${domains}" "${domain}")
 		done
 	fi
-	blocklist=$(printf "%s\n%s\n" "${blocklist}" "${domains}")
+        if [[ -z "${blocklist}" ]]; then
+                blocklist=$(printf "%s\n" "${domains}")
+        else
+                blocklist=$(printf "%s\n%s\n" "${blocklist}" "${domains}")
+        fi
 	unset domains
 }
 
