@@ -173,7 +173,7 @@ function download_to_tempfile()
   # $1 cmd
   # $2 url
   # $3 tmpfile
-  info_msg "Downloading from $2\n"
+  info_msg "Downloading from $2"
   local hostfile="$(printf -- "%s" "$($1 $2)")"
   if [[ -z "${hostfile}" ]]; then
     info_msg "  Failed to download from: $2"
