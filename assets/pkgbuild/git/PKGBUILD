@@ -26,16 +26,16 @@ source=("${_gitname}::git+${url}#branch=master")
 ###############################################################################
 
 pkgver() {
-	cd "$srcdir/$_gitname"
-	# From
-	# https://wiki.archlinux.org/index.php/VCS_package_guidelines#The_pkgver.28.29_function
-	# If there are no tags then use number of revisions since beginning of the history:
-	printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+  cd "$srcdir/$_gitname"
+  # From
+  # https://wiki.archlinux.org/index.php/VCS_package_guidelines#The_pkgver.28.29_function
+  # If there are no tags then use number of revisions since beginning of the history:
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
 package() {
-	cd "$srcdir/$_gitname"
-	install -Dm 755 "${_gitname}" "${pkgdir}/usr/bin/${_gitname}"
-	install -Dm 644 LICENSE "${pkgdir}/usr/share/licenses/${_gitname}/LICENSE"
+  cd "$srcdir/$_gitname"
+  install -Dm 755 "${_gitname}" "${pkgdir}/usr/bin/${_gitname}"
+  install -Dm 644 LICENSE "${pkgdir}/usr/share/licenses/${_gitname}/LICENSE"
 }
 
