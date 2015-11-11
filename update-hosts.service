@@ -1,0 +1,6 @@
+[Unit]
+Description=Update hosts file
+
+[Service]
+Type=oneshot
+ExecStart=update-hosts

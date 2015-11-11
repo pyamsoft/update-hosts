@@ -34,8 +34,12 @@ pkgver() {
 }
 
 package() {
+  local _timer="${_gitname}.timer"
+  local _service="${_gitname}.service"
   cd "$srcdir/$_gitname"
   install -Dm 755 "${_gitname}" "${pkgdir}/usr/bin/${_gitname}"
   install -Dm 644 LICENSE "${pkgdir}/usr/share/licenses/${_gitname}/LICENSE"
+  install -Dm 644 "${_timer}" "${pkgdir}/usr/lib/systemd/system/${_timer}"
+  install -Dm 644 "${_service}" "${pkgdir}/usr/lib/systemd/system/${_service}"
 }
 
