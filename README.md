@@ -24,11 +24,17 @@ The main differences being:
 
 - http://winhelp2002.mvps.org/hosts.txt
 - http://someonewhocares.org/hosts/hosts
-- http://hosts-file.net/download/hosts.txt
 - http://www.malwaredomainlist.com/hostslist/hosts.txt
 - http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
 - http://adaway.org/hosts.txt
 - http://malwaredomains.lehigh.edu/files/justdomains
+- http://hosts-file.net/ad_servers.txt
+- http://hosts-file.net/emd.txt
+- http://hosts-file.net/exp.txt
+- http://hosts-file.net/fsa.txt
+- http://hosts-file.net/hjk.txt
+- http://hosts-file.net/mmt.txt
+- http://hosts-file.net/psh.txt
 
 ## What is this for?
 To prevent your computer from connecting to domains who serve ads and malware.  
