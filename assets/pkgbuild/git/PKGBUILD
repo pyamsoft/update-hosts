@@ -5,7 +5,7 @@
 pkgname=update-hosts-git
 _gitname=update-hosts
 pkgdesc="Generate a hosts file based on multiple sources (git)"
-pkgver=r67.114b0d1
+pkgver=r69.f48d68a
 pkgrel=1
 arch=('i686' 'x86_64')
 makedepends=('git')
