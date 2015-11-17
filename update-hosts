@@ -5,7 +5,6 @@
 # Modified by:
 #  pyamsoft <pyam(dot)soft(at)gmail(dot)com>
 
-# Exit on errors:
 # For more information about these particular options, see
 #    https://stackoverflow.com/questions/13468481/when-to-use-set-e
 set -u
@@ -13,13 +12,16 @@ set -o pipefail
 
 # Configuration:
 readonly sudolock="/tmp/update-hosts.sudolock"
+
 temp_files=()
 pids="" # Leave blank
 blocklist="" # Leave this blank
 hosts="" # Leave this blank
+
 readonly dst_hosts="/etc/hosts"
 readonly dst_backup="${dst_hosts}.backup.$(date +%Y%m%d)"
 readonly dst_ip="0.0.0.0"
+
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
 #       can occur when using traceroute, netstat and the like.
 header="
@@ -27,6 +29,7 @@ header="
 255.255.255.255 broadcasthost
 0.0.0.0 0.0.0.0
 "
+
 readonly sources=(
   # The base sources
   "http://winhelp2002.mvps.org/hosts.txt"
@@ -63,6 +66,7 @@ readonly whitelist=(
   # "www.google-analytics.com"
   # "ssl.google-analytics.com"
 )
+
 # BLACKLIST DOMAINS
 #    agor.io: Jumpscare
 #    pinion.gg: Ads in Counter Strike: Global Offensive and other games
@@ -314,11 +318,11 @@ normalize_to_lowercase()
 ##
 remove_local_entries()
 {
-# $1 file
-# $2 url
-info_msg "Remove local entries: $2 ($1)"
-# blocklist=$(printf "%s\n" "${blocklist}" | grep -Ev '^(localhost|localhost.localdomain|local|broadcasthost)$')
-sed -n -i -r '/^(localhost|localhost.localdomain|local|broadcasthost)$/!p' "$1"
+  # $1 file
+  # $2 url
+  info_msg "Remove local entries: $2 ($1)"
+  # blocklist=$(printf "%s\n" "${blocklist}" | grep -Ev '^(localhost|localhost.localdomain|local|broadcasthost)$')
+  sed -n -i -r '/^(localhost|localhost.localdomain|local|broadcasthost)$/!p' "$1"
 }
 
 ##
