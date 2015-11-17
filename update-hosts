@@ -28,15 +28,14 @@ header="
 0.0.0.0 0.0.0.0
 "
 readonly sources=(
+  # The base sources
   "http://winhelp2002.mvps.org/hosts.txt"
-  "http://someonewhocares.org/hosts/hosts"
   "http://www.malwaredomainlist.com/hostslist/hosts.txt"
   "http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext"
   "http://adaway.org/hosts.txt"
   "http://malwaredomains.lehigh.edu/files/justdomains"
 
   # Hosts-file.net server classifications
-  "http://hosts-file.net/ad_servers.txt" # Ad servers
   "http://hosts-file.net/emd.txt" # Malware sites
   "http://hosts-file.net/exp.txt" # Exploit sites
   "http://hosts-file.net/fsa.txt" # Fraud sites
@@ -44,9 +43,12 @@ readonly sources=(
   "http://hosts-file.net/mmt.txt" # Misleading marketing
   "http://hosts-file.net/psh.txt" # Phishing sites
 
+  # These entries may break some streaming video sites
+  "http://hosts-file.net/ad_servers.txt" # Ad servers
+  "http://someonewhocares.org/hosts/hosts"
+
   # These entries are very large, and may break certain sites
   # that rely on CDNs or third party sources
-
   # "http://hosts-file.net/download/hosts.txt" # The full host list, blocks malicious domains
   # "http://hosts-file.net/hphosts-partial.txt" # Any updates to the hosts-file.net hosts file since the point release
 )
