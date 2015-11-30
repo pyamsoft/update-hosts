@@ -32,13 +32,19 @@ header="
 
 readonly sources=(
   # The base sources
+  # Provides a basic amount of protection without breaking sites, or breaking
+  # only a minimal amount of sites
   "http://winhelp2002.mvps.org/hosts.txt"
   "http://www.malwaredomainlist.com/hostslist/hosts.txt"
   "http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext"
   "http://adaway.org/hosts.txt"
+  "http://someonewhocares.org/hosts/hosts"
   "http://malwaredomains.lehigh.edu/files/justdomains"
 
   # Hosts-file.net server classifications
+  # Provides more in-depth protection and host blocking at the cost of
+  # breaking some sites
+  "http://hosts-file.net/ad_servers.txt" # Ad servers
   "http://hosts-file.net/emd.txt" # Malware sites
   "http://hosts-file.net/exp.txt" # Exploit sites
   "http://hosts-file.net/fsa.txt" # Fraud sites
@@ -46,12 +52,15 @@ readonly sources=(
   "http://hosts-file.net/mmt.txt" # Misleading marketing
   "http://hosts-file.net/psh.txt" # Phishing sites
 
-  # These entries may break some streaming video sites
-  "http://hosts-file.net/ad_servers.txt" # Ad servers
-  "http://someonewhocares.org/hosts/hosts"
-
   # These entries are very large, and may break certain sites
   # that rely on CDNs or third party sources
+  # Instead of downloading the entire hosts file and additional parts
+  # the split download above is recommended. The parts that you do not
+  # desire can be ignored individually instead of an all or nothing approach.
+  # The two sources below are generally not recommended nor needed. If you do wish
+  # to use them, be sure to comment out the above hosts-file.net entries
+  # or you will largely be pulling duplicate sources.
+
   # "http://hosts-file.net/download/hosts.txt" # The full host list, blocks malicious domains
   # "http://hosts-file.net/hphosts-partial.txt" # Any updates to the hosts-file.net hosts file since the point release
 )
@@ -65,7 +74,6 @@ readonly sources=(
 # relate in some way to the uBlock0 Unbreak list will be added here.
 # This is to allow uBlock0 to block the specific parts of the domains, while
 # not breaking other sites that actually rely on them
-
 # Though not a great solution, this seems to be the only way to get around
 # some sites breaking when blocking certain hosts
 readonly whitelist=(
