@@ -442,8 +442,8 @@ fix_file_permissons()
 ##
 print_hosts_file_differences()
 {
-  local old_hosts_number=$(wc -l < ${dst_backup})
-  local new_hosts_number=$(wc -l < ${dst_hosts})
+  local old_hosts_number=$(wc -l < "${dst_backup}")
+  local new_hosts_number=$(wc -l < "${dst_hosts}")
   printf -- "%b + %b%s %bhosts added! (%b + %b%s %b)\n" \
     "\e[1;33m" "\e[1;32m" "${new_hosts_number}" \
     "\e[0m" "\e[1;32m" "\e[1;34m" \
