@@ -338,7 +338,7 @@ decide_dl_client()
 ##
 # Sources list parsing
 ##
-function download_to_tempfile()
+download_to_tempfile()
 {
   # $1 cmd
   # $2 url
@@ -618,7 +618,7 @@ print_hosts_file_differences()
   done
 }
 
-function cancel_sudoloop()
+cancel_sudoloop()
 {
   [[ -e "${sudolock}" ]] && rm -f "${sudolock}"
 
