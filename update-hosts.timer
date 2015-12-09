@@ -1,5 +1,6 @@
 [Unit]
-Description=Update hosts file daily
+; Description=Update hosts file daily
+Description=DO NOT USE. The timer service is currently buggy and causes the hosts file to be overwritten to empty.
 
 [Timer]
 OnCalendar=daily
