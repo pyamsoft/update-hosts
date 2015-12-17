@@ -18,6 +18,9 @@ pids="" # Leave blank
 blocklist="" # Leave this blank
 hosts="" # Leave this blank
 
+# Options
+remove_backups=0
+
 readonly dst_hosts="/etc/hosts"
 readonly dst_backup="${dst_hosts}.backup.$(date +%Y%m%d)"
 readonly dst_ip="0.0.0.0"
@@ -609,7 +612,19 @@ print_hosts_file_differences()
   unset old_hosts_number new_hosts_number
 }
 
- sudoloop()
+remove_all_backup_hosts_files()
+{
+  for arg in /etc/hosts.backup.*; do
+    info_msg "Removing backup file: ${arg}..."
+    if [[ "${EUID}" -eq 0 ]]; then
+      rm -f "${arg}" > /dev/null 2>&1
+    else
+      sudo rm -f "${arg}" > /dev/null 2>&1
+    fi
+  done
+}
+
+sudoloop()
 {
   touch "${sudolock}"
   while [[ -e "${sudolock}" ]]; do
@@ -655,6 +670,25 @@ check_for_binary chmod
 check_for_binary mktemp
 check_for_binary cat
 
+# Handle options
+# Options
+#   -h | --help     Display help
+#   -r | --remove   Remove backups
+for arg in $@; do
+  case "${arg}" in
+    "-h"|"--help")
+      action_msg "Options:"
+      printf -- "     -h | --help     Display help\n"
+      printf -- "     -r | --remove   Remove backups\n"
+      shift
+      exit 0
+      ;;
+    "-r"|"--remove")
+      remove_backups=1
+      shift
+      ;;
+  esac
+done
 
 # Trap exit signals
 trap cancel_sudoloop INT
@@ -669,7 +703,6 @@ if [[ "${EUID}" -ne 0 ]]; then
   sudoloop &
 fi
 
-
 # Process begins:
 action_msg "Configuration:"
 print_config
@@ -677,15 +710,13 @@ print_config
 action_msg "Downloading sources lists..."
 download_sources "$(decide_dl_client)"
 
-action_msg "Parsing sources lists..."
+action_msg "Generating hosts file..."
 apply_whitelist
 apply_blacklist
 remove_duplicates
 sort_entries
 add_new_destination
 generate_new_hosts_file
-
-action_msg "Generating hosts file..."
 backup_old_hosts_file
 install_new_hosts_file
 fix_file_permissons "${dst_hosts}"
@@ -693,6 +724,9 @@ fix_file_permissons "${dst_backup}"
 print_hosts_file_differences
 
 # Cleanup
+if [[ "${remove_backups}" -eq 1 ]]; then
+  remove_all_backup_hosts_files
+fi
 cancel_sudoloop
 
 # vim: set syntax=sh tabstop=2 softtabstop=2 shiftwidth=2 shiftround expandtab:
