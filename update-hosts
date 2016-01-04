@@ -60,12 +60,17 @@ readonly sources=(
   # Instead of downloading the entire hosts file and additional parts
   # the split download above is recommended. The parts that you do not
   # desire can be ignored individually instead of an all or nothing approach.
-  # The two sources below are generally not recommended nor needed. If you do wish
-  # to use them, be sure to comment out the above hosts-file.net entries
+  # The two sources below are generally not recommended nor needed. If you do
+  # wish to use them, be sure to comment out the above hosts-file.net entries
   # or you will largely be pulling duplicate sources.
 
-  # "http://hosts-file.net/download/hosts.txt" # The full host list, blocks malicious domains
-  # "http://hosts-file.net/hphosts-partial.txt" # Any updates to the hosts-file.net hosts file since the point release
+  # The full host list, blocks malicious domains
+  #
+  # "http://hosts-file.net/download/hosts.txt"
+
+  # Any updates to the hosts-file.net hosts file since the point release
+  #
+  # "http://hosts-file.net/hphosts-partial.txt"
 )
 
 # Regex allowed
@@ -287,13 +292,14 @@ info_msg()
 }
 
 ##
-# Check the environment path for the either wget or curl, exit if it is not found
+# Check the environment path for the either wget or curl
+# exit if it is not found
 ##
 check_for_download_ability()
 {
   if ! which curl > /dev/null 2>&1; then
     if ! which wget > /dev/null 2>&1; then
-      printf -- "Either wget or curl are required for operation of this script\n"
+      printf -- "Either wget or curl are required for this script\n"
       printf -- "Please install either 'wget' or 'curl' onto your system.\n"
       exit 1
     fi
@@ -306,7 +312,7 @@ check_for_download_ability()
 check_for_binary()
 {
   if ! which "$1" > /dev/null 2>&1; then
-    printf -- "The '%s' binary is required for operation of this script.\n" "$1"
+    printf -- "The '%s' binary is required for this script.\n" "$1"
     printf -- "Please install '%s' onto your system.\n" "$1"
     exit 1
   fi
@@ -380,9 +386,9 @@ download_sources()
     pids="${pids} $!"
   done
 
- # Wait for all parallel downloads to finish
- # Instead of taking a long time in total, this will only take as long
- # as it takes for the longest download to complete
+  # Wait for all parallel downloads to finish
+  # Instead of taking a long time in total, this will only take as long
+  # as it takes for the longest download to complete
   wait ${pids}
 
   # Write the contents of each download to the blocklist
@@ -405,11 +411,11 @@ download_sources()
 ##
 # Change EOL from DOS to Unix format
 ##
-change_eol() {
+change_eol()
+{
   # $1 file
   # $2 url
   info_msg "Change EOL to Unix format: $2 ($1)"
-  # blocklist=$(printf "%s\n" "${blocklist}" | sed 's/$//')
   sed -r -i 's/$//' "$1"
 }
 
@@ -423,7 +429,6 @@ select_host_lines()
   info_msg "Select only hosts lines: $2 ($1)"
   local ip_regex='([0-9]{1,3}\.){3}[0-9]{1,3}[[:blank:]]+'
   local domain_regex='([[:alnum:]_-]{1,63}\.)+[[:alpha:]][[:alnum:]_-]{1,62}'
-  # blocklist=$(printf '%s\n' "${blocklist}" | grep -oE "(^(${ip_regex})|^)${domain_regex}")
 
   # KLUDGE
   # This leaves trailing comments in lines, making it not as effective
@@ -444,7 +449,6 @@ remove_untrusted_domain()
   # $1 file
   # $2 url
   info_msg "Remove old destination: $2 ($1)"
-  # blocklist=$(printf "%s\n" "${blocklist}" | sed -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g')
   sed -i -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g' "$1"
 }
 
@@ -456,7 +460,6 @@ normalize_to_lowercase()
   # $1 file
   # $2 url
   info_msg "Transform all entries to lowercase: $2 ($1)"
-  # blocklist=$(printf "%s\n" "${blocklist}" | awk '{print tolower($0)}')
 
   # KLUDGE
   # Awk for some reason stops parsing after 1024 lines
@@ -469,15 +472,16 @@ normalize_to_lowercase()
 }
 
 ##
-# Remove any entries containing the localhost, as it will be added by the header later on
+# Remove any entries containing the localhost, as it will be added by
+# the header later on
 ##
 remove_local_entries()
 {
   # $1 file
   # $2 url
   info_msg "Remove local entries: $2 ($1)"
-  # blocklist=$(printf "%s\n" "${blocklist}" | grep -Ev '^(localhost|localhost.localdomain|local|broadcasthost)$')
-  sed -n -i -r '/^(localhost|localhost.localdomain|local|broadcasthost)$/!p' "$1"
+  sed -n -i -r \
+    '/^(localhost|localhost.localdomain|local|broadcasthost)$/!p' "$1"
 }
 
 ##
@@ -486,11 +490,13 @@ remove_local_entries()
 apply_whitelist()
 {
   info_msg "Apply whitelist"
-  if [[ ! -z "${blocklist}" ]]; then
-    for domain in "${whitelist[@]}"; do
-      blocklist=$(printf -- "%s\n" "${blocklist}" | sed -r "/${domain}/d")
-    done
+  if [[ -z "${blocklist}" ]]; then
+    return 1
   fi
+
+  for domain in "${whitelist[@]}"; do
+    blocklist=$(printf -- "%s\n" "${blocklist}" | sed -r "/${domain}/d")
+  done
 }
 
 ##
@@ -556,7 +562,8 @@ generate_new_hosts_file()
 {
   header=$(printf -- "# <header>%s# </header>\n" "${header}")
   header=$(printf -- "# %s\n%s\n" "$(date)" "${header}")
-  hosts=$(printf -- "%s\n# <blocklist>\n%s\n# </blocklist>" "${header}" "${blocklist}")
+  hosts=$(printf -- "%s\n# <blocklist>\n%s\n# </blocklist>" \
+    "${header}" "${blocklist}")
 }
 
 ##
