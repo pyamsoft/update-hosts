@@ -109,7 +109,12 @@ readonly whitelist=(
 
   # Fixes other cdns
   '^cdn-i\.dmdentertainment\.com$'
+
+  # Fixes other cdns
   '^cdn\.vurb\.com$'
+
+  # Fixes target.com
+  '^target\.122\.2o7\.net$'
 
   # Fixes fwmrm.net
   '^adm\.fwmrm\.net$'
@@ -224,6 +229,9 @@ readonly whitelist=(
 
   # Fixes nationalreview.com
   'nationalreview\.com$'
+
+  # Fixes liveperson.net issues
+  'liveperson\.net$'
 )
 
 # BLACKLIST DOMAINS
