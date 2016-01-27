@@ -45,6 +45,7 @@ hosts="" # Leave this blank
 
 # Options
 remove_backups=0
+display_pager=0
 
 readonly dst_hosts="/etc/hosts"
 readonly dst_backup="${dst_hosts}.backup.$(date +%Y%m%d)"
@@ -714,12 +715,14 @@ check_for_binary cat
 # Options
 #   -h | --help     Display help
 #   -r | --remove   Remove backups
+#   -p | --pager    Display hosts file in pager
 for arg in $@; do
   case "${arg}" in
     "-h"|"--help")
       action_msg "Options:"
       printf -- "     -h | --help     Display help\n"
       printf -- "     -r | --remove   Remove backups\n"
+      printf -- "     -p | --pager    Display hosts file in pager\n"
       shift
       exit 0
       ;;
@@ -727,8 +730,28 @@ for arg in $@; do
       remove_backups=1
       shift
       ;;
+    "-p"|"--pager")
+      display_pager=1
+      shift;
+      ;;
   esac
 done
+
+# Check if pager is set
+if [[ "${display_pager}" -eq 1 ]]; then
+  # Using the pager requires extra binary: less
+  check_for_binary less
+  action_msg "Displaying ${dst_hosts} in less..."
+
+  # Options for less
+  # -Q all quiet
+  lessopts="-Q"
+  less "${lessopts}" "${dst_hosts}"
+  action_msg "Exiting..."
+
+  # Clean exit
+  exit 0
+fi
 
 # Trap exit signals
 trap cancel_sudoloop INT
