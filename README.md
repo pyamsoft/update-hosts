@@ -66,7 +66,7 @@ specific system.
 2. Edit the white/black lists and add the wanted URLs.
 3. Run the script by invoking it from the command line like so:  
 ```
-./update-hosts
+./update-hosts [-h|-r|-p] [--help|--remove|--pager]
 ```
 
 ## Disclaimer
