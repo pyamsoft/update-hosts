@@ -738,6 +738,7 @@ for arg in $@; do
 done
 
 # Check if pager is set
+# TODO Add support for a $PAGER variable
 if [[ "${display_pager}" -eq 1 ]]; then
   # Using the pager requires extra binary: less
   check_for_binary less
