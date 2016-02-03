@@ -56,6 +56,7 @@ readonly dst_ip="0.0.0.0"
 header="
 127.0.0.1 $(uname -n) localhost
 255.255.255.255 broadcasthost
+# Fixes a display anomaly in traceroute and netstat
 0.0.0.0 0.0.0.0
 "
 
