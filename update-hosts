@@ -741,14 +741,16 @@ done
 # Check if pager is set
 # TODO Add support for a $PAGER variable
 if [[ "${display_pager}" -eq 1 ]]; then
-  # Using the pager requires extra binary: less
-  check_for_binary less
-  action_msg "Displaying ${dst_hosts} in less..."
 
-  # Options for less
-  # -Q all quiet
-  lessopts="-Q"
-  less "${lessopts}" "${dst_hosts}"
+  # Check for the PAGER environment variable
+  # Conditional assignment works when using the set -u option
+  : "${PAGER:=less}"
+
+  # Using the pager requires extra binary
+  check_for_binary "${PAGER}"
+  action_msg "Displaying ${dst_hosts} in ${PAGER}..."
+
+  "${PAGER}" "${dst_hosts}"
   action_msg "Exiting..."
 
   # Clean exit
