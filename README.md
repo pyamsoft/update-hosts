@@ -19,6 +19,11 @@ The main differences being:
   intrusive advertisements Counter Strike: Global Offensive.
 - Creates a backup of the original hosts file before overwriting.
 - Only supports IPv4 addresses.
+- Supports parallel background downloads without reliance programs other than  
+  the standard coreutils
+- Pulls from a larger range of hosts sources
+- Allows for viewing the hosts-file via a standard pager
+- Is named update-hosts instead of hosts-update
 
 ## Hosts Sources
 
