@@ -74,13 +74,14 @@ readonly sources=(
   # Hosts-file.net server classifications
   # Provides more in-depth protection and host blocking at the cost of
   # breaking some sites
-  "http://hosts-file.net/ad_servers.txt" # Ad servers
-  "http://hosts-file.net/emd.txt" # Malware sites
-  "http://hosts-file.net/exp.txt" # Exploit sites
-  "http://hosts-file.net/fsa.txt" # Fraud sites
-  "http://hosts-file.net/hjk.txt" # Hijack sites
-  "http://hosts-file.net/mmt.txt" # Misleading marketing
-  "http://hosts-file.net/psh.txt" # Phishing sites
+  #
+  # "http://hosts-file.net/ad_servers.txt" # Ad servers
+  # "http://hosts-file.net/emd.txt" # Malware sites
+  # "http://hosts-file.net/exp.txt" # Exploit sites
+  # "http://hosts-file.net/fsa.txt" # Fraud sites
+  # "http://hosts-file.net/hjk.txt" # Hijack sites
+  # "http://hosts-file.net/mmt.txt" # Misleading marketing
+  # "http://hosts-file.net/psh.txt" # Phishing sites
 
   # These entries are very large, and may break certain sites
   # that rely on CDNs or third party sources
