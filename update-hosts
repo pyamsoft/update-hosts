@@ -608,7 +608,7 @@ generate_new_hosts_file()
 backup_old_hosts_file()
 {
   info_msg "Creating backup of original hosts file..."
-  if [ "${EUID}" -ne 0 ]; then
+  if [ "$(id -u)" -ne 0 ]; then
     sudo cp "${dst_hosts}" "${dst_backup}"
   else
     cp "${dst_hosts}" "${dst_backup}"
@@ -621,7 +621,7 @@ backup_old_hosts_file()
 install_new_hosts_file()
 {
   info_msg "Installing new hosts file..."
-  if [ "${EUID}" -ne 0 ]; then
+  if [ "$(id -u)" -ne 0 ]; then
     printf -- "%s\n" "${hosts}" | sudo tee "${dst_hosts}" > /dev/null
   else
     printf -- "%s\n" "${hosts}" | tee "${dst_hosts}" > /dev/null
@@ -634,7 +634,7 @@ install_new_hosts_file()
 fix_file_permissons()
 {
   info_msg "Fixing permissions for file $1..."
-  if [ "${EUID}" -ne 0 ]; then
+  if [ "$(id -u)" -ne 0 ]; then
     sudo chmod 644 "$1"
   else
     chmod 644 "$1"
@@ -659,7 +659,7 @@ remove_all_backup_hosts_files()
 {
   for arg in /etc/hosts.backup.*; do
     info_msg "Removing backup file: ${arg}..."
-    if [ "${EUID}" -eq 0 ]; then
+    if [ "$(id -u)" -eq 0 ]; then
       rm -f "${arg}" > /dev/null 2>&1
     else
       sudo rm -f "${arg}" > /dev/null 2>&1
@@ -761,7 +761,7 @@ fi
 # Trap exit signals
 trap cancel_sudoloop INT
 
-if [ "${EUID}" -ne 0 ]; then
+if [ "$(id -u)" -ne 0 ]; then
   check_for_binary sudo
 
   # initialize sudo
