@@ -71,22 +71,19 @@ readonly base_sources="
   http://malwaredomains.lehigh.edu/files/justdomains
 "
 
-readonly sources="
-
-  ${base_sources}
-
-"
 # Hosts-file.net server classifications
 # Provides more in-depth protection and host blocking at the cost of
 # breaking some sites
 #
-# http://hosts-file.net/ad_servers.txt # Ad servers
-# http://hosts-file.net/emd.txt # Malware sites
-# http://hosts-file.net/exp.txt # Exploit sites
-# http://hosts-file.net/fsa.txt # Fraud sites
-# http://hosts-file.net/hjk.txt # Hijack sites
-# http://hosts-file.net/mmt.txt # Misleading marketing
-# http://hosts-file.net/psh.txt # Phishing sites
+# readonly hosts_file_net_parts="
+#   http://hosts-file.net/ad_servers.txt
+#   http://hosts-file.net/emd.txt
+#   http://hosts-file.net/exp.txt
+#   http://hosts-file.net/fsa.txt
+#   http://hosts-file.net/hjk.txt
+#   http://hosts-file.net/mmt.txt
+#   http://hosts-file.net/psh.txt
+# "
 
 # These entries are very large, and may break certain sites
 # that rely on CDNs or third party sources
@@ -96,14 +93,24 @@ readonly sources="
 # The two sources below are generally not recommended nor needed. If you do
 # wish to use them, be sure to comment out the above hosts-file.net entries
 # or you will largely be pulling duplicate sources.
-
-# The full host list, blocks malicious domains
 #
-# http://hosts-file.net/download/hosts.txt
+# readonly hosts_file_net_full="
+#   http://hosts-file.net/download/hosts.txt
+#   http://hosts-file.net/hphosts-partial.txt
+# "
 
-# Any updates to the hosts-file.net hosts file since the point release
-#
-# http://hosts-file.net/hphosts-partial.txt
+
+# The sources that will be parsed into the hosts file.
+# By default only the sources in the ${base_sources} list
+# are included, additional sources can be included by
+# appending them onto lines following the base-sources line.
+# Destinations and duplicate entries do not matter, as they will
+# be sanitized and duplicates will be stripped out.
+readonly sources="
+
+  ${base_sources}
+
+"
 
 # Regex allowed
 #  '\.com$'   -> all domains that end with '.com'
