@@ -387,7 +387,7 @@ select_host_lines()
   # sed -n -i -r "/(^(${ip_regex})|^)${domain_regex}/p" "$1"
   #
   # This is an ugly workaround
-  local content=$(grep -oE "(^(${ip_regex})|^)${domain_regex}" "$1")
+  local content="$(grep -oE "(^(${ip_regex})|^)${domain_regex}" "$1")"
   printf -- "$content" > "$1"
   unset content
   unset ip_regex domain_regex
@@ -418,7 +418,7 @@ normalize_to_lowercase()
   # awk -v tf="$1" '{print tolower($0) > tf}' "$1"
   #
   # This is an ugly work around
-  local content=$(awk '{print tolower($0)}' "$1")
+  local content="$(awk '{print tolower($0)}' "$1")"
   printf -- "${content}" > "$1"
   unset content
 }
