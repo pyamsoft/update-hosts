@@ -123,204 +123,107 @@ readonly sources="
 # not breaking other sites that actually rely on them
 # Though not a great solution, this seems to be the only way to get around
 # some sites breaking when blocking certain hosts
-readonly whitelist=(
-  # Fixes issues in Chrome Store and other sites
-  'google-analytics\.com$'
-
-  # Fixes adf.ly
-  'adf\.ly$'
-
-  # Fixes some cdns
-  '^widget-cdn\.rpxnow\.com$'
-
-  # Fixes broken videos
-  '^tags\.tiqcdn\.com$'
-
-  # Fixes statcounter sites
-  'statcounter\.com$'
-
-  # Fixes liverail.com
-  '^cdn-static\.liverail\.com$'
-  '^vox-static\.liverail\.com$'
-
-  # Fixes cnet.com videos
-  '^s0\.2mdn\.net$'
-
-  # Fixes other cdns
-  '^cdn-i\.dmdentertainment\.com$'
-
-  # Fixes other cdns
-  '^cdn\.vurb\.com$'
-
-  # Fixes target.com
-  '^target\.122\.2o7\.net$'
-
-  # Fixes fwmrm.net
-  '^adm\.fwmrm\.net$'
-
-  # Fixes mopub.com
-  'mopub\.com$'
-
-  # Fixes safelinking.net
-  'safelinking\.net$'
-
-  # Fixes outbrain
-  'outbrain\.com$'
-
-  # Fixes inc.com
-  'inc\.com$'
-
-  # Fixes flurry.com
-  'flurry\.com$'
-
-  # Fixes speedtest.net
-  '^c\.speedtest\.net$'
-
-  # Fixes boldchat
-  'boldchat\.com$'
-
-  # Fixes mixpanel
-  'mixpanel\.com$'
-
-  # Fixes turner cdn
-  '^cdn\.turner\.com$'
-
-  # Fixes yahoo! APIs
-  '^yui\.yahooapis\.com$'
-
-  # Fixes top.mail.ru
-  '^top\.mail\.ru$'
-
-  # Fixes washington post
-  '^css\.washingtonpost\.com$'
-
-  # Fix pcekspert.com
-  'pcekspert\.com$'
-
-  # Fix clickbank.com
-  'clickbank\.com$'
-
-  # Fix yandex.ru
-  'yandex\.ru$'
-
-  # Fix yastatic.net
-  'yastatic\.net$'
-
-  # Fix carbonads
-  'carbonads\.net$'
-
-  # Fix some google api thing
-  '^imasdk\.googleapis\.com$'
-
-  # Fixes 2o7.net
-  '2o7\.net$'
-
-  # Fixes quantcast
-  'quantcast\.com$'
-
-  # Chrome store
-  '^css5\.gaanacdn\.com$'
-
-  # keen github.io
-  '^keen\.github\.io$'
-
-  # Fixes sites that rely on intergi.com
-  '^cdn\.phoenix\.intergi\.com$'
-
-  # Fixes kissmetrics.com
-  'kissmetrics\.com$'
-
-  # Fixes viewpoint
-  'viewpoint\.com$'
-
-  # Fixes woopra.com
-  'woopra\.com$'
-
-  # Fixes monetate.net
-  'monetate\.net$'
-
-  # Fixes googleads.g.doubleclick.net
-  '^googleads\.g\.doubleclick\.net$'
-
-  # fixes echohosting.cafe24
-  '^img\.echohosting\.cafe24\.com$'
-
-  # Fixes googletagmanager
-  'googletagmanager\.com$'
-
-  # Fixes partnet.googleadservices.com
-  '^partner\.googleadservices\.com$'
-
-  # Fix pagefair.com
-  'pagefair\.com$'
-
-  # Fixes redfin
-  '^ssl\.cdn-redfin\.com$'
-
-  # Fixes southwest.com
-  '^www\.southwest\.com$'
-
-  # Fixes marketwatch.com
-  'marketwatch\.com$'
-
-  # Fixes cloudfront.net
-  'cloudfront\.net$'
-
-  # Fixes nationalreview.com
-  'nationalreview\.com$'
-
-  # Fixes liveperson.net issues
-  'liveperson\.net$'
-)
+readonly whitelist='
+  google-analytics\.com$
+  adf\.ly$
+  ^widget-cdn\.rpxnow\.com$
+  ^tags\.tiqcdn\.com$
+  statcounter\.com$
+  ^cdn-static\.liverail\.com$
+  ^vox-static\.liverail\.com$
+  ^s0\.2mdn\.net$
+  ^cdn-i\.dmdentertainment\.com$
+  ^cdn\.vurb\.com$
+  ^target\.122\.2o7\.net$
+  ^adm\.fwmrm\.net$
+  mopub\.com$
+  safelinking\.net$
+  outbrain\.com$
+  inc\.com$
+  flurry\.com$
+  ^c\.speedtest\.net$
+  boldchat\.com$
+  mixpanel\.com$
+  ^cdn\.turner\.com$
+  ^yui\.yahooapis\.com$
+  ^top\.mail\.ru$
+  ^css\.washingtonpost\.com$
+  pcekspert\.com$
+  clickbank\.com$
+  yandex\.ru$
+  yastatic\.net$
+  carbonads\.net$
+  ^imasdk\.googleapis\.com$
+  2o7\.net$
+  quantcast\.com$
+  ^css5\.gaanacdn\.com$
+  ^keen\.github\.io$
+  ^cdn\.phoenix\.intergi\.com$
+  kissmetrics\.com$
+  viewpoint\.com$
+  woopra\.com$
+  monetate\.net$
+  ^googleads\.g\.doubleclick\.net$
+  ^img\.echohosting\.cafe24\.com$
+  googletagmanager\.com$
+  ^partner\.googleadservices\.com$
+  pagefair\.com$
+  ^ssl\.cdn-redfin\.com$
+  ^www\.southwest\.com$
+  marketwatch\.com$
+  cloudfront\.net$
+  nationalreview\.com$
+  liveperson\.net$
+'
 
 # BLACKLIST DOMAINS
 # Only exact strings, no regex supported
 #    agor.io: Jumpscare
 #    pinion.gg: Ads in Counter Strike: Global Offensive and other games
-readonly blacklist=(
-  "agor.io"
-  "www.agor.io"
-  "adback.pinion.gg"
-  "api.pinion.gg"
-  "bin.pinion.gg"
-  "blog.pinion.gg"
-  "bork.pinion.gg"
-  "calendar.pinion.gg"
-  "cdn.pinion.gg"
-  "cp.pinion.gg"
-  "crm.pinion.gg"
-  "delivery.pinion.gg"
-  "direct.pinion.gg"
-  "docs.pinion.gg"
-  "immuniser.pinion.gg"
-  "kermit.pinion.gg"
-  "legacy.pinion.gg"
-  "log.pinion.gg"
-  "mail.pinion.gg"
-  "mailer.pinion.gg"
-  "motd.pinion.gg"
-  "ns1.pinion.gg"
-  "ns2.pinion.gg"
-  "ns3.pinion.gg"
-  "ns4.pinion.gg"
-  "ns5.pinion.gg"
-  "ns6.pinion.gg"
-  "office.pinion.gg"
-  "oscar.pinion.gg"
-  "pinion-log.pinion.gg"
-  "pinion.gg"
-  "pog.pinion.gg"
-  "quartermaster.pinion.gg"
-  "seen.pinion.gg"
-  "stage.pinion.gg"
-  "templ4d2.pinion.gg"
-  "tix.pinion.gg"
-  "transcoded.pinion.gg"
-  "video.pinion.gg"
-  "voip.pinion.gg"
-  "wiki.pinion.gg"
-  "www.pinion.gg"
-)
+readonly blacklist='
+  agor.io
+  www.agor.io
+  adback.pinion.gg
+  api.pinion.gg
+  bin.pinion.gg
+  blog.pinion.gg
+  bork.pinion.gg
+  calendar.pinion.gg
+  cdn.pinion.gg
+  cp.pinion.gg
+  crm.pinion.gg
+  delivery.pinion.gg
+  direct.pinion.gg
+  docs.pinion.gg
+  immuniser.pinion.gg
+  kermit.pinion.gg
+  legacy.pinion.gg
+  log.pinion.gg
+  mail.pinion.gg
+  mailer.pinion.gg
+  motd.pinion.gg
+  ns1.pinion.gg
+  ns2.pinion.gg
+  ns3.pinion.gg
+  ns4.pinion.gg
+  ns5.pinion.gg
+  ns6.pinion.gg
+  office.pinion.gg
+  oscar.pinion.gg
+  pinion-log.pinion.gg
+  pinion.gg
+  pog.pinion.gg
+  quartermaster.pinion.gg
+  seen.pinion.gg
+  stage.pinion.gg
+  templ4d2.pinion.gg
+  tix.pinion.gg
+  transcoded.pinion.gg
+  video.pinion.gg
+  voip.pinion.gg
+  wiki.pinion.gg
+  www.pinion.gg
+'
 
 ##
 # Display a general message
@@ -543,7 +446,7 @@ apply_whitelist()
     return 1
   fi
 
-  for domain in "${whitelist[@]}"; do
+  for domain in ${whitelist}; do
     blocklist=$(printf -- "%s\n" "${blocklist}" | sed -r "/${domain}/d")
   done
 }
@@ -561,13 +464,14 @@ apply_blacklist()
   # 0.0.0.0 <space>
 
   # Domains initialized as first blacklist entry
-  local domains="${blacklist[0]}"
-  # Only loop if the blacklist is multiple entries
-  if [ "${#blacklist[@]}" -gt 1 ]; then
-    for domain in "${blacklist[@]:1}"; do
+  local domains=""
+  for domain in ${blacklist}; do
+    if [ -z "${domains}" ]; then
+      domains="${domain}"
+    else
       domains=$(printf -- "%s\n%s\n" "${domains}" "${domain}")
-    done
-  fi
+    fi
+  done
 
   if [ -z "${blocklist}" ]; then
     blocklist=$(printf -- "%s\n" "${domains}")
