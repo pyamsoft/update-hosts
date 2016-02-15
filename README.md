@@ -23,6 +23,7 @@ The main differences being:
   the standard coreutils
 - Pulls from a larger range of hosts sources
 - Allows for viewing the hosts-file via a standard pager
+- Runs using the standard /bin/sh instead of relying on bash
 - Is named update-hosts instead of hosts-update
 
 ## Hosts Sources
@@ -33,6 +34,9 @@ The main differences being:
 - http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
 - http://adaway.org/hosts.txt
 - http://malwaredomains.lehigh.edu/files/justdomains
+
+### Additional sources
+
 - http://hosts-file.net/ad_servers.txt
 - http://hosts-file.net/emd.txt
 - http://hosts-file.net/exp.txt
@@ -40,6 +44,8 @@ The main differences being:
 - http://hosts-file.net/hjk.txt
 - http://hosts-file.net/mmt.txt
 - http://hosts-file.net/psh.txt
+- http://hosts-file.net/download/hosts.txt
+- http://hosts-file.net/hphosts-partial.txt
 
 ## What is this for?
 To prevent your computer from connecting to domains who serve ads and malware.  
