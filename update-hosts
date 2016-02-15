@@ -37,7 +37,7 @@ set -u
 # Configuration:
 readonly sudolock="/tmp/update-hosts.sudolock"
 
-temp_files=()
+temp_files=""
 pids="" # Leave blank
 blocklist="" # Leave this blank
 hosts="" # Leave this blank
@@ -59,46 +59,51 @@ header="
 0.0.0.0 0.0.0.0
 "
 
-readonly sources=(
-  # The base sources
-  # Provides a basic amount of protection without breaking sites, or breaking
-  # only a minimal amount of sites
-  "http://winhelp2002.mvps.org/hosts.txt"
-  "http://www.malwaredomainlist.com/hostslist/hosts.txt"
-  "http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext"
-  "http://adaway.org/hosts.txt"
-  "http://someonewhocares.org/hosts/hosts"
-  "http://malwaredomains.lehigh.edu/files/justdomains"
+# The base sources
+# Provides a basic amount of protection without breaking sites, or breaking
+# only a minimal amount of sites
+readonly base_sources="
+  http://winhelp2002.mvps.org/hosts.txt
+  http://www.malwaredomainlist.com/hostslist/hosts.txt
+  http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
+  http://adaway.org/hosts.txt
+  http://someonewhocares.org/hosts/hosts
+  http://malwaredomains.lehigh.edu/files/justdomains
+"
 
-  # Hosts-file.net server classifications
-  # Provides more in-depth protection and host blocking at the cost of
-  # breaking some sites
-  #
-  # "http://hosts-file.net/ad_servers.txt" # Ad servers
-  # "http://hosts-file.net/emd.txt" # Malware sites
-  # "http://hosts-file.net/exp.txt" # Exploit sites
-  # "http://hosts-file.net/fsa.txt" # Fraud sites
-  # "http://hosts-file.net/hjk.txt" # Hijack sites
-  # "http://hosts-file.net/mmt.txt" # Misleading marketing
-  # "http://hosts-file.net/psh.txt" # Phishing sites
+readonly sources="
 
-  # These entries are very large, and may break certain sites
-  # that rely on CDNs or third party sources
-  # Instead of downloading the entire hosts file and additional parts
-  # the split download above is recommended. The parts that you do not
-  # desire can be ignored individually instead of an all or nothing approach.
-  # The two sources below are generally not recommended nor needed. If you do
-  # wish to use them, be sure to comment out the above hosts-file.net entries
-  # or you will largely be pulling duplicate sources.
+  ${base_sources}
 
-  # The full host list, blocks malicious domains
-  #
-  # "http://hosts-file.net/download/hosts.txt"
+"
+# Hosts-file.net server classifications
+# Provides more in-depth protection and host blocking at the cost of
+# breaking some sites
+#
+# http://hosts-file.net/ad_servers.txt # Ad servers
+# http://hosts-file.net/emd.txt # Malware sites
+# http://hosts-file.net/exp.txt # Exploit sites
+# http://hosts-file.net/fsa.txt # Fraud sites
+# http://hosts-file.net/hjk.txt # Hijack sites
+# http://hosts-file.net/mmt.txt # Misleading marketing
+# http://hosts-file.net/psh.txt # Phishing sites
 
-  # Any updates to the hosts-file.net hosts file since the point release
-  #
-  # "http://hosts-file.net/hphosts-partial.txt"
-)
+# These entries are very large, and may break certain sites
+# that rely on CDNs or third party sources
+# Instead of downloading the entire hosts file and additional parts
+# the split download above is recommended. The parts that you do not
+# desire can be ignored individually instead of an all or nothing approach.
+# The two sources below are generally not recommended nor needed. If you do
+# wish to use them, be sure to comment out the above hosts-file.net entries
+# or you will largely be pulling duplicate sources.
+
+# The full host list, blocks malicious domains
+#
+# http://hosts-file.net/download/hosts.txt
+
+# Any updates to the hosts-file.net hosts file since the point release
+#
+# http://hosts-file.net/hphosts-partial.txt
 
 # Regex allowed
 #  '\.com$'   -> all domains that end with '.com'
@@ -412,11 +417,13 @@ download_to_tempfile()
 download_sources()
 {
   # $1 cmd
-  local sources_size="${#sources[@]}"
-  for ((i=0; i<sources_size; i++)); do
-    temp_files[$i]="$(mktemp)"
-    local url="${sources[$i]}"
-    download_to_tempfile "$1" "${url}" "${temp_files[$i]}" &
+  # local sources_size="${#sources[@]}"
+  # for ((i=0; i<sources_size; i++)); do
+  for src in ${sources}; do
+    local current_temp_file=$(mktemp)
+    temp_files="${current_temp_file} ${temp_files}"
+    local url="${src}"
+    download_to_tempfile "$1" "${url}" "${current_temp_file}" &
     unset url
     pids="${pids} $!"
   done
@@ -427,7 +434,7 @@ download_sources()
   wait ${pids}
 
   # Write the contents of each download to the blocklist
-  for hostfile in "${temp_files[@]}"; do
+  for hostfile in ${temp_files}; do
     local content="$(cat ${hostfile})"
     if [ ! -z "${content}" ]; then
       if [ -z "${blocklist}" ]; then
@@ -685,8 +692,8 @@ cancel_sudoloop()
   done
 
   # rm leftover files
-  for hostfile in "${temp_files[@]}"; do
-    rm -f "${hostfile}" > /dev/null 2>&1
+  for temp in ${temp_files}; do
+    rm -f "${temp}" > /dev/null 2>&1
   done
 
   exit 0
