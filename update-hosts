@@ -34,6 +34,9 @@
 #    https://stackoverflow.com/questions/13468481/when-to-use-set-e
 set -u
 
+# Version
+version="1.0.0"
+
 # Configuration:
 readonly sudolock="/tmp/update-hosts.sudolock"
 
