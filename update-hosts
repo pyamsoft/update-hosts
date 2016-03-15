@@ -126,6 +126,8 @@ readonly sources="
 # not breaking other sites that actually rely on them
 # Though not a great solution, this seems to be the only way to get around
 # some sites breaking when blocking certain hosts
+#
+# Update 2016/03/15
 readonly whitelist='
   google-analytics\.com$
   adf\.ly$
@@ -177,6 +179,10 @@ readonly whitelist='
   cloudfront\.net$
   nationalreview\.com$
   liveperson\.net$
+  taboola\.com$
+  ^ticketmaster\.122\.2o7\.net$
+  phoronix\.com$
+  ^files\.explosm\.net$
 '
 
 # BLACKLIST DOMAINS
