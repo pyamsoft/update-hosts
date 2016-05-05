@@ -130,6 +130,7 @@ readonly sources="
 # Update 2016/03/15
 readonly whitelist='
   google-analytics\.com$
+  ^analytics\.google\.com$
   adf\.ly$
   ^widget-cdn\.rpxnow\.com$
   ^tags\.tiqcdn\.com$
@@ -149,7 +150,9 @@ readonly whitelist='
   ^c\.speedtest\.net$
   boldchat\.com$
   mixpanel\.com$
-  ^cdn\.turner\.com$
+  ^charlie\.strim.io$
+  ^ovh\.strim.io$
+  cdn\.turner\.com$
   ^yui\.yahooapis\.com$
   ^top\.mail\.ru$
   ^css\.washingtonpost\.com$
@@ -183,6 +186,17 @@ readonly whitelist='
   ^ticketmaster\.122\.2o7\.net$
   phoronix\.com$
   ^files\.explosm\.net$
+  ^cdn\.segment\.com$
+  sorted\.org$
+  ^\analytics\.edgekey\.net$
+  tfag\.de$
+  ^nav\.files\.bbci\.co\.uk$
+  gamespot\.com$
+  umbro\.com$
+  ^shop\.puppetlabs\.com$
+  flightradar24\.com$
+  ^premium\.soundcloud\.com$
+  ^stats\.bbc\.co\.uk$
 '
 
 # BLACKLIST DOMAINS
