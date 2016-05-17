@@ -71,6 +71,7 @@ header="
 readonly base_sources="
   http://winhelp2002.mvps.org/hosts.txt
   http://someonewhocares.org/hosts/hosts
+  http://malwaredomains.lehigh.edu/files/justdomains
   https://www.malwaredomainlist.com/hostslist/hosts.txt
   https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
   https://adaway.org/hosts.txt
