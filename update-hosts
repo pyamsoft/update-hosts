@@ -643,6 +643,12 @@ cancel_sudoloop()
   exit 0
 }
 
+print_version()
+{
+  printf -- "update-hosts[${version}]\n"
+  echo
+}
+
 
 # Script begins here
 
@@ -666,16 +672,22 @@ check_for_binary cat
 # Handle options
 # Options
 #   -h | --help     Display help
+#   -v | --version  Display version
 #   -r | --remove   Remove backups
 #   -p | --pager    Display hosts file in pager
 for arg in $@; do
   case "${arg}" in
     "-h"|"--help")
-      action_msg "Options:"
+      print_version
+      printf -- "  Options:\n"
       printf -- "     -h | --help     Display help\n"
+      printf -- "     -v | --version  Display version\n"
       printf -- "     -r | --remove   Remove backups\n"
       printf -- "     -p | --pager    Display hosts file in pager\n"
-      shift
+      exit 0
+      ;;
+    "-v"|"--version")
+      print_version
       exit 0
       ;;
     "-r"|"--remove")
