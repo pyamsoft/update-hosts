@@ -38,7 +38,7 @@ set -u
 export LC_ALL=C
 
 # Version
-version="1.0.3"
+version="1.0.4"
 
 # Configuration:
 readonly sudolock="/tmp/update-hosts.sudolock"
@@ -51,10 +51,6 @@ hosts="" # Leave this blank
 # Options
 remove_backups=0
 display_pager=0
-
-readonly dst_hosts="/etc/hosts"
-readonly dst_backup="${dst_hosts}.backup.$(date +%Y%m%d)"
-readonly dst_ip="0.0.0.0"
 
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
 #       can occur when using traceroute, netstat and the like.
@@ -557,11 +553,15 @@ generate_new_hosts_file()
 ##
 backup_old_hosts_file()
 {
-  info_msg "Creating backup of original hosts file..."
-  if [ "$(id -u)" -ne 0 ]; then
-    sudo cp "${dst_hosts}" "${dst_backup}"
+  if [ -f "${dst_hosts}" ]; then
+    info_msg "Creating backup of original hosts file..."
+    if [ "$(id -u)" -ne 0 ]; then
+      sudo cp "${dst_hosts}" "${dst_backup}"
+    else
+      cp "${dst_hosts}" "${dst_backup}"
+    fi
   else
-    cp "${dst_hosts}" "${dst_backup}"
+    info_msg "No original file exists to create backup"
   fi
 }
 
@@ -583,11 +583,15 @@ install_new_hosts_file()
 ##
 fix_file_permissons()
 {
-  info_msg "Fixing permissions for file $1..."
-  if [ "$(id -u)" -ne 0 ]; then
-    sudo chmod 644 "$1"
+  if [ -f "$1" ]; then
+    info_msg "Fixing permissions for file $1..."
+    if [ "$(id -u)" -ne 0 ]; then
+      sudo chmod 644 "$1"
+    else
+      chmod 644 "$1"
+    fi
   else
-    chmod 644 "$1"
+    info_msg "Cannot fix permission for non-existant file $1"
   fi
 }
 
@@ -596,7 +600,12 @@ fix_file_permissons()
 ##
 print_hosts_file_differences()
 {
-  local old_hosts_number=$(wc -l < "${dst_backup}")
+  local old_hosts_number
+  if [ -f "${dst_backup}" ]; then
+    old_hosts_number=$(wc -l < "${dst_backup}")
+  else
+    old_hosts_number=0
+  fi
   local new_hosts_number=$(wc -l < "${dst_hosts}")
   printf -- "%b + %b%s %bhosts added! (%b + %b%s %b)\n" \
     "\033[1;33m" "\033[1;32m" "${new_hosts_number}" \
@@ -651,6 +660,7 @@ print_version()
 
 
 # Script begins here
+dst_hosts="/etc/hosts"
 
 # Check for required binaries, exit out if they are not present
 check_for_download_ability
@@ -675,6 +685,7 @@ check_for_binary cat
 #   -v | --version  Display version
 #   -r | --remove   Remove backups
 #   -p | --pager    Display hosts file in pager
+#   -o | --output   The file to output to
 for arg in $@; do
   case "${arg}" in
     "-h"|"--help")
@@ -684,6 +695,7 @@ for arg in $@; do
       printf -- "     -v | --version  Display version\n"
       printf -- "     -r | --remove   Remove backups\n"
       printf -- "     -p | --pager    Display hosts file in pager\n"
+      printf -- "     -o | --output   The file to output to\n"
       exit 0
       ;;
     "-v"|"--version")
@@ -698,8 +710,26 @@ for arg in $@; do
       display_pager=1
       shift;
       ;;
+    "-o"|"--output")
+      shift
+      if [ $# -ge 1 ]; then
+        if  [ -z "$1" ]; then
+          printf -- "Must specify an output file.\n"
+          exit 1
+        else
+          dst_hosts="$1"
+          shift
+        fi
+      else
+        printf -- "Must specify an output file.\n"
+        exit 1
+      fi
+      ;;
   esac
 done
+
+readonly dst_backup="${dst_hosts}.backup.$(date +%Y%m%d)"
+readonly dst_ip="0.0.0.0"
 
 # Check if pager is set
 # TODO Add support for a $PAGER variable
