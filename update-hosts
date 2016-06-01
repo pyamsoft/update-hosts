@@ -51,6 +51,7 @@ hosts="" # Leave this blank
 # Options
 remove_backups=0
 display_pager=0
+require_root=1
 
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
 #       can occur when using traceroute, netstat and the like.
@@ -260,6 +261,14 @@ readonly blacklist='
 action_msg()
 {
   printf -- "%b + %b%s%b\n" "\033[1;33m" "\033[1;32m" "$1" "\033[0m"
+}
+
+##
+# Display an error message
+##
+error_msg()
+{
+  printf -- "%b + %b%s%b\n" "\033[1;33m" "\033[1;31m" "$1" "\033[0m"
 }
 
 ##
@@ -555,10 +564,16 @@ backup_old_hosts_file()
 {
   if [ -f "${dst_hosts}" ]; then
     info_msg "Creating backup of original hosts file..."
-    if [ "$(id -u)" -ne 0 ]; then
-      sudo cp "${dst_hosts}" "${dst_backup}"
+    if [ "$(id -u)" -ne 0 ] && [ "${require_root}" -eq 1 ]; then
+      sudo cp "${dst_hosts}" "${dst_backup}" || {
+      error_msg "Failed to copy to file ${dst_backup}"
+      exit 4
+    }
     else
-      cp "${dst_hosts}" "${dst_backup}"
+      cp "${dst_hosts}" "${dst_backup}" || {
+      error_msg "Failed to copy to file ${dst_backup}"
+      exit 4
+    }
     fi
   else
     info_msg "No original file exists to create backup"
@@ -571,10 +586,16 @@ backup_old_hosts_file()
 install_new_hosts_file()
 {
   info_msg "Installing new hosts file..."
-  if [ "$(id -u)" -ne 0 ]; then
-    printf -- "%s\n" "${hosts}" | sudo tee "${dst_hosts}" > /dev/null
+  if [ "$(id -u)" -ne 0 ] && [ "${require_root}" -eq 1 ]; then
+    printf -- "%s\n" "${hosts}" | sudo tee "${dst_hosts}" > /dev/null || {
+      error_msg "Failed to output to file ${dst_hosts}"
+      exit 3
+    }
   else
-    printf -- "%s\n" "${hosts}" | tee "${dst_hosts}" > /dev/null
+    printf -- "%s\n" "${hosts}" | tee "${dst_hosts}" > /dev/null || {
+      error_msg "Failed to output to file ${dst_hosts}"
+      exit 3
+    }
   fi
 }
 
@@ -585,10 +606,16 @@ fix_file_permissons()
 {
   if [ -f "$1" ]; then
     info_msg "Fixing permissions for file $1..."
-    if [ "$(id -u)" -ne 0 ]; then
-      sudo chmod 644 "$1"
+    if [ "$(id -u)" -ne 0 ] && [ "${require_root}" -eq 1 ]; then
+      sudo chmod 644 "$1" || {
+        error_msg "Failed to chmod $1"
+        exit 2
+      }
     else
-      chmod 644 "$1"
+      chmod 644 "$1" || {
+        error_msg "Failed to chmod $1"
+        exit 2
+      }
     fi
   else
     info_msg "Cannot fix permission for non-existant file $1"
@@ -618,7 +645,7 @@ remove_all_backup_hosts_files()
 {
   for arg in /etc/hosts.backup.*; do
     info_msg "Removing backup file: ${arg}..."
-    if [ "$(id -u)" -eq 0 ]; then
+    if [ "$(id -u)" -eq 0 ] && [ "${require_root}" -eq 1 ]; then
       rm -f "${arg}" > /dev/null 2>&1
     else
       sudo rm -f "${arg}" > /dev/null 2>&1
@@ -686,6 +713,7 @@ check_for_binary cat
 #   -r | --remove   Remove backups
 #   -p | --pager    Display hosts file in pager
 #   -o | --output   The file to output to
+#   -n | --noroot   Do not require root to output.
 for arg in $@; do
   case "${arg}" in
     "-h"|"--help")
@@ -696,6 +724,7 @@ for arg in $@; do
       printf -- "     -r | --remove   Remove backups\n"
       printf -- "     -p | --pager    Display hosts file in pager\n"
       printf -- "     -o | --output   The file to output to\n"
+      printf -- "     -n | --noroot   Do not require root to output\n"
       exit 0
       ;;
     "-v"|"--version")
@@ -725,6 +754,10 @@ for arg in $@; do
         exit 1
       fi
       ;;
+    "-n"|"--noroot")
+      require_root=0
+      shift
+      ;;
   esac
 done
 
@@ -753,7 +786,7 @@ fi
 # Trap exit signals
 trap cancel_sudoloop INT
 
-if [ "$(id -u)" -ne 0 ]; then
+if [ "$(id -u)" -ne 0 ] && [ "${require_root}" -eq 1 ]; then
   check_for_binary sudo
 
   # initialize sudo
