@@ -42,6 +42,7 @@ version="1.1.0"
 
 # Configuration:
 readonly sudolock="/tmp/update-hosts.sudolock"
+readonly dst_ip="0.0.0.0"
 
 temp_files=""
 pids="" # Leave blank
@@ -49,6 +50,7 @@ blocklist="" # Leave this blank
 hosts="" # Leave this blank
 
 # Options
+diff_file=0
 remove_backups=0
 display_pager=0
 require_root=1
@@ -653,6 +655,42 @@ remove_all_backup_hosts_files()
   done
 }
 
+print_file_diff()
+{
+  # Check for the DIFF environment variable
+  # Conditional assignment works when using the set -u option
+  : "${DIFF:=diff}"
+
+  if [ -f "${dst_hosts}" ] && [ -f "${dst_backup}" ]; then
+
+    # Using the pager requires extra binary
+    check_for_binary "${DIFF}"
+    action_msg "Displaying diff of ${dst_backup} and "${dst_hosts} using "${DIFF}"
+
+    "${DIFF}" -u "${dst_backup}" "${dst_hosts}"
+  else
+    error_msg "Cannot diff ${dst_backup} and ${dst_hosts} using ${DIFF}"
+  fi
+}
+
+display_hosts_in_pager()
+{
+  # Check for the PAGER environment variable
+  # Conditional assignment works when using the set -u option
+  : "${PAGER:=less}"
+
+  if [ -f "${dst_hosts}" ]; then
+
+    # Using the pager requires extra binary
+    check_for_binary "${PAGER}"
+    action_msg "Displaying ${dst_hosts} in ${PAGER}..."
+
+    "${PAGER}" "${dst_hosts}"
+  else
+    error_msg "File ${dst_hosts} does not exist. Cannot output to ${PAGER}"
+  fi
+}
+
 sudoloop()
 {
   touch "${sudolock}"
@@ -725,6 +763,7 @@ for arg in $@; do
       printf -- "     -p | --pager    Display hosts file in pager\n"
       printf -- "     -o | --output   The file to output to\n"
       printf -- "     -n | --noroot   Do not require root to output\n"
+      printf -- "     -d | --diff     Display a diff of the output file\n"
       exit 0
       ;;
     "-v"|"--version")
@@ -758,27 +797,21 @@ for arg in $@; do
       require_root=0
       shift
       ;;
+    "-d"|"--diff")
+      diff_file=1;
+      shift
+      ;;
   esac
 done
 
 readonly dst_backup="${dst_hosts}.backup.$(date +%Y%m%d)"
-readonly dst_ip="0.0.0.0"
 
 # Check if pager is set
 # TODO Add support for a $PAGER variable
 if [ "${display_pager}" -eq 1 ]; then
+  display_hosts_in_pager
 
-  # Check for the PAGER environment variable
-  # Conditional assignment works when using the set -u option
-  : "${PAGER:=less}"
-
-  # Using the pager requires extra binary
-  check_for_binary "${PAGER}"
-  action_msg "Displaying ${dst_hosts} in ${PAGER}..."
-
-  "${PAGER}" "${dst_hosts}"
   action_msg "Exiting..."
-
   # Clean exit
   exit 0
 fi
@@ -815,6 +848,9 @@ install_new_hosts_file
 fix_file_permissons "${dst_hosts}"
 fix_file_permissons "${dst_backup}"
 print_hosts_file_differences
+if [ "${diff_file}" -eq 1 ]; then
+  print_file_diff "${dst_backup}" "${dst_hosts}"
+fi
 
 # Cleanup
 if [ "${remove_backups}" -eq 1 ]; then
