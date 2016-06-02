@@ -30,10 +30,17 @@ The main differences being:
 
 - http://winhelp2002.mvps.org/hosts.txt
 - http://someonewhocares.org/hosts/hosts
-- http://www.malwaredomainlist.com/hostslist/hosts.txt
-- http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
-- http://adaway.org/hosts.txt
 - http://malwaredomains.lehigh.edu/files/justdomains
+- https://www.malwaredomainlist.com/hostslist/hosts.txt
+- https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
+- https://adaway.org/hosts.txt
+- https://www.malwaredomainlist.com/hostslist/hosts.txt
+- https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
+- https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt
+- https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
+- https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
+- https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
+- https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
 
 ### Additional sources
 
@@ -77,7 +84,7 @@ specific system.
 2. Edit the white/black lists and add the wanted URLs.
 3. Run the script by invoking it from the command line like so:  
 ```
-./update-hosts [-h|-r|-p] [--help|--remove|--pager]
+./update-hosts [-h|-v|-r|-p|-n] [--help|--version|--remove|--pager|--noroot] [-o|--output] FILE
 ```
 
 ## Disclaimer
