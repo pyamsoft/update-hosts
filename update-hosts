@@ -205,6 +205,9 @@ readonly whitelist='
   flightradar24\.com$
   ^premium\.soundcloud\.com$
   ^stats\.bbc\.co\.uk$
+  snoobi\.com$
+  esellerate\.net$
+  ^dw\.cbsi\.com$
 '
 
 # BLACKLIST DOMAINS
