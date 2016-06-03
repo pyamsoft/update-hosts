@@ -38,7 +38,7 @@ set -u
 export LC_ALL=C
 
 # Version
-version="1.2.1"
+version="1.2.2"
 
 # Configuration:
 readonly sudolock="/tmp/update-hosts.sudolock"
