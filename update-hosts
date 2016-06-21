@@ -78,9 +78,13 @@ readonly base_sources="
   https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt
   https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
   https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
-  https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
-  https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
 "
+
+# Additional hosts file servers
+# readonly additonal_sources="
+#   https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
+#   https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
+# "
 
 # Hosts-file.net server classifications
 # Provides more in-depth protection and host blocking at the cost of

@@ -39,11 +39,11 @@ The main differences being:
 - https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt
 - https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
 - https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
-- https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
-- https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
 
 ### Additional sources
 
+- https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
+- https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
 - http://hosts-file.net/ad_servers.txt
 - http://hosts-file.net/emd.txt
 - http://hosts-file.net/exp.txt
