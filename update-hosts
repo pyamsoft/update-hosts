@@ -572,17 +572,10 @@ backup_old_hosts_file()
 {
   if [ -f "${dst_hosts}" ]; then
     info_msg "Creating backup of original hosts file..."
-    if [ "$(id -u)" -ne 0 ] && [ "${require_root}" -eq 1 ]; then
-      sudo cp "${dst_hosts}" "${dst_backup}" || {
+    "${needs_sudo}" cp "${dst_hosts}" "${dst_backup}" || {
       error_msg "Failed to copy to file ${dst_backup}"
       exit 4
     }
-    else
-      cp "${dst_hosts}" "${dst_backup}" || {
-      error_msg "Failed to copy to file ${dst_backup}"
-      exit 4
-    }
-    fi
   else
     info_msg "No original file exists to create backup"
   fi
@@ -594,17 +587,10 @@ backup_old_hosts_file()
 install_new_hosts_file()
 {
   info_msg "Installing new hosts file..."
-  if [ "$(id -u)" -ne 0 ] && [ "${require_root}" -eq 1 ]; then
-      printf -- "%s\n" "${hosts}" | sudo tee "${dst_hosts}" > /dev/null || {
-      error_msg "Failed to output to file ${dst_hosts}"
-      exit 3
-    }
-  else
-      printf -- "%s\n" "${hosts}" | tee "${dst_hosts}" > /dev/null || {
-      error_msg "Failed to output to file ${dst_hosts}"
-      exit 3
-    }
-  fi
+  printf -- "%s\n" "${hosts}" | "${needs_sudo}" tee "${dst_hosts}" > /dev/null || {
+    error_msg "Failed to output to file ${dst_hosts}"
+    exit 3
+  }
 }
 
 ##
@@ -614,17 +600,10 @@ fix_file_permissons()
 {
   if [ -f "$1" ]; then
     info_msg "Fixing permissions for file $1..."
-    if [ "$(id -u)" -ne 0 ] && [ "${require_root}" -eq 1 ]; then
-      sudo chmod 644 "$1" || {
-        error_msg "Failed to chmod $1"
-        exit 2
-      }
-    else
-      chmod 644 "$1" || {
-        error_msg "Failed to chmod $1"
-        exit 2
-      }
-    fi
+    "${needs_sudo}" chmod 644 "$1" || {
+      error_msg "Failed to chmod $1"
+      exit 2
+    }
   else
     info_msg "Cannot fix permission for non-existant file $1"
   fi
@@ -653,11 +632,7 @@ remove_all_backup_hosts_files()
 {
   for arg in /etc/hosts.backup.*; do
     info_msg "Removing backup file: ${arg}..."
-    if [ "$(id -u)" -eq 0 ] && [ "${require_root}" -eq 1 ]; then
-      rm -f "${arg}" > /dev/null 2>&1
-    else
-      sudo rm -f "${arg}" > /dev/null 2>&1
-    fi
+    "${needs_sudo}" rm -f "${arg}" > /dev/null 2>&1
   done
 }
 
@@ -825,6 +800,7 @@ fi
 # Trap exit signals
 trap cancel_sudoloop INT
 
+needs_sudo=
 if [ "$(id -u)" -ne 0 ] && [ "${require_root}" -eq 1 ]; then
   check_for_binary sudo
 
@@ -833,6 +809,10 @@ if [ "$(id -u)" -ne 0 ] && [ "${require_root}" -eq 1 ]; then
 
   # Start sudoloop
   sudoloop &
+
+  needs_sudo="sudo"
+else
+  needs_sudo=""
 fi
 
 # Process begins:
