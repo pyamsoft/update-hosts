@@ -57,17 +57,17 @@ require_root=1
 
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
 #       can occur when using traceroute, netstat and the like.
-header="
+hosts_header="
 127.0.0.1 $(uname -n) localhost
 255.255.255.255 broadcasthost
 # Fixes a display anomaly in traceroute and netstat
 0.0.0.0 0.0.0.0
 "
 
-# The base sources
+# The base hosts_sources
 # Provides a basic amount of protection without breaking sites, or breaking
 # only a minimal amount of sites
-readonly base_sources="
+readonly base_hosts_sources="
   http://winhelp2002.mvps.org/hosts.txt
   http://someonewhocares.org/hosts/hosts
   https://www.malwaredomainlist.com/hostslist/hosts.txt
@@ -81,7 +81,7 @@ readonly base_sources="
 "
 
 # Additional hosts file servers
-# readonly additonal_sources="
+# readonly additonal_hosts_sources="
 #   https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
 #   https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
 # "
@@ -101,13 +101,13 @@ readonly base_sources="
 # "
 
 # These entries are very large, and may break certain sites
-# that rely on CDNs or third party sources
+# that rely on CDNs or third party hosts_sources
 # Instead of downloading the entire hosts file and additional parts
 # the split download above is recommended. The parts that you do not
 # desire can be ignored individually instead of an all or nothing approach.
-# The two sources below are generally not recommended nor needed. If you do
+# The two hosts_sources below are generally not recommended nor needed. If you do
 # wish to use them, be sure to comment out the above hosts-file.net entries
-# or you will largely be pulling duplicate sources.
+# or you will largely be pulling duplicate hosts_sources.
 #
 # readonly hosts_file_net_full="
 #   http://hosts-file.net/download/hosts.txt
@@ -115,15 +115,15 @@ readonly base_sources="
 # "
 
 
-# The sources that will be parsed into the hosts file.
-# By default only the sources in the ${base_sources} list
-# are included, additional sources can be included by
-# appending them onto lines following the base-sources line.
+# The hosts_sources that will be parsed into the hosts file.
+# By default only the hosts_sources in the ${base_hosts_sources} list
+# are included, additional hosts_sources can be included by
+# appending them onto lines following the base-hosts_sources line.
 # Destinations and duplicate entries do not matter, as they will
 # be sanitized and duplicates will be stripped out.
-readonly sources="
+readonly hosts_sources="
 
-  ${base_sources}
+  ${base_hosts_sources}
 
 "
 
@@ -140,7 +140,7 @@ readonly sources="
 # some sites breaking when blocking certain hosts
 #
 # Update 2016/03/15
-readonly whitelist='
+readonly hosts_whitelist='
   google-analytics\.com$
   ^analytics\.google\.com$
   adf\.ly$
@@ -214,11 +214,11 @@ readonly whitelist='
   ^dw\.cbsi\.com$
 '
 
-# BLACKLIST DOMAINS
+# hosts_blacklist DOMAINS
 # Only exact strings, no regex supported
 #    agor.io: Jumpscare
 #    pinion.gg: Ads in Counter Strike: Global Offensive and other games
-readonly blacklist='
+readonly hosts_blacklist='
   agor.io
   www.agor.io
   adback.pinion.gg
@@ -341,7 +341,7 @@ decide_dl_client()
 }
 
 ##
-# Sources list parsing
+# hosts_sources list parsing
 ##
 download_to_tempfile()
 {
@@ -370,12 +370,12 @@ download_to_tempfile()
 # Download the hosts file from each URL specified in source
 # Download runs in parallel in the background
 ##
-download_sources()
+download_hosts_sources()
 {
   # $1 cmd
-  # local sources_size="${#sources[@]}"
-  # for ((i=0; i<sources_size; i++)); do
-  for src in ${sources}; do
+  # local hosts_sources_size="${#hosts_sources[@]}"
+  # for ((i=0; i<hosts_sources_size; i++)); do
+  for src in ${hosts_sources}; do
     local current_temp_file=$(mktemp)
     temp_files="${current_temp_file} ${temp_files}"
     local url="${src}"
@@ -471,7 +471,7 @@ normalize_to_lowercase()
 
 ##
 # Remove any entries containing the localhost, as it will be added by
-# the header later on
+# the hosts_header later on
 ##
 remove_local_entries()
 {
@@ -483,16 +483,17 @@ remove_local_entries()
 }
 
 ##
-# Apply the user whitelist
+# Apply the user hosts_whitelist
 ##
 apply_whitelist()
 {
-  info_msg "Apply whitelist"
+  # $1 whitelist
+  info_msg "Apply hosts_whitelist"
   if [ -z "${blocklist}" ]; then
     return 1
   fi
 
-  for domain in ${whitelist}; do
+  for domain in $1; do
     blocklist=$(printf -- "%s\n" "${blocklist}" | sed -r "/${domain}/d")
   done
 }
@@ -502,16 +503,14 @@ apply_whitelist()
 ##
 apply_blacklist()
 {
-  info_msg "Apply blacklist"
-  # Cache the blacklist domains so that the entire block list
+  # $1 blacklist
+  info_msg "Apply hosts_blacklist"
+  # Cache the hosts_blacklist domains so that the entire block list
   # does not have to be echoed each time.
-  # Fix an issue which adds a rogue newline into the blacklist,
-  # creating an blank entry in the hosts file of
-  # 0.0.0.0 <space>
 
-  # Domains initialized as first blacklist entry
+  # Domains initialized as first hosts_blacklist entry
   local domains=""
-  for domain in ${blacklist}; do
+  for domain in $1; do
     if [ -z "${domains}" ]; then
       domains="${domain}"
     else
@@ -555,14 +554,14 @@ add_new_destination()
 }
 
 ##
-# Parse the header and create the new hosts file
+# Parse the hosts_header and create the new hosts file
 ##
 generate_new_hosts_file()
 {
-  header=$(printf -- "# <header>%s# </header>\n" "${header}")
-  header=$(printf -- "# %s\n%s\n" "$(date)" "${header}")
+  hosts_header=$(printf -- "# <hosts_header>%s# </hosts_header>\n" "${hosts_header}")
+  hosts_header=$(printf -- "# %s\n%s\n" "$(date)" "${hosts_header}")
   hosts=$(printf -- "%s\n# <blocklist>\n%s\n# </blocklist>" \
-    "${header}" "${blocklist}")
+    "${hosts_header}" "${blocklist}")
 }
 
 ##
@@ -819,12 +818,12 @@ fi
 action_msg "Configuration:"
 print_config
 
-action_msg "Downloading sources lists..."
-download_sources "$(decide_dl_client)"
+action_msg "Downloading hosts_sources lists..."
+download_hosts_sources "$(decide_dl_client)"
 
 action_msg "Generating hosts file..."
-apply_whitelist
-apply_blacklist
+apply_whitelist "${hosts_whitelist}"
+apply_blacklist "${hosts_blacklist}"
 remove_duplicates
 sort_entries
 add_new_destination
