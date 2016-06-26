@@ -297,7 +297,7 @@ check_for_download_ability()
     if ! which wget > /dev/null 2>&1; then
       printf -- "Either wget or curl are required for this script\n"
       printf -- "Please install either 'wget' or 'curl' onto your system.\n"
-      exit 1
+      return 1
     fi
   fi
 }
@@ -310,7 +310,7 @@ check_for_binary()
   if ! which "$1" > /dev/null 2>&1; then
     printf -- "The '%s' binary is required for this script.\n" "$1"
     printf -- "Please install '%s' onto your system.\n" "$1"
-    exit 1
+    return 1
   fi
 }
 
@@ -573,7 +573,7 @@ backup_old_hosts_file()
     info_msg "Creating backup of original hosts file..."
     "${needs_sudo}" cp "${dst_hosts}" "${dst_backup}" || {
       error_msg "Failed to copy to file ${dst_backup}"
-      exit 4
+      return 1
     }
   else
     info_msg "No original file exists to create backup"
@@ -588,7 +588,7 @@ install_new_hosts_file()
   info_msg "Installing new hosts file..."
   printf -- "%s\n" "${hosts}" | "${needs_sudo}" tee "${dst_hosts}" > /dev/null || {
     error_msg "Failed to output to file ${dst_hosts}"
-    exit 3
+    return 1
   }
 }
 
@@ -601,7 +601,7 @@ fix_file_permissons()
     info_msg "Fixing permissions for file $1..."
     "${needs_sudo}" chmod 644 "$1" || {
       error_msg "Failed to chmod $1"
-      exit 2
+      return 1
     }
   else
     info_msg "Cannot fix permission for non-existant file $1"
@@ -708,21 +708,21 @@ print_version()
 dst_hosts="/etc/hosts"
 
 # Check for required binaries, exit out if they are not present
-check_for_download_ability
-check_for_binary sed
-check_for_binary grep
-check_for_binary sort
-check_for_binary touch
-check_for_binary sleep
-check_for_binary rm
-check_for_binary awk
-check_for_binary tee
-check_for_binary cp
-check_for_binary wc
-check_for_binary printf
-check_for_binary chmod
-check_for_binary mktemp
-check_for_binary cat
+check_for_download_ability || exit 1
+check_for_binary sed || exit 1
+check_for_binary grep || exit 1
+check_for_binary sort || exit 1
+check_for_binary touch || exit 1
+check_for_binary sleep || exit 1
+check_for_binary rm || exit 1
+check_for_binary awk || exit 1
+check_for_binary tee || exit 1
+check_for_binary cp || exit 1
+check_for_binary wc || exit 1
+check_for_binary printf || exit 1
+check_for_binary chmod || exit 1
+check_for_binary mktemp || exit 1
+check_for_binary cat || exit 1
 
 # Handle options
 # Options
@@ -819,27 +819,27 @@ action_msg "Configuration:"
 print_config
 
 action_msg "Downloading hosts_sources lists..."
-download_hosts_sources "$(decide_dl_client)"
+download_hosts_sources "$(decide_dl_client)" || cancel_sudoloop
 
 action_msg "Generating hosts file..."
-apply_whitelist "${hosts_whitelist}"
-apply_blacklist "${hosts_blacklist}"
-remove_duplicates
-sort_entries
-add_new_destination
-generate_new_hosts_file
-backup_old_hosts_file
-install_new_hosts_file
-fix_file_permissons "${dst_hosts}"
-fix_file_permissons "${dst_backup}"
-print_hosts_file_differences
+apply_whitelist "${hosts_whitelist}" || cancel_sudoloop
+apply_blacklist "${hosts_blacklist}" || cancel_sudoloop
+remove_duplicates || cancel_sudoloop
+sort_entries || cancel_sudoloop
+add_new_destination || cancel_sudoloop
+generate_new_hosts_file || cancel_sudoloop
+backup_old_hosts_file || cancel_sudoloop
+install_new_hosts_file || cancel_sudoloop
+fix_file_permissons "${dst_hosts}" || cancel_sudoloop
+fix_file_permissons "${dst_backup}" || cancel_sudoloop
+print_hosts_file_differences || cancel_sudoloop
 if [ "${diff_file}" -eq 1 ]; then
-  print_file_diff "${dst_backup}" "${dst_hosts}"
+  print_file_diff "${dst_backup}" "${dst_hosts}" || cancel_sudoloop
 fi
 
 # Cleanup
 if [ "${remove_backups}" -eq 1 ]; then
-  remove_all_backup_hosts_files
+  remove_all_backup_hosts_files || cancel_sudoloop
 fi
 cancel_sudoloop
 
