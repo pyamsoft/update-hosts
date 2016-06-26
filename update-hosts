@@ -43,7 +43,6 @@ version="1.2.2"
 # Configuration:
 readonly sudolock="/tmp/update-hosts.sudolock"
 readonly dst_ip="0.0.0.0"
-readonly ipset_name="blocklist"
 
 temp_files=""
 pids="" # Leave blank
@@ -354,12 +353,31 @@ check_for_binary()
 }
 
 ##
-# Print out the user configuration
+# Print out the hosts configuration
 ##
-print_config()
+print_hosts_config()
 {
+  action_msg "Hosts Configuration:"
   info_msg "Hosts location: ${dst_hosts}"
   info_msg "Destination IP: ${dst_ip}"
+}
+
+##
+# Print out the ipset configuration
+##
+print_ipset_config()
+{
+  action_msg "Ipset Configuration:"
+  info_msg "Ipset location: ${dst_ipset}"
+  info_msg "Ipset name: ${ipset_name}"
+
+  # The ipset must exist first for this script to work
+  # check for existence here
+  ${needs_sudo} ipset list "${ipset_name}" > /dev/null 2>&1 || {
+    error_msg "The ipset: ${ipset_name} must exist before running this script."
+    error_msg "Create it using: # ipset create ${ipset_name}"
+    return 1
+  }
 }
 
 ##
@@ -784,6 +802,7 @@ print_version()
 # Script begins here
 dst_hosts="/etc/hosts"
 dst_ipset="/etc/ipset.conf"
+ipset_name="blocklist"
 
 # Check for required binaries, exit out if they are not present
 check_for_download_ability || exit 1
@@ -808,8 +827,10 @@ check_for_binary cat || exit 1
 #   -v | --version  Display version
 #   -r | --remove   Remove backups
 #   -n | --noroot   Do not require root to output.
+#   -i | --ipset    Also download ipset sources
 #   --output-hosts  The file to output hosts to
 #   --output-ipset  The file to output ipsets to
+#   --ipset-name    The name of the ipset
 for arg in $@; do
   case "${arg}" in
     "-h"|"--help")
@@ -819,8 +840,10 @@ for arg in $@; do
       printf -- "     -v | --version  Display version\n"
       printf -- "     -r | --remove   Remove backups\n"
       printf -- "     -n | --noroot   Do not require root to output\n"
+      printf -- "     -i | --ipset    Also download ipset sources\n"
       printf -- "     --output-hosts  The file to output hosts to\n"
       printf -- "     --output-ipset  The file to output ipsets to\n"
+      printf -- "     --ipset-name    The name of the ipset\n"
       exit 0
       ;;
     "-v"|"--version")
@@ -835,14 +858,14 @@ for arg in $@; do
       shift
       if [ $# -ge 1 ]; then
         if  [ -z "$1" ]; then
-          printf -- "Must specify an output file.\n"
+          error_msg "Must specify an output file name."
           exit 1
         else
           dst_hosts="$1"
           shift
         fi
       else
-        printf -- "Must specify an output file.\n"
+        error_msg "Must specify an output file name."
         exit 1
       fi
       ;;
@@ -850,19 +873,38 @@ for arg in $@; do
       shift
       if [ $# -ge 1 ]; then
         if  [ -z "$1" ]; then
-          printf -- "Must specify an output file.\n"
+          error_msg "Must specify an output file name."
           exit 1
         else
           dst_ipset="$1"
           shift
         fi
       else
-        printf -- "Must specify an output file.\n"
+        error_msg "Must specify an output file name."
+        exit 1
+      fi
+      ;;
+    "--ipset-name")
+      shift
+      if [ $# -ge 1 ]; then
+        if  [ -z "$1" ]; then
+          error_msg "Must specify an ipset name."
+          exit 1
+        else
+          ipset_name="$1"
+          shift
+        fi
+      else
+        error_msg "Must specify an ipset name."
         exit 1
       fi
       ;;
     "-n"|"--noroot")
       require_root=0
+      shift
+      ;;
+    "-i"|"--ipset")
+      manage_ipsets=1
       shift
       ;;
   esac
@@ -887,8 +929,7 @@ else
 fi
 
 # Process begins:
-action_msg "Configuration:"
-print_config
+print_hosts_config
 
 # Download
 action_msg "Downloading hosts_sources lists..."
@@ -924,8 +965,11 @@ fi
 # Start fresh
 cleanup
 
+check_for_binary ipset || exit 1
+
 # Download
 printf -- "\n\n"
+print_ipset_config || exit 1
 action_msg "Downloading ipset_sources lists..."
 download_sources "$(decide_dl_client)" "${ipset_sources}" "process_ipset_sources" || cancel_sudoloop
 
