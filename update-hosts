@@ -332,9 +332,9 @@ decide_dl_client()
   # Should have passed before this function
   local cmd=
   if which curl > /dev/null 2>&1; then
-    cmd="curl -fsSL --connect-timeout 40 --max-time 60"
+    cmd="curl -fsSL --connect-timeout 40 --max-time 60 -A 'Mozilla/5.0'"
   else
-    cmd="wget -T 10 -qO-"
+    cmd="wget -T 10 -qO- -A 'Mozilla/5.0'"
   fi
   printf -- "%s" "${cmd}"
   unset cmd
@@ -595,12 +595,12 @@ install_new_hosts_file()
 {
   info_msg "Installing new hosts file..."
   if [ "$(id -u)" -ne 0 ] && [ "${require_root}" -eq 1 ]; then
-    printf -- "%s\n" "${hosts}" | sudo tee "${dst_hosts}" > /dev/null || {
+      printf -- "%s\n" "${hosts}" | sudo tee "${dst_hosts}" > /dev/null || {
       error_msg "Failed to output to file ${dst_hosts}"
       exit 3
     }
   else
-    printf -- "%s\n" "${hosts}" | tee "${dst_hosts}" > /dev/null || {
+      printf -- "%s\n" "${hosts}" | tee "${dst_hosts}" > /dev/null || {
       error_msg "Failed to output to file ${dst_hosts}"
       exit 3
     }
