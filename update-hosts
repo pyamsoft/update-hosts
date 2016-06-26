@@ -638,9 +638,9 @@ generate_new_hosts_file()
 }
 
 ##
-# Backup original hosts file
+# Backup original file
 ##
-backup_old_hosts_file()
+backup_old_file()
 {
   if [ -f "${dst_hosts}" ]; then
     info_msg "Creating backup of original hosts file..."
@@ -928,19 +928,22 @@ fi
 action_msg "Configuration:"
 print_config
 
+# Download
 action_msg "Downloading hosts_sources lists..."
 download_sources "$(decide_dl_client)" "${hosts_sources}" "process_hosts_sources" || cancel_sudoloop
 
+# Parse
 action_msg "Generating hosts file..."
 apply_whitelist "${hosts_whitelist}" || cancel_sudoloop
 apply_blacklist "${hosts_blacklist}" || cancel_sudoloop
 remove_duplicates || cancel_sudoloop
 sort_entries || cancel_sudoloop
 add_new_destination || cancel_sudoloop
-generate_new_hosts_file || cancel_sudoloop
 
+# Install
+generate_new_hosts_file || cancel_sudoloop
 dst_backup=$(create_backup_name "${dst_hosts}" ) || cancel_sudoloop
-backup_old_hosts_file || cancel_sudoloop
+backup_old_file || cancel_sudoloop
 install_new_hosts_file || cancel_sudoloop
 fix_file_permissons "${dst_hosts}" || cancel_sudoloop
 fix_file_permissons "${dst_backup}" || cancel_sudoloop
@@ -957,17 +960,24 @@ fi
 # Start fresh
 cleanup
 
+# Download
 printf -- "\n\n"
 action_msg "Downloading ipset_sources lists..."
 download_sources "$(decide_dl_client)" "${ipset_sources}" "process_ipset_sources" || cancel_sudoloop
 
+# Parse
 action_msg "Generating ipset..."
 apply_whitelist "${ipset_whitelist}" || cancel_sudoloop
 apply_blacklist "${ipset_blacklist}" || cancel_sudoloop
 remove_duplicates || cancel_sudoloop
 sort_entries || cancel_sudoloop
+
+# Install
+dst_backup=$(create_backup_name "${ipset_file}" ) || cancel_sudoloop
+backup_old_file || cancel_sudoloop
 install_ipset_blocklist || cancel_sudoloop
 fix_file_permissons "${ipset_file}" || cancel_sudoloop
+fix_file_permissons "${dst_backup}" || cancel_sudoloop
 
 cancel_sudoloop
 
