@@ -44,7 +44,7 @@ version="1.2.2"
 readonly sudolock="/tmp/update-hosts.sudolock"
 readonly dst_ip="0.0.0.0"
 readonly ipset_name="blocklist"
-readonly ipset_file="/etc/ipset.conf"
+readonly dst_ipset="/etc/ipset.conf"
 
 temp_files=""
 pids="" # Leave blank
@@ -56,6 +56,7 @@ diff_file=0
 remove_backups=0
 display_pager=0
 require_root=1
+manage_ipsets=0
 
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
 #       can occur when using traceroute, netstat and the like.
@@ -670,22 +671,22 @@ install_ipset_blocklist()
   action_msg "Install the ipset blocklist"
 
   info_msg "Clear existing block list"
-  printf -- "" | "${needs_sudo}" tee "${ipset_file}" > /dev/null
+  printf -- "" | "${needs_sudo}" tee "${dst_ipset}" > /dev/null
   "${needs_sudo}" ipset flush "${ipset_name}"
 
   info_msg "Create new blocklist"
   # Save here just to get the create line
-  "${needs_sudo}" ipset save "${ipset_name}" -file "${ipset_file}"
+  "${needs_sudo}" ipset save "${ipset_name}" -file "${dst_ipset}"
 
   info_msg "Add new IPs to the block list"
   blocklist=$(printf -- "%s\n" "${blocklist}" | sed -e 's/^/add blocklist /')
-  printf -- "%s\n" "${blocklist}" | "${needs_sudo}" tee -a "${ipset_file}" > /dev/null || {
+  printf -- "%s\n" "${blocklist}" | "${needs_sudo}" tee -a "${dst_ipset}" > /dev/null || {
     error_msg "Failed to add ipset to blocklist"
     exit 1
   }
 
   info_msg "Commit new ipset"
-  "${needs_sudo}" ipset restore -exist -file "${ipset_file}"
+  "${needs_sudo}" ipset restore -exist -file "${dst_ipset}"
 }
 
 
@@ -960,6 +961,11 @@ if [ "${remove_backups}" -eq 1 ]; then
   remove_all_backup_files "${dst_hosts}" || cancel_sudoloop
 fi
 
+if [ "${manage_ipsets}" -eq 0 ]; then
+  # End here
+  cancel_sudoloop
+fi
+
 # Start fresh
 cleanup
 
@@ -976,16 +982,18 @@ remove_duplicates || cancel_sudoloop
 sort_entries || cancel_sudoloop
 
 # Install
-dst_backup=$(create_backup_name "${ipset_file}" ) || cancel_sudoloop
+dst_backup=$(create_backup_name "${dst_ipset}" ) || cancel_sudoloop
 backup_old_file || cancel_sudoloop
 install_ipset_blocklist || cancel_sudoloop
-fix_file_permissons "${ipset_file}" || cancel_sudoloop
+fix_file_permissons "${dst_ipset}" || cancel_sudoloop
 fix_file_permissons "${dst_backup}" || cancel_sudoloop
-print_file_differences "${ipset_file}" "${dst_backup}" || cancel_sudoloop
+print_file_differences "${dst_ipset}" "${dst_backup}" || cancel_sudoloop
 
 if [ "${remove_backups}" -eq 1 ]; then
-  remove_all_backup_files "${ipset_file}" || cancel_sudoloop
+  remove_all_backup_files "${dst_ipset}" || cancel_sudoloop
 fi
+
+# Finish
 cancel_sudoloop
 
 # vim: set syntax=sh tabstop=2 softtabstop=2 shiftwidth=2 shiftround expandtab:
