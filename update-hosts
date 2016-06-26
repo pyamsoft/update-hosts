@@ -42,7 +42,6 @@ version="1.2.2"
 
 # Configuration:
 readonly sudolock="/tmp/update-hosts.sudolock"
-readonly dst_ip="0.0.0.0"
 
 temp_files=""
 pids="" # Leave blank
@@ -803,6 +802,7 @@ print_version()
 dst_hosts="/etc/hosts"
 dst_ipset="/etc/ipset.conf"
 ipset_name="blocklist"
+dst_ip="0.0.0.0"
 
 # Check for required binaries, exit out if they are not present
 check_for_download_ability || exit 1
@@ -831,6 +831,7 @@ check_for_binary cat || exit 1
 #   --output-hosts  The file to output hosts to
 #   --output-ipset  The file to output ipsets to
 #   --ipset-name    The name of the ipset
+#   --dest-ip       The destination IP to use
 for arg in $@; do
   case "${arg}" in
     "-h"|"--help")
@@ -844,6 +845,7 @@ for arg in $@; do
       printf -- "     --output-hosts  The file to output hosts to\n"
       printf -- "     --output-ipset  The file to output ipsets to\n"
       printf -- "     --ipset-name    The name of the ipset\n"
+      printf -- "     --dest-ip       The destination IP to use\n"
       exit 0
       ;;
     "-v"|"--version")
@@ -896,6 +898,21 @@ for arg in $@; do
         fi
       else
         error_msg "Must specify an ipset name."
+        exit 1
+      fi
+      ;;
+    "--dest-ip")
+      shift
+      if [ $# -ge 1 ]; then
+        if  [ -z "$1" ]; then
+          error_msg "Must specify an IP."
+          exit 1
+        else
+          dst_ip="$1"
+          shift
+        fi
+      else
+        error_msg "Must specify an IP."
         exit 1
       fi
       ;;
