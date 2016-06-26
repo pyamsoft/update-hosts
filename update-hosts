@@ -44,7 +44,6 @@ version="1.2.2"
 readonly sudolock="/tmp/update-hosts.sudolock"
 readonly dst_ip="0.0.0.0"
 readonly ipset_name="blocklist"
-readonly dst_ipset="/etc/ipset.conf"
 
 temp_files=""
 pids="" # Leave blank
@@ -52,9 +51,7 @@ blocklist="" # Leave this blank
 hosts="" # Leave this blank
 
 # Options
-diff_file=0
 remove_backups=0
-display_pager=0
 require_root=1
 manage_ipsets=0
 
@@ -645,7 +642,7 @@ backup_old_file()
 {
   if [ -f "${dst_hosts}" ]; then
     info_msg "Creating backup of original hosts file..."
-    "${needs_sudo}" cp "${dst_hosts}" "${dst_backup}" || {
+    ${needs_sudo} cp "${dst_hosts}" "${dst_backup}" || {
       error_msg "Failed to copy to file ${dst_backup}"
       return 1
     }
@@ -660,7 +657,7 @@ backup_old_file()
 install_new_hosts_file()
 {
   info_msg "Installing new hosts file..."
-  printf -- "%s\n" "${hosts}" | "${needs_sudo}" tee "${dst_hosts}" > /dev/null || {
+  printf -- "%s\n" "${hosts}" | ${needs_sudo} tee "${dst_hosts}" > /dev/null || {
     error_msg "Failed to output to file ${dst_hosts}"
     return 1
   }
@@ -671,22 +668,22 @@ install_ipset_blocklist()
   action_msg "Install the ipset blocklist"
 
   info_msg "Clear existing block list"
-  printf -- "" | "${needs_sudo}" tee "${dst_ipset}" > /dev/null
-  "${needs_sudo}" ipset flush "${ipset_name}"
+  printf -- "" | ${needs_sudo} tee "${dst_ipset}" > /dev/null
+  ${needs_sudo} ipset flush "${ipset_name}"
 
   info_msg "Create new blocklist"
   # Save here just to get the create line
-  "${needs_sudo}" ipset save "${ipset_name}" -file "${dst_ipset}"
+  ${needs_sudo} ipset save "${ipset_name}" -file "${dst_ipset}"
 
   info_msg "Add new IPs to the block list"
   blocklist=$(printf -- "%s\n" "${blocklist}" | sed -e 's/^/add blocklist /')
-  printf -- "%s\n" "${blocklist}" | "${needs_sudo}" tee -a "${dst_ipset}" > /dev/null || {
+  printf -- "%s\n" "${blocklist}" | ${needs_sudo} tee -a "${dst_ipset}" > /dev/null || {
     error_msg "Failed to add ipset to blocklist"
     exit 1
   }
 
   info_msg "Commit new ipset"
-  "${needs_sudo}" ipset restore -exist -file "${dst_ipset}"
+  ${needs_sudo} ipset restore -exist -file "${dst_ipset}"
 }
 
 
@@ -697,7 +694,7 @@ fix_file_permissons()
 {
   if [ -f "$1" ]; then
     info_msg "Fixing permissions for file $1..."
-    "${needs_sudo}" chmod 644 "$1" || {
+    ${needs_sudo} chmod 644 "$1" || {
       error_msg "Failed to chmod $1"
       return 1
     }
@@ -738,44 +735,8 @@ remove_all_backup_files()
   # $1 normal file
   for arg in "$1".backup.*; do
     info_msg "Removing backup file: ${arg}..."
-    "${needs_sudo}" rm -f "${arg}" > /dev/null 2>&1
+    ${needs_sudo} rm -f "${arg}" > /dev/null 2>&1
   done
-}
-
-print_file_diff()
-{
-  # Check for the DIFF environment variable
-  # Conditional assignment works when using the set -u option
-  : "${DIFF:=diff}"
-
-  if [ -f "${dst_hosts}" ] && [ -f "${dst_backup}" ]; then
-
-    # Using the pager requires extra binary
-    check_for_binary "${DIFF}"
-    action_msg "Displaying diff of ${dst_backup} and "${dst_hosts} using "${DIFF}"
-
-    "${DIFF}" -u "${dst_backup}" "${dst_hosts}"
-  else
-    error_msg "Cannot diff ${dst_backup} and ${dst_hosts} using ${DIFF}"
-  fi
-}
-
-display_hosts_in_pager()
-{
-  # Check for the PAGER environment variable
-  # Conditional assignment works when using the set -u option
-  : "${PAGER:=less}"
-
-  if [ -f "${dst_hosts}" ]; then
-
-    # Using the pager requires extra binary
-    check_for_binary "${PAGER}"
-    action_msg "Displaying ${dst_hosts} in ${PAGER}..."
-
-    "${PAGER}" "${dst_hosts}"
-  else
-    error_msg "File ${dst_hosts} does not exist. Cannot output to ${PAGER}"
-  fi
 }
 
 sudoloop()
@@ -822,6 +783,7 @@ print_version()
 
 # Script begins here
 dst_hosts="/etc/hosts"
+dst_ipset="/etc/ipset.conf"
 
 # Check for required binaries, exit out if they are not present
 check_for_download_ability || exit 1
@@ -845,9 +807,9 @@ check_for_binary cat || exit 1
 #   -h | --help     Display help
 #   -v | --version  Display version
 #   -r | --remove   Remove backups
-#   -p | --pager    Display hosts file in pager
-#   -o | --output   The file to output to
 #   -n | --noroot   Do not require root to output.
+#   --output-hosts  The file to output hosts to
+#   --output-ipset  The file to output ipsets to
 for arg in $@; do
   case "${arg}" in
     "-h"|"--help")
@@ -856,10 +818,9 @@ for arg in $@; do
       printf -- "     -h | --help     Display help\n"
       printf -- "     -v | --version  Display version\n"
       printf -- "     -r | --remove   Remove backups\n"
-      printf -- "     -p | --pager    Display hosts file in pager\n"
-      printf -- "     -o | --output   The file to output to\n"
       printf -- "     -n | --noroot   Do not require root to output\n"
-      printf -- "     -d | --diff     Display a diff of the output file\n"
+      printf -- "     --output-hosts  The file to output hosts to\n"
+      printf -- "     --output-ipset  The file to output ipsets to\n"
       exit 0
       ;;
     "-v"|"--version")
@@ -870,11 +831,7 @@ for arg in $@; do
       remove_backups=1
       shift
       ;;
-    "-p"|"--pager")
-      display_pager=1
-      shift;
-      ;;
-    "-o"|"--output")
+    "--output-hosts")
       shift
       if [ $# -ge 1 ]; then
         if  [ -z "$1" ]; then
@@ -889,26 +846,27 @@ for arg in $@; do
         exit 1
       fi
       ;;
+    "--output-ipset")
+      shift
+      if [ $# -ge 1 ]; then
+        if  [ -z "$1" ]; then
+          printf -- "Must specify an output file.\n"
+          exit 1
+        else
+          dst_ipset="$1"
+          shift
+        fi
+      else
+        printf -- "Must specify an output file.\n"
+        exit 1
+      fi
+      ;;
     "-n"|"--noroot")
       require_root=0
       shift
       ;;
-    "-d"|"--diff")
-      diff_file=1;
-      shift
-      ;;
   esac
 done
-
-# Check if pager is set
-# TODO Add support for a $PAGER variable
-if [ "${display_pager}" -eq 1 ]; then
-  display_hosts_in_pager
-
-  action_msg "Exiting..."
-  # Clean exit
-  exit 0
-fi
 
 # Trap exit signals
 trap cancel_sudoloop INT
@@ -952,9 +910,6 @@ install_new_hosts_file || cancel_sudoloop
 fix_file_permissons "${dst_hosts}" || cancel_sudoloop
 fix_file_permissons "${dst_backup}" || cancel_sudoloop
 print_file_differences "${dst_hosts}" "${dst_backup}" || cancel_sudoloop
-if [ "${diff_file}" -eq 1 ]; then
-  print_file_diff "${dst_backup}" "${dst_hosts}" || cancel_sudoloop
-fi
 
 # Cleanup
 if [ "${remove_backups}" -eq 1 ]; then
