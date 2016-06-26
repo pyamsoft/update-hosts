@@ -43,6 +43,8 @@ version="1.2.2"
 # Configuration:
 readonly sudolock="/tmp/update-hosts.sudolock"
 readonly dst_ip="0.0.0.0"
+readonly ipset_name="blocklist"
+readonly ipset_file="/etc/ipset.conf"
 
 temp_files=""
 pids="" # Leave blank
@@ -261,6 +263,45 @@ readonly hosts_blacklist='
   voip.pinion.gg
   wiki.pinion.gg
   www.pinion.gg
+'
+
+# The base ipsets
+# Provides a basic amount of protection without breaking sites, or breaking
+# only a minimal amount of sites
+readonly base_ipset_sources="
+    http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
+    https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=1.1.1.1
+    https://www.maxmind.com/en/proxy-detection-sample-list
+    http://danger.rulez.sk/projects/bruteforceblocker/blist.php
+    https://www.spamhaus.org/drop/drop.lasso
+    http://cinsscore.com/list/ci-badguys.txt
+    https://www.openbl.org/lists/base.txt
+    https://www.autoshun.org/files/shunlist.csv
+    https://lists.blocklist.de/lists/all.txt
+    https://www.stopforumspam.com/downloads/toxic_ip_cidr.txt
+    http://blocklist.greensnow.co/greensnow.txt
+"
+
+# The sources that will be parsed into the ipset.
+# By default only the sources in the ${base_sources} list
+# are included, additional sources can be included by
+# appending them onto lines following the base-sources line.
+# Destinations and duplicate entries do not matter, as they will
+# be sanitized and duplicates will be stripped out.
+readonly ipset_sources="
+
+  ${base_ipset_sources}
+
+"
+readonly ipset_whitelist='
+127.0.0.1
+0.0.0.0
+255.255.255.255
+'
+
+# BLACKLIST IPS
+# Only exact strings, no regex supported
+readonly ipset_blacklist='
 '
 
 ##
