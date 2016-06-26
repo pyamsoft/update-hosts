@@ -732,9 +732,10 @@ print_file_differences()
   unset old_number new_number
 }
 
-remove_all_backup_hosts_files()
+remove_all_backup_files()
 {
-  for arg in /etc/hosts.backup.*; do
+  # $1 normal file
+  for arg in "$1".backup.*; do
     info_msg "Removing backup file: ${arg}..."
     "${needs_sudo}" rm -f "${arg}" > /dev/null 2>&1
   done
@@ -956,7 +957,7 @@ fi
 
 # Cleanup
 if [ "${remove_backups}" -eq 1 ]; then
-  remove_all_backup_hosts_files || cancel_sudoloop
+  remove_all_backup_files "${dst_hosts}" || cancel_sudoloop
 fi
 
 # Start fresh
@@ -982,6 +983,9 @@ fix_file_permissons "${ipset_file}" || cancel_sudoloop
 fix_file_permissons "${dst_backup}" || cancel_sudoloop
 print_file_differences "${ipset_file}" "${dst_backup}" || cancel_sudoloop
 
+if [ "${remove_backups}" -eq 1 ]; then
+  remove_all_backup_files "${ipset_file}" || cancel_sudoloop
+fi
 cancel_sudoloop
 
 # vim: set syntax=sh tabstop=2 softtabstop=2 shiftwidth=2 shiftround expandtab:
