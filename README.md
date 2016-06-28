@@ -16,13 +16,12 @@ parsing.
 The main differences being:
 
 - Predefined blacklist of the pinion.gg domain, which is a common source of  
-  intrusive advertisements Counter Strike: Global Offensive.
+  intrusive advertisements in Counter Strike: Global Offensive.
 - Creates a backup of the original hosts file before overwriting.
 - Only supports IPv4 addresses.
-- Supports parallel background downloads without reliance programs other than  
-  the standard coreutils
+- Supports parallel background downloads without reliance on programs other  
+  than the standard coreutils
 - Pulls from a larger range of hosts sources
-- Allows for viewing the hosts-file via a standard pager
 - Runs using the standard /bin/sh instead of relying on bash
 - Is named update-hosts instead of hosts-update
 
