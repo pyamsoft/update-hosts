@@ -266,16 +266,16 @@ readonly hosts_blacklist='
 # only a minimal amount of sites
 readonly base_ipset_sources="
     http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
-    https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=1.1.1.1
-    https://www.maxmind.com/en/proxy-detection-sample-list
     http://danger.rulez.sk/projects/bruteforceblocker/blist.php
-    https://www.spamhaus.org/drop/drop.lasso
     http://cinsscore.com/list/ci-badguys.txt
+    http://blocklist.greensnow.co/greensnow.txt
     https://www.openbl.org/lists/base.txt
     https://www.autoshun.org/files/shunlist.csv
     https://lists.blocklist.de/lists/all.txt
     https://www.stopforumspam.com/downloads/toxic_ip_cidr.txt
-    http://blocklist.greensnow.co/greensnow.txt
+    https://www.spamhaus.org/drop/drop.lasso
+    https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=1.1.1.1
+    https://www.maxmind.com/en/proxy-detection-sample-list
 "
 
 # The sources that will be parsed into the ipset.

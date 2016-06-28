@@ -54,6 +54,20 @@ The main differences being:
 - http://hosts-file.net/download/hosts.txt
 - http://hosts-file.net/hphosts-partial.txt
 
+## Ipset Sources
+
+- http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
+- http://danger.rulez.sk/projects/bruteforceblocker/blist.php
+- http://cinsscore.com/list/ci-badguys.txt
+- http://blocklist.greensnow.co/greensnow.txt
+- https://www.openbl.org/lists/base.txt
+- https://www.autoshun.org/files/shunlist.csv
+- https://lists.blocklist.de/lists/all.txt
+- https://www.stopforumspam.com/downloads/toxic_ip_cidr.txt
+- https://www.spamhaus.org/drop/drop.lasso
+- https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=1.1.1.1
+- https://www.maxmind.com/en/proxy-detection-sample-list
+
 ## What is this for?
 To prevent your computer from connecting to domains who serve ads and malware.  
 This will increase the security of your computer and save bandwidth.
@@ -84,7 +98,24 @@ specific system.
 2. Edit the white/black lists and add the wanted URLs.
 3. Run the script by invoking it from the command line like so:  
 ```
-./update-hosts [-h|-v|-r|-p|-n] [--help|--version|--remove|--pager|--noroot] [-o|--output] FILE
+./update-hosts
+```
+
+## Options
+```
+update-hosts[2.0.0]
+
+  Options:
+     -h | --help     Display help
+     -v | --version  Display version
+     -r | --remove   Remove backups
+     -n | --noroot   Do not require root to output
+     -i | --ipset    Also download ipset sources
+     --output-hosts  The file to output hosts to
+     --output-ipset  The file to output ipsets to
+     --ipset-name    The name of the ipset
+     --dest-ip       The destination IP to use
+
 ```
 
 ## Disclaimer
