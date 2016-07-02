@@ -393,8 +393,6 @@ print_hosts_config()
   info_msg "Hosts location: ${print_hosts_config__file}"
   info_msg "Destination IP: ${print_hosts_config__ip}"
 
-  return 1
-
   unset print_hosts_config__file
   unset print_hosts_config__ip
   return 0
@@ -1182,7 +1180,7 @@ main_hosts()
   print_file_differences "${main_hosts__file}" "${main_hosts__file_backup}" || cancel_sudoloop
 
   # Cleanup
-  if [ "${remove_backups}" -eq 1 ]; then
+  if [ "${main_hosts__remove_backup}" -eq 1 ]; then
     remove_all_backup_files "${main_hosts__sudo}" "${main_hosts__file}" || cancel_sudoloop
   fi
 
@@ -1195,9 +1193,54 @@ main_hosts()
   return 0
 }
 
+##
+# Main function which handles the downloading of ipset files
+#
+# $1 needs_sudo
+# $2 ipset file destination
+# $3 ipset name
+# $4 remove backups
 main_ipsets()
 {
-  echo "PASS"
+  main_ipsets__sudo="$1"
+  main_ipsets__file="$2"
+  main_ipsets__name="$3"
+  main_ipsets__remove_backup="$4"
+
+  # Begin
+  printf -- "\n\n"
+  print_ipset_config "${main_ipsets__sudo}" "${main_ipsets__file}" "${main_ipsets__name}" || return 1
+
+  # Download
+  action_msg "Downloading ipset_sources lists..."
+  download_sources "$(decide_dl_client)" "${IPSET_SOURCES}" "process_ipset_sources" || cancel_sudoloop
+
+  # Parse
+  action_msg "Generating ipset..."
+  apply_whitelist "${IPSET_WHITELIST}" || cancel_sudoloop
+  apply_blacklist "${IPSET_BLACKLIST}" || cancel_sudoloop
+  remove_duplicates || cancel_sudoloop
+  sort_entries || cancel_sudoloop
+
+  # Install
+  main_ipsets__file_backup=$(create_backup_name "${main_ipsets__file}" ) || cancel_sudoloop
+  backup_old_file "${main_ipsets__sudo}" "${main_ipsets__file}" "${main_ipsets__file_backup}" || cancel_sudoloop
+  install_ipset_blocklist "${main_ipsets__sudo}" "${main_ipsets__file}" "${main_ipsets__name}" || cancel_sudoloop
+  fix_file_permissons "${main_ipsets__sudo}" "${main_ipsets__file}" || cancel_sudoloop
+  fix_file_permissons "${main_ipsets__sudo}" "${main_ipsets__file_backup}" || cancel_sudoloop
+  print_file_differences "${main_ipsets__file}" "${main_ipsets__file_backup}" || cancel_sudoloop
+
+  # Cleanup
+  if [ "${main_ipsets__remove_backup}" -eq 1 ]; then
+    remove_all_backup_files "${main_ipsets__sudo}" "${main_ipsets__file}" || cancel_sudoloop
+  fi
+
+  unset main_ipsets__sudo
+  unset main_ipsets__file
+  unset main_ipsets__name
+  unset main_ipsets__file_backup
+  unset main_ipsets__remove_backup
+  return 0
 }
 
 main()
@@ -1355,6 +1398,10 @@ main()
     needs_sudo=""
   fi
 
+
+  # Main process
+
+  # Parse hosts files
   main_hosts "${needs_sudo}" "${dst_hosts}" "${dst_ip}" "${remove_backups}" || cancel_sudoloop
 
   if [ "${manage_ipsets}" -eq 0 ]; then
@@ -1366,49 +1413,27 @@ main()
   cleanup
 
   check_for_binary ipset || cancel_sudoloop
-
-  # Begin
-  printf -- "\n\n"
-  print_ipset_config "${needs_sudo}" "${dst_ipset}" "${ipset_name}" || return 1
-
-  # Download
-  action_msg "Downloading ipset_sources lists..."
-  download_sources "$(decide_dl_client)" "${IPSET_SOURCES}" "process_ipset_sources" || cancel_sudoloop
-
-  # Parse
-  action_msg "Generating ipset..."
-  apply_whitelist "${IPSET_WHITELIST}" || cancel_sudoloop
-  apply_blacklist "${IPSET_BLACKLIST}" || cancel_sudoloop
-  remove_duplicates || cancel_sudoloop
-  sort_entries || cancel_sudoloop
-
-  # Install
-  dst_backup=$(create_backup_name "${dst_ipset}" ) || cancel_sudoloop
-  backup_old_file "${needs_sudo}" "${dst_ipset}" "${dst_backup}" || cancel_sudoloop
-  install_ipset_blocklist "${needs_sudo}" "${dst_ipset}" "${ipset_name}" || cancel_sudoloop
-  fix_file_permissons "${dst_ipset}" || cancel_sudoloop
-  fix_file_permissons "${dst_backup}" || cancel_sudoloop
-  print_file_differences "${dst_ipset}" "${dst_backup}" || cancel_sudoloop
-
-  if [ "${remove_backups}" -eq 1 ]; then
-    remove_all_backup_files "${dst_ipset}" || cancel_sudoloop
-  fi
+  main_ipsets "${needs_sudo}" "${dst_ipset}" "${ipset_name}" "${remove_backups}" || cancel_sudoloop
 
   # Finish
   cancel_sudoloop
 }
 
-# For more information about these particular options, see
-#    https://stackoverflow.com/questions/13468481/when-to-use-set-e
-set -u
+if [ "$(basename "$_")" != "update-hosts" ]; then
+  # Return, script was sourced
+  return 0
+else
+  # For more information about these particular options, see
+  #    https://stackoverflow.com/questions/13468481/when-to-use-set-e
+  set -u
 
-# Export the LC as the default C so that we do not run into locale based quirks
-export LC_ALL=C
+  # Export the LC as the default C so that we do not run into locale based quirks
+  export LC_ALL=C
 
-__temp_files="" # Leave blank
-__pids="" # Leave blank
-__blocklist="" # Leave blank
+  __temp_files="" # Leave blank
+  __pids="" # Leave blank
+  __blocklist="" # Leave blank
 
-main "$@"
-
+  main "$@"
+fi
 # vim: set syntax=sh tabstop=2 softtabstop=2 shiftwidth=2 shiftround expandtab:
