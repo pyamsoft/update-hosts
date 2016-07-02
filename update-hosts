@@ -1348,7 +1348,6 @@ main()
         long_option=""
         case "${option}" in
           -)
-            info_msg "parse long option: -${option}${OPTARG}"
             case "${OPTARG}" in
               help)
                 print_help
