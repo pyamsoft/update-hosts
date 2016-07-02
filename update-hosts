@@ -666,6 +666,7 @@ select_host_lines()
 
   # Echo out result
   printf -- "${select_host_lines__content}" > "${select_host_lines__file}"
+
   unset select_host_lines__file
   unset select_host_lines__url
   unset select_host_lines__content
@@ -676,28 +677,47 @@ select_host_lines()
 
 ##
 # Only select lines which contain an ip, do not select comments/other
+#
+# $1 file location
+# $2 source url
 ##
 select_ip_lines()
 {
-  # $1 file
-  # $2 url
-  info_msg "Select only ip lines: $2 ($1)"
-  local ip_regex='([0-9]{1,3}\.){3}[0-9]{1,3}'
+  readonly SELECT_IP_LINES_IP_REGEX='([0-9]{1,3}\.){3}[0-9]{1,3}'
+  select_ip_lines__file="$1"
+  select_ip_lines__url="$2"
 
-  local content="$(grep -oE "${ip_regex}" "$1")"
-  printf -- "${content}" > "$1"
-  unset content ip_regex
+  info_msg "Select only IP lines: ${select_ip_lines__url} (${select_ip_lines__file})"
+  select_ip_lines__content=
+  select_ip_lines__content="$(grep -oE "${SELECT_IP_LINES_IP_REGEX}" \
+    "${select_ip_lines__file}")"
+
+  # Echo out result
+  printf -- "${select_ip_lines__content}" > "${select_ip_lines__file}"
+
+  unset select_ip_lines__content
+  unset select_ip_lines__file
+  unset select_ip_lines__url
+  unset SELECT_IP_LINES_IP_REGEX
+  return 0
 }
 
 ##
 # Remove any predefined destinations, as they may be untrustworthy
+#
+# $1 file
+# $2 url
 ##
 remove_untrusted_domain()
 {
-  # $1 file
-  # $2 url
-  info_msg "Remove old destination: $2 ($1)"
-  sed -i -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g' "$1"
+  remove_untrusted_domain__file="$1"
+  remove_untrusted_domain__url="$2"
+  info_msg "Remove old destination: ${remove_untrusted_domain__url} (${remove_untrusted_domain__file})"
+  sed -i -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g' "${remove_untrusted_domain__file}"
+
+  unset remove_untrusted_domain__file
+  unset remove_untrusted_domain__url
+  return 0
 }
 
 ##
