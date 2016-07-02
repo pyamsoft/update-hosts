@@ -797,220 +797,224 @@ print_version()
   echo
 }
 
+main()
+{
+  # Script begins here
+  dst_hosts="/etc/hosts"
+  dst_ipset="/etc/ipset.conf"
+  ipset_name="blocklist"
+  dst_ip="0.0.0.0"
 
-# Script begins here
-dst_hosts="/etc/hosts"
-dst_ipset="/etc/ipset.conf"
-ipset_name="blocklist"
-dst_ip="0.0.0.0"
+  # Check for required binaries, exit out if they are not present
+  check_for_download_ability || exit 1
+  check_for_binary sed || exit 1
+  check_for_binary grep || exit 1
+  check_for_binary sort || exit 1
+  check_for_binary touch || exit 1
+  check_for_binary sleep || exit 1
+  check_for_binary rm || exit 1
+  check_for_binary awk || exit 1
+  check_for_binary tee || exit 1
+  check_for_binary cp || exit 1
+  check_for_binary wc || exit 1
+  check_for_binary printf || exit 1
+  check_for_binary chmod || exit 1
+  check_for_binary mktemp || exit 1
+  check_for_binary cat || exit 1
 
-# Check for required binaries, exit out if they are not present
-check_for_download_ability || exit 1
-check_for_binary sed || exit 1
-check_for_binary grep || exit 1
-check_for_binary sort || exit 1
-check_for_binary touch || exit 1
-check_for_binary sleep || exit 1
-check_for_binary rm || exit 1
-check_for_binary awk || exit 1
-check_for_binary tee || exit 1
-check_for_binary cp || exit 1
-check_for_binary wc || exit 1
-check_for_binary printf || exit 1
-check_for_binary chmod || exit 1
-check_for_binary mktemp || exit 1
-check_for_binary cat || exit 1
-
-# Handle options
-# Options
-#   -h | --help     Display help
-#   -v | --version  Display version
-#   -r | --remove   Remove backups
-#   -n | --noroot   Do not require root to output.
-#   -i | --ipset    Also download ipset sources
-#   --output-hosts  The file to output hosts to
-#   --output-ipset  The file to output ipsets to
-#   --ipset-name    The name of the ipset
-#   --dest-ip       The destination IP to use
-for arg in $@; do
-  case "${arg}" in
-    "-h"|"--help")
-      print_version
-      printf -- "  Options:\n"
-      printf -- "     -h | --help     Display help\n"
-      printf -- "     -v | --version  Display version\n"
-      printf -- "     -r | --remove   Remove backups\n"
-      printf -- "     -n | --noroot   Do not require root to output\n"
-      printf -- "     -i | --ipset    Also download ipset sources\n"
-      printf -- "     --output-hosts  The file to output hosts to\n"
-      printf -- "     --output-ipset  The file to output ipsets to\n"
-      printf -- "     --ipset-name    The name of the ipset\n"
-      printf -- "     --dest-ip       The destination IP to use\n"
-      exit 0
-      ;;
-    "-v"|"--version")
-      print_version
-      exit 0
-      ;;
-    "-r"|"--remove")
-      remove_backups=1
-      shift
-      ;;
-    "--output-hosts")
-      shift
-      if [ $# -ge 1 ]; then
-        if  [ -z "$1" ]; then
+  # Handle options
+  # Options
+  #   -h | --help     Display help
+  #   -v | --version  Display version
+  #   -r | --remove   Remove backups
+  #   -n | --noroot   Do not require root to output.
+  #   -i | --ipset    Also download ipset sources
+  #   --output-hosts  The file to output hosts to
+  #   --output-ipset  The file to output ipsets to
+  #   --ipset-name    The name of the ipset
+  #   --dest-ip       The destination IP to use
+  for arg in $@; do
+    case "${arg}" in
+      "-h"|"--help")
+        print_version
+        printf -- "  Options:\n"
+        printf -- "     -h | --help     Display help\n"
+        printf -- "     -v | --version  Display version\n"
+        printf -- "     -r | --remove   Remove backups\n"
+        printf -- "     -n | --noroot   Do not require root to output\n"
+        printf -- "     -i | --ipset    Also download ipset sources\n"
+        printf -- "     --output-hosts  The file to output hosts to\n"
+        printf -- "     --output-ipset  The file to output ipsets to\n"
+        printf -- "     --ipset-name    The name of the ipset\n"
+        printf -- "     --dest-ip       The destination IP to use\n"
+        exit 0
+        ;;
+      "-v"|"--version")
+        print_version
+        exit 0
+        ;;
+      "-r"|"--remove")
+        remove_backups=1
+        shift
+        ;;
+      "--output-hosts")
+        shift
+        if [ $# -ge 1 ]; then
+          if  [ -z "$1" ]; then
+            error_msg "Must specify an output file name."
+            exit 1
+          else
+            dst_hosts="$1"
+            shift
+          fi
+        else
           error_msg "Must specify an output file name."
           exit 1
-        else
-          dst_hosts="$1"
-          shift
         fi
-      else
-        error_msg "Must specify an output file name."
-        exit 1
-      fi
-      ;;
-    "--output-ipset")
-      shift
-      if [ $# -ge 1 ]; then
-        if  [ -z "$1" ]; then
+        ;;
+      "--output-ipset")
+        shift
+        if [ $# -ge 1 ]; then
+          if  [ -z "$1" ]; then
+            error_msg "Must specify an output file name."
+            exit 1
+          else
+            dst_ipset="$1"
+            shift
+          fi
+        else
           error_msg "Must specify an output file name."
           exit 1
-        else
-          dst_ipset="$1"
-          shift
         fi
-      else
-        error_msg "Must specify an output file name."
-        exit 1
-      fi
-      ;;
-    "--ipset-name")
-      shift
-      if [ $# -ge 1 ]; then
-        if  [ -z "$1" ]; then
+        ;;
+      "--ipset-name")
+        shift
+        if [ $# -ge 1 ]; then
+          if  [ -z "$1" ]; then
+            error_msg "Must specify an ipset name."
+            exit 1
+          else
+            ipset_name="$1"
+            shift
+          fi
+        else
           error_msg "Must specify an ipset name."
           exit 1
-        else
-          ipset_name="$1"
-          shift
         fi
-      else
-        error_msg "Must specify an ipset name."
-        exit 1
-      fi
-      ;;
-    "--dest-ip")
-      shift
-      if [ $# -ge 1 ]; then
-        if  [ -z "$1" ]; then
+        ;;
+      "--dest-ip")
+        shift
+        if [ $# -ge 1 ]; then
+          if  [ -z "$1" ]; then
+            error_msg "Must specify an IP."
+            exit 1
+          else
+            dst_ip="$1"
+            shift
+          fi
+        else
           error_msg "Must specify an IP."
           exit 1
-        else
-          dst_ip="$1"
-          shift
         fi
-      else
-        error_msg "Must specify an IP."
-        exit 1
-      fi
-      ;;
-    "-n"|"--noroot")
-      require_root=0
-      shift
-      ;;
-    "-i"|"--ipset")
-      manage_ipsets=1
-      shift
-      ;;
-  esac
-done
+        ;;
+      "-n"|"--noroot")
+        require_root=0
+        shift
+        ;;
+      "-i"|"--ipset")
+        manage_ipsets=1
+        shift
+        ;;
+    esac
+  done
 
-# Trap exit signals
-trap cancel_sudoloop INT
+  # Trap exit signals
+  trap cancel_sudoloop INT
 
-needs_sudo=
-if [ "$(id -u)" -ne 0 ] && [ "${require_root}" -eq 1 ]; then
-  check_for_binary sudo
+  needs_sudo=
+  if [ "$(id -u)" -ne 0 ] && [ "${require_root}" -eq 1 ]; then
+    check_for_binary sudo
 
-  # initialize sudo
-  sudo -v || exit 1
+    # initialize sudo
+    sudo -v || exit 1
 
-  # Start sudoloop
-  sudoloop &
+    # Start sudoloop
+    sudoloop &
 
-  needs_sudo="sudo"
-else
-  needs_sudo=""
-fi
+    needs_sudo="sudo"
+  else
+    needs_sudo=""
+  fi
 
-# Process begins:
-print_hosts_config
+  # Process begins:
+  print_hosts_config
 
-# Download
-action_msg "Downloading hosts_sources lists..."
-download_sources "$(decide_dl_client)" "${hosts_sources}" "process_hosts_sources" || cancel_sudoloop
+  # Download
+  action_msg "Downloading hosts_sources lists..."
+  download_sources "$(decide_dl_client)" "${hosts_sources}" "process_hosts_sources" || cancel_sudoloop
 
-# Parse
-action_msg "Generating hosts file..."
-apply_whitelist "${hosts_whitelist}" || cancel_sudoloop
-apply_blacklist "${hosts_blacklist}" || cancel_sudoloop
-remove_duplicates || cancel_sudoloop
-sort_entries || cancel_sudoloop
-add_new_destination || cancel_sudoloop
+  # Parse
+  action_msg "Generating hosts file..."
+  apply_whitelist "${hosts_whitelist}" || cancel_sudoloop
+  apply_blacklist "${hosts_blacklist}" || cancel_sudoloop
+  remove_duplicates || cancel_sudoloop
+  sort_entries || cancel_sudoloop
+  add_new_destination || cancel_sudoloop
 
-# Install
-generate_new_hosts_file || cancel_sudoloop
-dst_backup=$(create_backup_name "${dst_hosts}" ) || cancel_sudoloop
-backup_old_file || cancel_sudoloop
-install_new_hosts_file || cancel_sudoloop
-fix_file_permissons "${dst_hosts}" || cancel_sudoloop
-fix_file_permissons "${dst_backup}" || cancel_sudoloop
-print_file_differences "${dst_hosts}" "${dst_backup}" || cancel_sudoloop
+  # Install
+  generate_new_hosts_file || cancel_sudoloop
+  dst_backup=$(create_backup_name "${dst_hosts}" ) || cancel_sudoloop
+  backup_old_file || cancel_sudoloop
+  install_new_hosts_file || cancel_sudoloop
+  fix_file_permissons "${dst_hosts}" || cancel_sudoloop
+  fix_file_permissons "${dst_backup}" || cancel_sudoloop
+  print_file_differences "${dst_hosts}" "${dst_backup}" || cancel_sudoloop
 
-# Cleanup
-if [ "${remove_backups}" -eq 1 ]; then
-  remove_all_backup_files "${dst_hosts}" || cancel_sudoloop
-fi
+  # Cleanup
+  if [ "${remove_backups}" -eq 1 ]; then
+    remove_all_backup_files "${dst_hosts}" || cancel_sudoloop
+  fi
 
-if [ "${manage_ipsets}" -eq 0 ]; then
-  # End here
+  if [ "${manage_ipsets}" -eq 0 ]; then
+    # End here
+    cancel_sudoloop
+  fi
+
+  # Start fresh
+  cleanup
+
+  check_for_binary ipset || exit 1
+
+  # Download
+  printf -- "\n\n"
+  print_ipset_config || exit 1
+  action_msg "Downloading ipset_sources lists..."
+  download_sources "$(decide_dl_client)" "${ipset_sources}" "process_ipset_sources" || cancel_sudoloop
+
+  # Parse
+  action_msg "Generating ipset..."
+  apply_whitelist "${ipset_whitelist}" || cancel_sudoloop
+  apply_blacklist "${ipset_blacklist}" || cancel_sudoloop
+  remove_duplicates || cancel_sudoloop
+  sort_entries || cancel_sudoloop
+
+  # Install
+  dst_backup=$(create_backup_name "${dst_ipset}" ) || cancel_sudoloop
+  backup_old_file || cancel_sudoloop
+  install_ipset_blocklist || cancel_sudoloop
+  fix_file_permissons "${dst_ipset}" || cancel_sudoloop
+  fix_file_permissons "${dst_backup}" || cancel_sudoloop
+  print_file_differences "${dst_ipset}" "${dst_backup}" || cancel_sudoloop
+
+  if [ "${remove_backups}" -eq 1 ]; then
+    remove_all_backup_files "${dst_ipset}" || cancel_sudoloop
+  fi
+
+  # Finish
   cancel_sudoloop
-fi
+}
 
-# Start fresh
-cleanup
-
-check_for_binary ipset || exit 1
-
-# Download
-printf -- "\n\n"
-print_ipset_config || exit 1
-action_msg "Downloading ipset_sources lists..."
-download_sources "$(decide_dl_client)" "${ipset_sources}" "process_ipset_sources" || cancel_sudoloop
-
-# Parse
-action_msg "Generating ipset..."
-apply_whitelist "${ipset_whitelist}" || cancel_sudoloop
-apply_blacklist "${ipset_blacklist}" || cancel_sudoloop
-remove_duplicates || cancel_sudoloop
-sort_entries || cancel_sudoloop
-
-# Install
-dst_backup=$(create_backup_name "${dst_ipset}" ) || cancel_sudoloop
-backup_old_file || cancel_sudoloop
-install_ipset_blocklist || cancel_sudoloop
-fix_file_permissons "${dst_ipset}" || cancel_sudoloop
-fix_file_permissons "${dst_backup}" || cancel_sudoloop
-print_file_differences "${dst_ipset}" "${dst_backup}" || cancel_sudoloop
-
-if [ "${remove_backups}" -eq 1 ]; then
-  remove_all_backup_files "${dst_ipset}" || cancel_sudoloop
-fi
-
-# Finish
-cancel_sudoloop
+main "$@"
 
 # vim: set syntax=sh tabstop=2 softtabstop=2 shiftwidth=2 shiftround expandtab:
 
