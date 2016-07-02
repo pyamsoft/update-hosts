@@ -540,69 +540,51 @@ download_to_tempfile()
 # $1 The HTTP client to use
 # $2 The sources list to download from
 # $3 Name of the function to call after download, begins with process_*
-# $4 Temporary files array to store into
-# $5 Array of PIDs
-# $6 The blocklist
 ##
 download_sources()
 {
   download_sources__client="$1"
   download_sources__sources="$2"
   download_sources__process_hook="$3"
-  download_sources__tempfiles_varname="$4"
-  download_sources__pids_varname="$5"
-  download_sources__blocklist_varname="$6"
 
   for download_sources__url in ${download_sources__sources}; do
     download_sources__tempfile=
     download_sources__tempfile="$(mktemp)"
 
     # Add the tempfile to list of temporary files
-    # Use eval to indirectly reference the variable given by varname
-    download_sources__tempfiles_content=
-    eval "download_sources__tempfiles_content=\"\$${download_sources__tempfiles_varname}\""
-    eval "${download_sources__tempfiles_varname}=\"${download_sources__tempfile} ${download_sources__tempfiles_content}\""
+    __temp_files="${download_sources__tempfile} "${__temp_files}
+
     download_to_tempfile "${download_sources__client}" "${download_sources__url}" "${download_sources__tempfile}" "${download_sources__process_hook}" &
 
     # Add the pid to list of pids
-    # Use eval to indirectly reference the variable given by varname
-    download_sources__pids_content=
-    eval "download_sources__pids_content=\"\$${download_sources__pids_varname}\""
-    eval "${download_sources__pids_varname}=\"${download_sources__pids_content} $!\""
+    __pids="${__pids} $!"
 
     unset download_sources__tempfile
     unset download_sources__url
-    unset download_sources__tempfiles_content
-    unset download_sources__pids_content
   done
 
   # Wait for all parallel downloads to finish
   # Instead of taking a long time in total, this will only take as long
   # as it takes for the longest download to complete
-  # Use eval to indirectly reference the variable given by varname
-  download_sources__pids_content=
-  eval "download_sources__pids_content=\"\$${download_sources__pids_varname}\""
-  wait ${download_sources__pids_content}
+  #
+  # Do not quote so that this will split into a list, instead of a single,
+  # space separated input
+  # shellcheck disable=SC2086
+  wait ${__pids}
 
   # Write the contents of each download to the blocklist
-  # Use eval to indirectly reference the variable given by varname
-  download_sources__tempfiles_content=
-  eval "download_sources__tempfiles_content=\"\$${download_sources__tempfiles_varname}\""
-  for f in ${download_sources__tempfiles_content}; do
+  for f in ${__temp_files}; do
     download_sources__tempfile_content=
-    download_sources__blocklist_content=
 
     download_sources__tempfile_content="$(cat "$f")"
     if [ ! -z "${download_sources__tempfile_content}" ]; then
-      # Use eval to indirectly reference the variable given by varname
-      eval "download_sources__blocklist_content=\"\$${download_sources__blocklist_varname}\""
-      if [ -z "${download_sources__blocklist_content}" ]; then
-        download_sources__blocklist_content=$(printf -- "%s\n" \
-          "${download_sources__tempfile_content}")
+      if [ -z "${__blocklist}" ]; then
+        __blocklist="$(printf -- "%s\n" \
+          "${download_sources__tempfile_content}")"
       else
-        download_sources__blocklist_content=$(printf -- "%s\n%s\n" \
-          "${download_sources__blocklist_content}" \
-          "${download_sources__tempfile_content}")
+        __blocklist="$(printf -- "%s\n%s\n" \
+          "${__blocklist}" \
+          "${download_sources__tempfile_content}")"
       fi
     fi
 
@@ -611,17 +593,11 @@ download_sources()
 
     unset f
     unset download_sources__tempfile_content
-    unset download_sources__blocklist_content
   done
 
   unset download_sources__client
   unset download_sources__sources
   unset download_sources__process_hook
-  unset download_sources__tempfiles_varname
-  unset download_sources__pids_varname
-  unset download_sources__blocklist_varname
-  unset download_sources__tempfiles_content
-  unset download_sources__pids_content
   return 0
 }
 
@@ -721,78 +697,110 @@ remove_untrusted_domain()
 
 ##
 # Normalize all entries to lowercase strings
+#
+# $1 file
+# $2 url
 ##
 normalize_to_lowercase()
 {
-  # $1 file
-  # $2 url
-  info_msg "Transform all entries to lowercase: $2 ($1)"
-
+  normalize_to_lowercase__file="$1"
+  normalize_to_lowercase__url="$2"
   # KLUDGE
   # Awk for some reason stops parsing after 1024 lines
   # awk -v tf="$1" '{print tolower($0) > tf}' "$1"
   #
   # This is an ugly work around
-  local content="$(awk '{print tolower($0)}' "$1")"
-  printf -- "${content}" > "$1"
-  unset content
+  info_msg "Transform all entries to lowercase: ${normalize_to_lowercase__url} (${normalize_to_lowercase__file})"
+
+  normalize_to_lowercase__content=
+  normalize_to_lowercase__content="$(awk '{print tolower($0)}' "${normalize_to_lowercase__file}")"
+  printf -- "${normalize_to_lowercase__content}" > "${normalize_to_lowercase__file}"
+
+  unset normalize_to_lowercase__file
+  unset normalize_to_lowercase__url
+  unset normalize_to_lowercase__content
+  return 0
 }
 
 ##
 # Remove any entries containing the localhost, as it will be added by
 # the hosts_header later on
+#
+# $1 file
+# $2 url
 ##
 remove_local_entries()
 {
-  # $1 file
-  # $2 url
-  info_msg "Remove local entries: $2 ($1)"
-  sed -n -i -r \
-    '/^(localhost|localhost.localdomain|local|broadcasthost)$/!p' "$1"
+  remove_local_entries__file="$1"
+  remove_local_entries__url="$2"
+
+  info_msg "Remove local entries: ${remove_local_entries__url} (${remove_local_entries__file})"
+  sed -n -i -r '/^(localhost|localhost.localdomain|local|broadcasthost)$/!p' \
+    "${remove_local_entries__file}"
+
+  unset remove_local_entries__file
+  unset remove_local_entries__url
+  return 0
 }
 
 ##
 # Apply the user hosts_whitelist
+#
+# $1 whitelist
 ##
 apply_whitelist()
 {
-  # $1 whitelist
+  apply_whitelist__whitelist="$1"
+
   info_msg "Apply hosts_whitelist"
-  if [ -z "${blocklist}" ]; then
+  if [ -z "${__blocklist}" ]; then
+    error_msg "Block list is empty"
     return 1
   fi
 
-  for domain in $1; do
-    blocklist=$(printf -- "%s\n" "${blocklist}" | sed -r "/${domain}/d")
+  for apply_whitelist__domain in ${apply_whitelist__whitelist}; do
+    __blocklist="$(printf -- "%s\n" "${__blocklist}" | sed -r "/${apply_whitelist__domain}/d")"
+    unset apply_whitelist__domain
   done
+
+  unset apply_whitelist__whitelist
+  return 0
 }
 
 ##
 # Apply the user blacklist
+#
+# $1 blacklist
 ##
 apply_blacklist()
 {
-  # $1 blacklist
+  apply_blacklist__blacklist="$1"
+
   info_msg "Apply hosts_blacklist"
   # Cache the hosts_blacklist domains so that the entire block list
   # does not have to be echoed each time.
-
   # Domains initialized as first hosts_blacklist entry
-  local domains=""
-  for domain in $1; do
-    if [ -z "${domains}" ]; then
-      domains="${domain}"
+  apply_blacklist__domains=""
+
+  for apply_blacklist__domain in ${apply_blacklist__blacklist}; do
+    if [ -z "${apply_blacklist__domains}" ]; then
+      apply_blacklist__domains="${apply_blacklist__domain}"
     else
-      domains=$(printf -- "%s\n%s\n" "${domains}" "${domain}")
+      apply_blacklist__domains="$(printf -- "%s\n%s\n" \
+        "${apply_blacklist__domains}" \
+        "${apply_blacklist__domain}")"
     fi
   done
 
-  if [ -z "${blocklist}" ]; then
-    blocklist=$(printf -- "%s\n" "${domains}")
+  if [ -z "${_blocklist}" ]; then
+    _blocklist="$(printf -- "%s\n" "${apply_blacklist__domains}")"
   else
-    blocklist=$(printf -- "%s\n%s\n" "${blocklist}" "${domains}")
+    _blocklist="$(printf -- "%s\n%s\n" "${_blocklist}" "${apply_blacklist__domains}")"
   fi
-  unset domains
+
+  unset apply_blacklist__domains
+  unset apply_blacklist__blacklist
+  return 0
 }
 
 ##
@@ -992,9 +1000,6 @@ main()
   # Version
   version="2.0.0"
 
-  temp_files=""
-  pids="" # Leave blank
-  blocklist="" # Leave this blank
   hosts="" # Leave this blank
 
   # Options
@@ -1154,11 +1159,11 @@ main()
 
   # Download
   action_msg "Downloading hosts_sources lists..."
-  download_sources "$(decide_dl_client)" "${HOSTS_SOURCES}" "process_hosts_sources" "temp_files" "pids" "blocklist" || cancel_sudoloop
+  download_sources "$(decide_dl_client)" "${HOSTS_SOURCES}" "process_hosts_sources" || cancel_sudoloop
 
   # Parse
   action_msg "Generating hosts file..."
-  apply_whitelist "${HOSTS_WHITELIST}" || cancel_sudoloop
+  apply_whitelist "blocklist" "${HOSTS_WHITELIST}" || cancel_sudoloop
   apply_blacklist "${HOSTS_BLACKLIST}" || cancel_sudoloop
   remove_duplicates || cancel_sudoloop
   sort_entries || cancel_sudoloop
@@ -1217,6 +1222,10 @@ main()
   cancel_sudoloop
 }
 
+
+__temp_files="" # Leave blank
+__pids="" # Leave blank
+__blocklist="" # Leave blank
 main "$@"
 
 # vim: set syntax=sh tabstop=2 softtabstop=2 shiftwidth=2 shiftround expandtab:
