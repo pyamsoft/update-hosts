@@ -31,6 +31,10 @@
 #  pyamsoft <pyam(dot)soft(at)gmail(dot)com>
 
 # Configuration:
+
+# Version
+VERSION="2.1.0"
+
 readonly SUDOLOCK="/tmp/update-hosts.sudolock"
 
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
@@ -901,14 +905,33 @@ backup_old_file()
 
 ##
 # Install the new hosts file to the destination
+#
+# $1 needs_sudo
+# $2 hosts file content
+# $3 file destination location
 ##
 install_new_hosts_file()
 {
+  install_new_hosts_file__sudo="$1"
+  install_new_hosts_file__hosts="$2"
+  install_new_hosts_file__destination="$3"
+
   info_msg "Installing new hosts file..."
-  printf -- "%s\n" "${hosts}" | ${needs_sudo} tee "${dst_hosts}" > /dev/null || {
-    error_msg "Failed to output to file ${dst_hosts}"
+  printf -- "%s\n" "${install_new_hosts_file__hosts}" \
+    | ${install_new_hosts_file__sudo} tee "${install_new_hosts_file__destination}" > /dev/null \
+    || {
+    error_msg "Failed to output to file ${install_new_hosts_file__destination}"
+
+    unset install_new_hosts_file__sudo
+    unset install_new_hosts_file__hosts
+    unset install_new_hosts_file__destination
     return 1
   }
+
+  unset install_new_hosts_file__sudo
+  unset install_new_hosts_file__hosts
+  unset install_new_hosts_file__destination
+  return 0
 }
 
 install_ipset_blocklist()
@@ -937,56 +960,104 @@ install_ipset_blocklist()
 
 ##
 # Fixes permission on file to 644
+#
+# $1 needs_sudo
+# $2 file to fix
 ##
 fix_file_permissons()
 {
-  if [ -f "$1" ]; then
-    info_msg "Fixing permissions for file $1..."
-    ${needs_sudo} chmod 644 "$1" || {
-      error_msg "Failed to chmod $1"
+  fix_file_permissons__sudo="$1"
+  fix_file_permissons__file="$2"
+
+  if [ -f "${fix_file_permissons__file}" ]; then
+    info_msg "Fixing permissions for file ${fix_file_permissons__file}..."
+    ${fix_file_permissons__sudo} chmod 644 "${fix_file_permissons__file}" \
+      || {
+      error_msg "Failed to chmod ${fix_file_permissons__file} to 644"
+
+      unset fix_file_permissons__sudo
+      unset fix_file_permissons__file
       return 1
     }
   else
-    info_msg "Cannot fix permission for non-existant file $1"
+    info_msg "Cannot fix permission for non-existant file ${fix_file_permissons__file}"
   fi
+
+  unset fix_file_permissons__sudo
+  unset fix_file_permissons__file
+  return 0
 }
 
+##
+# Create a backup file name by appending the current date
+# $1 file name
 create_backup_name()
 {
-  # $1 file name
-  printf -- "$1.backup.$(date +%Y%m%d)"
+  create_backup_name__file="$1"
+
+  # Echo out file name
+  printf -- "${create_backup_name__file}.backup.$(date +%Y%m%d)"
+
+  unset create_backup_name__file
+  return 0
 }
 
 ##
 # Print the differences between the number of lines in each file
+#
+# $1 new file
+# $2 old file
 ##
 print_file_differences()
 {
-  # $1 new
-  # $2 old
-  local old_number=
-  if [ -f "$2" ]; then
-    old_number=$(wc -l < "$2")
-  else
-    old_number=0
+  print_file_differences__new="$1"
+  print_file_differences__old="$2"
+
+  print_file_differences__old_number=0
+  if [ -f "${print_file_differences__old}" ]; then
+    print_file_differences__old_number=$(wc -l < "${print_file_differences__old}")
   fi
-  local new_number=$(wc -l < "$1")
+
+  print_file_differences__new_number=
+  print_file_differences__new_number=$(wc -l < "${print_file_differences__new}")
+
+  # Echo out the result
   printf -- "%b + %b%s %bentries added! (%b + %b%s %b)\n" \
-    "\033[1;33m" "\033[1;32m" "${new_number}" \
+    "\033[1;33m" "\033[1;32m" "${print_file_differences__new_number}" \
     "\033[0m" "\033[1;32m" "\033[1;34m" \
-    "$((new_number - old_number))" "\033[0m"
-  unset old_number new_number
+    "$((print_file_differences__new_number - print_file_differences__old_number))" \
+    "\033[0m"
+
+  unset print_file_differences__old
+  unset print_file_differences__new
+  unset print_file_differences__old_number
+  unset print_file_differences__new_number
+  return 0
 }
 
+##
+# Remove all backup files that start with the given pattern
+#
+# $1 needs_sudo
+# $2 normal file name
 remove_all_backup_files()
 {
-  # $1 normal file
-  for arg in "$1".backup.*; do
-    info_msg "Removing backup file: ${arg}..."
-    ${needs_sudo} rm -f "${arg}" > /dev/null 2>&1
+  remove_all_backup_files__sudo="$1"
+  remove_all_backup_files__file="$2"
+  for remove_all_backup_files__temp in "${remove_all_backup_files__file}".backup.*; do
+    info_msg "Removing backup file: ${remove_all_backup_files__temp}..."
+    ${remove_all_backup_files__sudo} rm -f "${remove_all_backup_files__temp}" > /dev/null 2>&1
+    unset remove_all_backup_files__temp
   done
+
+  unset remove_all_backup_files__sudo
+  unset remove_all_backup_files__file
+  return 0
 }
 
+##
+# While the script is running, continue to refresh sudo timer
+# This should be run in the background
 sudoloop()
 {
   touch "${SUDOLOCK}"
@@ -994,52 +1065,60 @@ sudoloop()
     sudo -n -v
     sleep 2
   done
+
+  return 0
 }
 
+##
+# Clean up any temp files and kill any processes that are still running
+# Also clears any global variables that are used
 cleanup()
 {
   # Kill runaway pids
-  for p in ${pids}; do
+  for p in ${__pids}; do
     kill "${p}" > /dev/null 2>&1
   done
 
   # rm leftover files
-  for temp in ${temp_files}; do
+  for temp in ${__temp_files}; do
     rm -f "${temp}" > /dev/null 2>&1
   done
 
-  blocklist=""
-  pids=""
-  temp_files=""
+  unset __blocklist
+  __blocklist=""
+
+  unset __pids
+  __pids=""
+
+  unset __temp_files
+  __temp_files=""
+
+  return 0
 }
 
+##
+# Cancels the sudoloop if it is running, performs cleanup and then exits the script
 cancel_sudoloop()
 {
   [ -e "${SUDOLOCK}" ] && rm -f "${SUDOLOCK}"
-
   cleanup
 
   # Exit point
   exit 0
 }
 
+##
+# Echoes out the current version held by the constant VERSION
 print_version()
 {
-  printf -- "update-hosts[${version}]\n"
+  printf -- "update-hosts[${VERSION}]\n"
   echo
+
+  return 0
 }
 
 main()
 {
-  # For more information about these particular options, see
-  #    https://stackoverflow.com/questions/13468481/when-to-use-set-e
-  set -u
-
-  # Export the LC as the default C so that we do not run into locale based quirks
-  export LC_ALL=C
-
-  # Version
-  version="2.0.0"
 
   # Options
   remove_backups=0
@@ -1213,14 +1292,15 @@ main()
   hosts="$(generate_new_hosts_file)" || cancel_sudoloop
   dst_backup="$(create_backup_name "${dst_hosts}")"
   backup_old_file "${needs_sudo}" "${dst_hosts}" "${dst_backup}" || cancel_sudoloop
-  install_new_hosts_file || cancel_sudoloop
-  fix_file_permissons "${dst_hosts}" || cancel_sudoloop
-  fix_file_permissons "${dst_backup}" || cancel_sudoloop
+  install_new_hosts_file "${needs_sudo}" "${hosts}" "${dst_hosts}" || cancel_sudoloop
+  fix_file_permissons "${needs_sudo}" "${dst_hosts}" || cancel_sudoloop
+  fix_file_permissons "${needs_sudo}" "${dst_backup}" || cancel_sudoloop
   print_file_differences "${dst_hosts}" "${dst_backup}" || cancel_sudoloop
+  unset hosts
 
   # Cleanup
   if [ "${remove_backups}" -eq 1 ]; then
-    remove_all_backup_files "${dst_hosts}" || cancel_sudoloop
+    remove_all_backup_files "${needs_sudo}" "${dst_hosts}" || cancel_sudoloop
   fi
 
   if [ "${manage_ipsets}" -eq 0 ]; then
@@ -1262,11 +1342,17 @@ main()
   cancel_sudoloop
 }
 
+# For more information about these particular options, see
+#    https://stackoverflow.com/questions/13468481/when-to-use-set-e
+set -u
+
+# Export the LC as the default C so that we do not run into locale based quirks
+export LC_ALL=C
 
 __temp_files="" # Leave blank
 __pids="" # Leave blank
 __blocklist="" # Leave blank
+
 main "$@"
 
 # vim: set syntax=sh tabstop=2 softtabstop=2 shiftwidth=2 shiftround expandtab:
-
