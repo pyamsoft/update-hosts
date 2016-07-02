@@ -254,7 +254,7 @@ readonly BASE_IPSET_SOURCES="
     https://lists.blocklist.de/lists/all.txt
     https://www.stopforumspam.com/downloads/toxic_ip_cidr.txt
     https://www.spamhaus.org/drop/drop.lasso
-    https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=1.1.1.1
+    https://check.torproject.org/cgi-bin/TorBulkreturnList.py?ip=1.1.1.1
     https://www.maxmind.com/en/proxy-detection-sample-list
 "
 
@@ -286,12 +286,15 @@ readonly IPSET_BLACKLIST='
 action_msg()
 {
   action_msg__message="$1"
+
   printf -- "%b + %b%s%b\n" \
     "\033[1;33m" \
     "\033[1;32m" \
     "${action_msg__message}" \
     "\033[0m"
+
   unset action_msg__message
+  return 0
 }
 
 ##
@@ -300,12 +303,15 @@ action_msg()
 error_msg()
 {
   error_msg__message="$1"
+
   printf -- "%b + %b%s%b\n" \
     "\033[1;33m" \
     "\033[1;31m" \
     "${error_msg__message}" \
     "\033[0m"
+
   unset error_msg__message
+  return 0
 }
 
 ##
@@ -314,14 +320,17 @@ error_msg()
 info_msg()
 {
   info_msg__message="$1"
+
   printf -- "   - %s\n" \
     "${info_msg__message}"
+
   unset info_msg__message
+  return 0
 }
 
 ##
 # Check the environment path for the either wget or curl
-# exit if it is not found
+# return if it is not found
 ##
 check_for_download_ability()
 {
@@ -329,21 +338,35 @@ check_for_download_ability()
     if ! which wget > /dev/null 2>&1; then
       printf -- "Either wget or curl are required for this script\n"
       printf -- "Please install either 'wget' or 'curl' onto your system.\n"
+
       return 1
     fi
   fi
+
+  return 0
 }
 
 ##
-# Check the environment path for the given binary, exit if it is not found
+# Check the environment path for the given binary, return if it is not found
+#
+# $1 the binary to check on the PATH
 ##
 check_for_binary()
 {
-  if ! which "$1" > /dev/null 2>&1; then
-    printf -- "The '%s' binary is required for this script.\n" "$1"
-    printf -- "Please install '%s' onto your system.\n" "$1"
+  check_for_binary__bin="$1"
+
+  if ! which "${check_for_binary__bin}" > /dev/null 2>&1; then
+    printf -- "The '%s' binary is required for this script.\n" \
+      "${check_for_binary__bin}"
+    printf -- "Please install '%s' onto your system.\n" \
+      "${check_for_binary__bin}"
+
+    unset check_for_binary__bin
     return 1
   fi
+
+  unset check_for_binary__bin
+  return 0
 }
 
 ##
@@ -356,163 +379,299 @@ print_hosts_config()
 {
   print_hosts_config__file="$1"
   print_hosts_config__ip="$2"
+
   action_msg "Hosts Configuration:"
   info_msg "Hosts location: ${print_hosts_config__file}"
   info_msg "Destination IP: ${print_hosts_config__ip}"
 
   unset print_hosts_config__file
   unset print_hosts_config__ip
+  return 0
 }
 
 ##
 # Print out the ipset configuration
+#
+# $1 sudo or blank if not needed
+# $2 ipset file location
+# $3 ipset name
 ##
 print_ipset_config()
 {
+  print_ipset_config__sudo="$1"
+  print_ipset_config__file="$2"
+  print_ipset_config__name="$3"
+
   action_msg "Ipset Configuration:"
-  info_msg "Ipset location: ${dst_ipset}"
-  info_msg "Ipset name: ${ipset_name}"
+  info_msg "Ipset location: ${print_ipset_config__file}"
+  info_msg "Ipset name: ${print_ipset_config__name}"
 
   # The ipset must exist first for this script to work
   # check for existence here
-  ${needs_sudo} ipset list "${ipset_name}" > /dev/null 2>&1 || {
-    error_msg "The ipset: ${ipset_name} must exist before running this script."
-    error_msg "Create it using: # ipset create ${ipset_name}"
+  ${print_ipset_config__sudo} ipset list "${print_ipset_config__name}" > /dev/null 2>&1 || {
+    error_msg "The ipset: ${print_ipset_config__name} must exist before running this script."
+    error_msg "Create it using: # ipset create ${print_ipset_config__name}"
+
+    unset print_ipset_config__sudo
+    unset print_ipset_config__file
+    unset print_ipset_config__name
     return 1
   }
+
+  unset print_ipset_config__sudo
+  unset print_ipset_config__file
+  unset print_ipset_config__name
+  return 0
 }
 
 ##
 # Decide what program to DL with
+#
+# Echoes the name of the program to use as an HTTP client for downloading the
+# sources
 ##
 decide_dl_client()
 {
   # Check for curl, if not found, use wget, as the check for either
   # Should have passed before this function
-  local cmd=
+  decide_dl_client__cmd=
+
   if which curl > /dev/null 2>&1; then
-    cmd="curl -fsSL --connect-timeout 40 --max-time 60 -A 'Mozilla/5.0'"
+    decide_dl_client__cmd="curl -fsSL --connect-timeout 40 --max-time 60 -A 'Mozilla/5.0'"
   else
-    cmd="wget -T 10 -qO- -A 'Mozilla/5.0'"
+    decide_dl_client__cmd="wget -T 10 -qO- -A 'Mozilla/5.0'"
   fi
-  printf -- "%s" "${cmd}"
-  unset cmd
-}
 
-process_ipset_sources()
-{
-  # $1 tmpfile
-  # $2 url
-  # Process each tmpfile seperately
-  change_eol "$1" "$2"
-  select_ip_lines "$1" "$2"
-}
+  # Echo before unsetting
+  printf -- "%s" "${decide_dl_client__cmd}"
 
-process_hosts_sources()
-{
-  # $1 tmpfile
-  # $2 url
-  # Process each tmpfile seperately
-  change_eol "$1" "$2"
-  select_host_lines "$1" "$2"
-  remove_untrusted_domain "$1" "$2"
-  normalize_to_lowercase "$1" "$2"
-  remove_local_entries "$1" "$2"
+  unset decide_dl_client__cmd
+  return 0
 }
 
 ##
-# hosts_sources list parsing
+# Process each temporary Ipset source file
+#
+# $1 temporary file location
+# $2 source url
+##
+process_ipset_sources()
+{
+  process_ipset_sources__file="$1"
+  process_ipset_sources__url="$2"
+
+  change_eol "${process_ipset_sources__file}" "${process_ipset_sources__url}"
+  select_ip_lines "${process_ipset_sources__file}" "${process_ipset_sources__url}"
+
+  unset process_ipset_sources__file
+  unset process_ipset_sources__url
+  return 0
+}
+
+##
+# Process each temporary hosts source file
+#
+# $1 temporary file location
+# $2 source url
+##
+process_hosts_sources()
+{
+  process_hosts_sources__file="$1"
+  process_hosts_sources__url="$2"
+
+  change_eol "${process_hosts_sources__file}" "${process_hosts_sources__url}"
+  select_host_lines "${process_hosts_sources__file}" "${process_hosts_sources__url}"
+  remove_untrusted_domain "${process_hosts_sources__file}" "${process_hosts_sources__url}"
+  normalize_to_lowercase "${process_hosts_sources__file}" "${process_hosts_sources__url}"
+  remove_local_entries "${process_hosts_sources__file}" "${process_hosts_sources__url}"
+
+  unset process_hosts_sources__file
+  unset process_hosts_sources__url
+  return 0
+}
+
+##
+# Parse the hosts file together from the various sources
+#
+# $1 The HTTP client to use
+# $2 The URL of the source
+# $3 The temporary file location
+# $4 The command to run after downloading, begins with process_*
 ##
 download_to_tempfile()
 {
-  # $1 cmd
-  # $2 hook
-  # $3 url
-  # $4 tmpfile
-  info_msg "Downloading from $3"
-  local hostfile="$(printf -- "%s" "$($1 $3)")"
-  if [ -z "${hostfile}" ]; then
-    info_msg "  Failed to download from: $3"
-    return
+  download_to_tempfile__client="$1"
+  download_to_tempfile__url="$2"
+  download_to_tempfile__file="$3"
+  download_to_tempfile__process_hook="$4"
+  download_to_tempfile__content=
+
+  info_msg "Downloading from ${download_to_tempfile__url}"
+  download_to_tempfile__content="$(printf -- "%s" "$(${download_to_tempfile__client} "${download_to_tempfile__url}")")"
+  if [ -z "${download_to_tempfile__content}" ]; then
+    info_msg "  Failed to download from: ${download_to_tempfile__url}"
+    return 1
   fi
 
   # Guarantee an empty file
-  printf -- "%s\n" "${hostfile}" > "$4"
-  "$2" "$4" "$3"
+  printf -- "%s\n" "${download_to_tempfile__content}" > "${download_to_tempfile__file}"
+
+  # Run after download processing hook
+  "${download_to_tempfile__process_hook}" "${download_to_tempfile__file}" "${download_to_tempfile__url}"
+
+  unset download_to_tempfile__client
+  unset download_to_tempfile__process_hook
+  unset download_to_tempfile__url
+  unset download_to_tempfile__file
+  unset download_to_tempfile__content
+  return 0
 }
 
 
 ##
 # Download the source file from each URL specified in source
 # Download runs in parallel in the background
+#
+# $1 The HTTP client to use
+# $2 The sources list to download from
+# $3 Name of the function to call after download, begins with process_*
+# $4 Temporary files array to store into
+# $5 Array of PIDs
+# $6 The blocklist
 ##
 download_sources()
 {
-  # $1 cmd
-  # $2 sources
-  # $3 process command
-  for src in $2; do
-    local current_temp_file=$(mktemp)
-    temp_files="${current_temp_file} ${temp_files}"
-    local url="${src}"
-    download_to_tempfile "$1" "$3" "${url}" "${current_temp_file}" &
-    pids="${pids} $!"
-    unset url
+  download_sources__client="$1"
+  download_sources__sources="$2"
+  download_sources__process_hook="$3"
+  download_sources__tempfiles_varname="$4"
+  download_sources__pids_varname="$5"
+  download_sources__blocklist_varname="$6"
+
+  for download_sources__url in ${download_sources__sources}; do
+    download_sources__tempfile=
+    download_sources__tempfile="$(mktemp)"
+
+    # Add the tempfile to list of temporary files
+    # Use eval to indirectly reference the variable given by varname
+    download_sources__tempfiles_content=
+    eval "download_sources__tempfiles_content=\"\$${download_sources__tempfiles_varname}\""
+    eval "${download_sources__tempfiles_varname}=\"${download_sources__tempfile} ${download_sources__tempfiles_content}\""
+    download_to_tempfile "${download_sources__client}" "${download_sources__url}" "${download_sources__tempfile}" "${download_sources__process_hook}" &
+
+    # Add the pid to list of pids
+    # Use eval to indirectly reference the variable given by varname
+    download_sources__pids_content=
+    eval "download_sources__pids_content=\"\$${download_sources__pids_varname}\""
+    eval "${download_sources__pids_varname}=\"${download_sources__pids_content} $!\""
+
+    unset download_sources__tempfile
+    unset download_sources__url
+    unset download_sources__tempfiles_content
+    unset download_sources__pids_content
   done
 
   # Wait for all parallel downloads to finish
   # Instead of taking a long time in total, this will only take as long
   # as it takes for the longest download to complete
-  wait ${pids}
+  # Use eval to indirectly reference the variable given by varname
+  download_sources__pids_content=
+  eval "download_sources__pids_content=\"\$${download_sources__pids_varname}\""
+  wait ${download_sources__pids_content}
 
   # Write the contents of each download to the blocklist
-  for f in ${temp_files}; do
-    local content="$(cat $f)"
-    if [ ! -z "${content}" ]; then
-      if [ -z "${blocklist}" ]; then
-        blocklist=$(printf -- "%s\n" "${content}")
+  # Use eval to indirectly reference the variable given by varname
+  download_sources__tempfiles_content=
+  eval "download_sources__tempfiles_content=\"\$${download_sources__tempfiles_varname}\""
+  for f in ${download_sources__tempfiles_content}; do
+    download_sources__tempfile_content=
+    download_sources__blocklist_content=
+
+    download_sources__tempfile_content="$(cat "$f")"
+    if [ ! -z "${download_sources__tempfile_content}" ]; then
+      # Use eval to indirectly reference the variable given by varname
+      eval "download_sources__blocklist_content=\"\$${download_sources__blocklist_varname}\""
+      if [ -z "${download_sources__blocklist_content}" ]; then
+        download_sources__blocklist_content=$(printf -- "%s\n" \
+          "${download_sources__tempfile_content}")
       else
-        blocklist=$(printf -- "%s\n%s\n" "${blocklist}" "${content}")
+        download_sources__blocklist_content=$(printf -- "%s\n%s\n" \
+          "${download_sources__blocklist_content}" \
+          "${download_sources__tempfile_content}")
       fi
     fi
 
     # Remove the temp file
     rm -f "$f"
-    unset content
+
+    unset f
+    unset download_sources__tempfile_content
+    unset download_sources__blocklist_content
   done
+
+  unset download_sources__client
+  unset download_sources__sources
+  unset download_sources__process_hook
+  unset download_sources__tempfiles_varname
+  unset download_sources__pids_varname
+  unset download_sources__blocklist_varname
+  unset download_sources__tempfiles_content
+  unset download_sources__pids_content
+  return 0
 }
 
 ##
 # Change EOL from DOS to Unix format
+#
+# $1 file location
+# $2 source url
 ##
 change_eol()
 {
-  # $1 file
-  # $2 url
-  info_msg "Change EOL to Unix format: $2 ($1)"
-  sed -r -i 's/$//' "$1"
+  change_eol__file="$1"
+  change_eol__url="$2"
+  info_msg "Change EOL to Unix format: ${change_eol__url} (${change_eol__file})"
+  sed -r -i 's/$//' "${change_eol__file}"
+
+  unset change_eol__file
+  unset change_eol__url
+  return 0
 }
 
 ##
 # Only select lines which contain a host, do not select comments/other
+#
+# $1 file location
+# $2 source url
 ##
 select_host_lines()
 {
-  # $1 file
-  # $2 url
-  info_msg "Select only hosts lines: $2 ($1)"
-  local ip_regex='([0-9]{1,3}\.){3}[0-9]{1,3}[[:blank:]]+'
-  local domain_regex='([[:alnum:]_-]{1,63}\.)+[[:alpha:]][[:alnum:]_-]{1,62}'
+  readonly SELECT_HOST_FILES_IP_REGEX='([0-9]{1,3}\.){3}[0-9]{1,3}[[:blank:]]+'
+  readonly SELECT_HOST_FILES_DOMAIN_REGEX='([[:alnum:]_-]{1,63}\.)+[[:alpha:]][[:alnum:]_-]{1,62}'
+  select_host_lines__file="$1"
+  select_host_lines__url="$2"
+
 
   # KLUDGE
   # This leaves trailing comments in lines, making it not as effective
   # sed -n -i -r "/(^(${ip_regex})|^)${domain_regex}/p" "$1"
   #
   # This is an ugly workaround
-  local content="$(grep -oE "(^(${ip_regex})|^)${domain_regex}" "$1")"
-  printf -- "$content" > "$1"
-  unset content
-  unset ip_regex domain_regex
+  info_msg "Select only hosts lines: ${select_host_lines__url} (${select_host_lines__file})"
+
+  select_host_lines__content=
+  select_host_lines__content="$(grep -oE \
+    "(^(${SELECT_HOST_FILES_IP_REGEX})|^)${SELECT_HOST_FILES_DOMAIN_REGEX}" \
+    "${select_host_lines__file}")"
+
+  # Echo out result
+  printf -- "${select_host_lines__content}" > "${select_host_lines__file}"
+  unset select_host_lines__file
+  unset select_host_lines__url
+  unset select_host_lines__content
+  unset SELECT_HOST_FILES_IP_REGEX
+  unset SELECT_HOST_FILES_DOMAIN_REGEX
+  return 0
 }
 
 ##
@@ -700,7 +859,7 @@ install_ipset_blocklist()
   blocklist=$(printf -- "%s\n" "${blocklist}" | sed -e 's/^/add blocklist /')
   printf -- "%s\n" "${blocklist}" | ${needs_sudo} tee -a "${dst_ipset}" > /dev/null || {
     error_msg "Failed to add ipset to blocklist"
-    exit 1
+    return 1
   }
 
   info_msg "Commit new ipset"
@@ -792,6 +951,7 @@ cancel_sudoloop()
 
   cleanup
 
+  # Exit point
   exit 0
 }
 
@@ -829,22 +989,22 @@ main()
   ipset_name="blocklist"
   dst_ip="0.0.0.0"
 
-  # Check for required binaries, exit out if they are not present
-  check_for_download_ability || exit 1
-  check_for_binary sed || exit 1
-  check_for_binary grep || exit 1
-  check_for_binary sort || exit 1
-  check_for_binary touch || exit 1
-  check_for_binary sleep || exit 1
-  check_for_binary rm || exit 1
-  check_for_binary awk || exit 1
-  check_for_binary tee || exit 1
-  check_for_binary cp || exit 1
-  check_for_binary wc || exit 1
-  check_for_binary printf || exit 1
-  check_for_binary chmod || exit 1
-  check_for_binary mktemp || exit 1
-  check_for_binary cat || exit 1
+  # Check for required binaries, return out if they are not present
+  check_for_download_ability || return 1
+  check_for_binary sed || return 1
+  check_for_binary grep || return 1
+  check_for_binary sort || return 1
+  check_for_binary touch || return 1
+  check_for_binary sleep || return 1
+  check_for_binary rm || return 1
+  check_for_binary awk || return 1
+  check_for_binary tee || return 1
+  check_for_binary cp || return 1
+  check_for_binary wc || return 1
+  check_for_binary printf || return 1
+  check_for_binary chmod || return 1
+  check_for_binary mktemp || return 1
+  check_for_binary cat || return 1
 
   # Handle options
   # Options
@@ -871,11 +1031,11 @@ main()
         printf -- "     --output-ipset  The file to output ipsets to\n"
         printf -- "     --ipset-name    The name of the ipset\n"
         printf -- "     --dest-ip       The destination IP to use\n"
-        exit 0
+        return 0
         ;;
       "-v"|"--version")
         print_version
-        exit 0
+        return 0
         ;;
       "-r"|"--remove")
         remove_backups=1
@@ -886,14 +1046,14 @@ main()
         if [ $# -ge 1 ]; then
           if  [ -z "$1" ]; then
             error_msg "Must specify an output file name."
-            exit 1
+            return 1
           else
             dst_hosts="$1"
             shift
           fi
         else
           error_msg "Must specify an output file name."
-          exit 1
+          return 1
         fi
         ;;
       "--output-ipset")
@@ -901,14 +1061,14 @@ main()
         if [ $# -ge 1 ]; then
           if  [ -z "$1" ]; then
             error_msg "Must specify an output file name."
-            exit 1
+            return 1
           else
             dst_ipset="$1"
             shift
           fi
         else
           error_msg "Must specify an output file name."
-          exit 1
+          return 1
         fi
         ;;
       "--ipset-name")
@@ -916,14 +1076,14 @@ main()
         if [ $# -ge 1 ]; then
           if  [ -z "$1" ]; then
             error_msg "Must specify an ipset name."
-            exit 1
+            return 1
           else
             ipset_name="$1"
             shift
           fi
         else
           error_msg "Must specify an ipset name."
-          exit 1
+          return 1
         fi
         ;;
       "--dest-ip")
@@ -931,14 +1091,14 @@ main()
         if [ $# -ge 1 ]; then
           if  [ -z "$1" ]; then
             error_msg "Must specify an IP."
-            exit 1
+            return 1
           else
             dst_ip="$1"
             shift
           fi
         else
           error_msg "Must specify an IP."
-          exit 1
+          return 1
         fi
         ;;
       "-n"|"--noroot")
@@ -952,7 +1112,7 @@ main()
     esac
   done
 
-  # Trap exit signals
+  # Trap return signals
   trap cancel_sudoloop INT
 
   needs_sudo=
@@ -960,7 +1120,7 @@ main()
     check_for_binary sudo
 
     # initialize sudo
-    sudo -v || exit 1
+    sudo -v || return 1
 
     # Start sudoloop
     sudoloop &
@@ -971,11 +1131,11 @@ main()
   fi
 
   # Process begins:
-  print_hosts_config "${dst_hosts}" "${dst_ip}"
+  print_hosts_config "${dst_hosts}" "${dst_ip}" || cancel_sudoloop
 
   # Download
   action_msg "Downloading hosts_sources lists..."
-  download_sources "$(decide_dl_client)" "${HOSTS_SOURCES}" "process_hosts_sources" || cancel_sudoloop
+  download_sources "$(decide_dl_client)" "${HOSTS_SOURCES}" "process_hosts_sources" "temp_files" "pids" "blocklist" || cancel_sudoloop
 
   # Parse
   action_msg "Generating hosts file..."
@@ -1007,11 +1167,11 @@ main()
   # Start fresh
   cleanup
 
-  check_for_binary ipset || exit 1
+  check_for_binary ipset || cancel_sudoloop
 
   # Download
   printf -- "\n\n"
-  print_ipset_config || exit 1
+  print_ipset_config "${needs_sudo}" "${dst_ipset}" "${ipset_name}" || return 1
   action_msg "Downloading ipset_sources lists..."
   download_sources "$(decide_dl_client)" "${IPSET_SOURCES}" "process_ipset_sources" || cancel_sudoloop
 
