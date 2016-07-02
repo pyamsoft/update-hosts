@@ -393,6 +393,8 @@ print_hosts_config()
   info_msg "Hosts location: ${print_hosts_config__file}"
   info_msg "Destination IP: ${print_hosts_config__ip}"
 
+  return 1
+
   unset print_hosts_config__file
   unset print_hosts_config__ip
   return 0
@@ -934,27 +936,50 @@ install_new_hosts_file()
   return 0
 }
 
+##
+# Installs the ipset into the file given and then commits to the
+# named ipset
+#
+# $1 needs_sudo
+# $2 ipset detination file
+# $3 ipset name
 install_ipset_blocklist()
 {
-  action_msg "Install the ipset blocklist"
+  install_ipset_blocklist__sudo="$1"
+  install_ipset_blocklist__file="$2"
+  install_ipset_blocklist__name="$3"
 
+  action_msg "Install the ipset blocklist"
   info_msg "Clear existing block list"
-  printf -- "" | ${needs_sudo} tee "${dst_ipset}" > /dev/null
-  ${needs_sudo} ipset flush "${ipset_name}"
+  printf -- "" \
+    | ${install_ipset_blocklist__sudo} tee "${install_ipset_blocklist__file}" > /dev/null
+  ${install_ipset_blocklist__sudo} ipset flush "${install_ipset_blocklist__name}"
 
   info_msg "Create new blocklist"
   # Save here just to get the create line
-  ${needs_sudo} ipset save "${ipset_name}" -file "${dst_ipset}"
+  ${install_ipset_blocklist__sudo} ipset save \
+    "${install_ipset_blocklist__name}" -file "${install_ipset_blocklist__file}"
 
   info_msg "Add new IPs to the block list"
-  blocklist=$(printf -- "%s\n" "${blocklist}" | sed -e 's/^/add blocklist /')
-  printf -- "%s\n" "${blocklist}" | ${needs_sudo} tee -a "${dst_ipset}" > /dev/null || {
+  __blocklist=$(printf -- "%s\n" "${__blocklist}" | sed -e 's/^/add blocklist /')
+  printf -- "%s\n" "${__blocklist}" \
+    | ${install_ipset_blocklist__sudo} tee -a "${install_ipset_blocklist__file}" > /dev/null \
+    || {
     error_msg "Failed to add ipset to blocklist"
+
+    unset install_ipset_blocklist__sudo
+    unset install_ipset_blocklist__file
+    unset install_ipset_blocklist__name
     return 1
   }
 
   info_msg "Commit new ipset"
-  ${needs_sudo} ipset restore -exist -file "${dst_ipset}"
+  ${install_ipset_blocklist__sudo} ipset restore -exist -file "${install_ipset_blocklist__file}"
+
+  unset install_ipset_blocklist__sudo
+  unset install_ipset_blocklist__file
+  unset install_ipset_blocklist__name
+  return 0
 }
 
 
@@ -1117,6 +1142,64 @@ print_version()
   return 0
 }
 
+##
+# Main function which handles the downloading of hosts files
+#
+# $1 needs_sudo
+# $2 hosts file destination
+# $3 destination IP address
+# $4 remove backups
+main_hosts()
+{
+  main_hosts__sudo="$1"
+  main_hosts__file="$2"
+  main_hosts__ip="$3"
+  main_hosts__remove_backup="$4"
+
+  # Configuration
+  print_hosts_config "${main_hosts__file}" "${main_hosts__ip}"
+
+  # Download
+  action_msg "Downloading hosts_sources lists..."
+  download_sources "$(decide_dl_client)" "${HOSTS_SOURCES}" "process_hosts_sources" || cancel_sudoloop
+
+  # Parse
+  action_msg "Generating hosts file..."
+  apply_whitelist "${HOSTS_WHITELIST}" || cancel_sudoloop
+  apply_blacklist "${HOSTS_BLACKLIST}" || cancel_sudoloop
+  remove_duplicates || cancel_sudoloop
+  sort_entries || cancel_sudoloop
+  add_new_destination "${main_hosts__ip}" || cancel_sudoloop
+
+  # Install
+  hosts=
+  hosts="$(generate_new_hosts_file)" || cancel_sudoloop
+  main_hosts__file_backup="$(create_backup_name "${main_hosts__file}")"
+  backup_old_file "${main_hosts__sudo}" "${main_hosts__file}" "${main_hosts__file_backup}" || cancel_sudoloop
+  install_new_hosts_file "${main_hosts__sudo}" "${hosts}" "${main_hosts__file}" || cancel_sudoloop
+  fix_file_permissons "${main_hosts__sudo}" "${main_hosts__file}" || cancel_sudoloop
+  fix_file_permissons "${main_hosts__sudo}" "${main_hosts__file_backup}" || cancel_sudoloop
+  print_file_differences "${main_hosts__file}" "${main_hosts__file_backup}" || cancel_sudoloop
+
+  # Cleanup
+  if [ "${remove_backups}" -eq 1 ]; then
+    remove_all_backup_files "${main_hosts__sudo}" "${main_hosts__file}" || cancel_sudoloop
+  fi
+
+  unset hosts
+  unset main_hosts__sudo
+  unset main_hosts__file
+  unset main_hosts__file_backup
+  unset main_hosts__ip
+  unset main_hosts__remove_backup
+  return 0
+}
+
+main_ipsets()
+{
+  echo "PASS"
+}
+
 main()
 {
 
@@ -1272,36 +1355,7 @@ main()
     needs_sudo=""
   fi
 
-  # Process begins:
-  print_hosts_config "${dst_hosts}" "${dst_ip}" || cancel_sudoloop
-
-  # Download
-  action_msg "Downloading hosts_sources lists..."
-  download_sources "$(decide_dl_client)" "${HOSTS_SOURCES}" "process_hosts_sources" || cancel_sudoloop
-
-  # Parse
-  action_msg "Generating hosts file..."
-  apply_whitelist "blocklist" "${HOSTS_WHITELIST}" || cancel_sudoloop
-  apply_blacklist "${HOSTS_BLACKLIST}" || cancel_sudoloop
-  remove_duplicates || cancel_sudoloop
-  sort_entries || cancel_sudoloop
-  add_new_destination "${dst_ip}" || cancel_sudoloop
-
-  # Install
-  hosts=
-  hosts="$(generate_new_hosts_file)" || cancel_sudoloop
-  dst_backup="$(create_backup_name "${dst_hosts}")"
-  backup_old_file "${needs_sudo}" "${dst_hosts}" "${dst_backup}" || cancel_sudoloop
-  install_new_hosts_file "${needs_sudo}" "${hosts}" "${dst_hosts}" || cancel_sudoloop
-  fix_file_permissons "${needs_sudo}" "${dst_hosts}" || cancel_sudoloop
-  fix_file_permissons "${needs_sudo}" "${dst_backup}" || cancel_sudoloop
-  print_file_differences "${dst_hosts}" "${dst_backup}" || cancel_sudoloop
-  unset hosts
-
-  # Cleanup
-  if [ "${remove_backups}" -eq 1 ]; then
-    remove_all_backup_files "${needs_sudo}" "${dst_hosts}" || cancel_sudoloop
-  fi
+  main_hosts "${needs_sudo}" "${dst_hosts}" "${dst_ip}" "${remove_backups}" || cancel_sudoloop
 
   if [ "${manage_ipsets}" -eq 0 ]; then
     # End here
@@ -1313,9 +1367,11 @@ main()
 
   check_for_binary ipset || cancel_sudoloop
 
-  # Download
+  # Begin
   printf -- "\n\n"
   print_ipset_config "${needs_sudo}" "${dst_ipset}" "${ipset_name}" || return 1
+
+  # Download
   action_msg "Downloading ipset_sources lists..."
   download_sources "$(decide_dl_client)" "${IPSET_SOURCES}" "process_ipset_sources" || cancel_sudoloop
 
@@ -1328,8 +1384,8 @@ main()
 
   # Install
   dst_backup=$(create_backup_name "${dst_ipset}" ) || cancel_sudoloop
-  backup_old_file || cancel_sudoloop
-  install_ipset_blocklist || cancel_sudoloop
+  backup_old_file "${needs_sudo}" "${dst_ipset}" "${dst_backup}" || cancel_sudoloop
+  install_ipset_blocklist "${needs_sudo}" "${dst_ipset}" "${ipset_name}" || cancel_sudoloop
   fix_file_permissons "${dst_ipset}" || cancel_sudoloop
   fix_file_permissons "${dst_backup}" || cancel_sudoloop
   print_file_differences "${dst_ipset}" "${dst_backup}" || cancel_sudoloop
