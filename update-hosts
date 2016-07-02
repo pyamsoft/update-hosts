@@ -280,6 +280,11 @@ readonly IPSET_WHITELIST='
 readonly IPSET_BLACKLIST='
 '
 
+# Some regular expressions for handling host names and IP addresses
+readonly REGEX_STRIP_IP_ADDRESS='([0-9]{1,3}\.){3}[0-9]{1,3}[[:blank:]]+'
+readonly REGEX_SELECT_IP_ADDRESS='([0-9]{1,3}\.){3}[0-9]{1,3}'
+readonly REGEX_SELECT_HOST_NAME='([[:alnum:]_-]{1,63}\.)+[[:alpha:]][[:alnum:]_-]{1,62}'
+
 ##
 # Display a general message
 ##
@@ -646,8 +651,6 @@ change_eol()
 ##
 select_host_lines()
 {
-  readonly SELECT_HOST_FILES_IP_REGEX='([0-9]{1,3}\.){3}[0-9]{1,3}[[:blank:]]+'
-  readonly SELECT_HOST_FILES_DOMAIN_REGEX='([[:alnum:]_-]{1,63}\.)+[[:alpha:]][[:alnum:]_-]{1,62}'
   select_host_lines__file="$1"
   select_host_lines__url="$2"
 
@@ -661,7 +664,7 @@ select_host_lines()
 
   select_host_lines__content=
   select_host_lines__content="$(grep -oE \
-    "(^(${SELECT_HOST_FILES_IP_REGEX})|^)${SELECT_HOST_FILES_DOMAIN_REGEX}" \
+    "(^(${REGEX_STRIP_IP_ADDRESS})|^)${REGEX_SELECT_HOST_NAME}" \
     "${select_host_lines__file}")"
 
   # Echo out result
@@ -670,8 +673,6 @@ select_host_lines()
   unset select_host_lines__file
   unset select_host_lines__url
   unset select_host_lines__content
-  unset SELECT_HOST_FILES_IP_REGEX
-  unset SELECT_HOST_FILES_DOMAIN_REGEX
   return 0
 }
 
@@ -683,13 +684,12 @@ select_host_lines()
 ##
 select_ip_lines()
 {
-  readonly SELECT_IP_LINES_IP_REGEX='([0-9]{1,3}\.){3}[0-9]{1,3}'
   select_ip_lines__file="$1"
   select_ip_lines__url="$2"
 
   info_msg "Select only IP lines: ${select_ip_lines__url} (${select_ip_lines__file})"
   select_ip_lines__content=
-  select_ip_lines__content="$(grep -oE "${SELECT_IP_LINES_IP_REGEX}" \
+  select_ip_lines__content="$(grep -oE "${REGEX_SELECT_IP_ADDRESS}" \
     "${select_ip_lines__file}")"
 
   # Echo out result
@@ -698,7 +698,6 @@ select_ip_lines()
   unset select_ip_lines__content
   unset select_ip_lines__file
   unset select_ip_lines__url
-  unset SELECT_IP_LINES_IP_REGEX
   return 0
 }
 
