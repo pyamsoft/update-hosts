@@ -792,10 +792,10 @@ apply_blacklist()
     fi
   done
 
-  if [ -z "${_blocklist}" ]; then
-    _blocklist="$(printf -- "%s\n" "${apply_blacklist__domains}")"
+  if [ -z "${__blocklist}" ]; then
+    __blocklist="$(printf -- "%s\n" "${apply_blacklist__domains}")"
   else
-    _blocklist="$(printf -- "%s\n%s\n" "${_blocklist}" "${apply_blacklist__domains}")"
+    __blocklist="$(printf -- "%s\n%s\n" "${__blocklist}" "${apply_blacklist__domains}")"
   fi
 
   unset apply_blacklist__domains
@@ -809,7 +809,9 @@ apply_blacklist()
 remove_duplicates()
 {
   info_msg "Remove duplicate entries"
-  blocklist=$(printf -- "%s\n" "${blocklist}" | awk '!a[$0]++')
+  __blocklist="$(printf -- "%s\n" "${__blocklist}" | awk '!a[$0]++')"
+
+  return 0
 }
 
 ##
@@ -818,44 +820,83 @@ remove_duplicates()
 sort_entries()
 {
   info_msg "Sort entries"
-  blocklist=$(printf -- "%s\n" "${blocklist}" | sort -n)
+  __blocklist="$(printf -- "%s\n" "${__blocklist}" | sort -n)"
+
+  return 0
 }
 
 ##
 # Add the configured destination, by default the zero address
+#
+# $1 desitination IP address
 ##
 add_new_destination()
 {
+  add_new_destination__ip="$1"
+
   info_msg "Add new destination"
-  blocklist=$(printf -- "%s\n" "${blocklist}" | sed "s/^/${dst_ip} /g")
+  __blocklist="$(printf -- "%s\n" "${__blocklist}" \
+    | sed "s/^/${add_new_destination__ip} /g")"
+
+  unset add_new_destination__ip
+  return 0
 }
 
 ##
 # Parse the hosts_header and create the new hosts file
+#
+# Outputs the completed hosts file contents
 ##
 generate_new_hosts_file()
 {
   generate_new_hosts_file__header=
-  generate_new_hosts_file__header=$(printf -- "# <hosts_header>%s# </hosts_header>\n" "${HOSTS_HEADER}")
-  generate_new_hosts_file__header=$(printf -- "# %s\n%s\n" "$(date)" "${generate_new_hosts_file__header}")
-  hosts=$(printf -- "%s\n# <blocklist>\n%s\n# </blocklist>" \
-    "${generate_new_hosts_file__header}" "${blocklist}")
+
+  info_msg "Create new hosts file"
+  generate_new_hosts_file__header="$(printf -- "# <hosts_header>%s# </hosts_header>\n" "${HOSTS_HEADER}")"
+  generate_new_hosts_file__header="$(printf -- "# %s\n%s\n" \
+    "$(date)" \
+    "${generate_new_hosts_file__header}")"
+
+  printf -- "%s\n# <blocklist>\n%s\n# </blocklist>" \
+    "${generate_new_hosts_file__header}" \
+    "${__blocklist}"
+
+  unset generate_new_hosts_file__header
+  unset __blocklist
+  return 0
 }
 
 ##
 # Backup original file
+#
+# $1 needs_sudo
+# $2 file name
+# $3 backup name
 ##
 backup_old_file()
 {
-  if [ -f "${dst_hosts}" ]; then
-    info_msg "Creating backup of original hosts file..."
-    ${needs_sudo} cp "${dst_hosts}" "${dst_backup}" || {
-      error_msg "Failed to copy to file ${dst_backup}"
+  backup_old_file__sudo="$1"
+  backup_old_file__file="$2"
+  backup_old_file__backup="$3"
+
+  if [ -f "${backup_old_file__file}" ]; then
+    info_msg "Creating backup of original file..."
+    ${backup_old_file__sudo} cp "${backup_old_file__file}" "${backup_old_file__backup}" || {
+      error_msg "Failed to copy to file ${backup_old_file__backup}"
+
+      unset backup_old_file__sudo
+      unset backup_old_file__file
+      unset backup_old_file__backup
       return 1
     }
   else
     info_msg "No original file exists to create backup"
   fi
+
+  unset backup_old_file__sudo
+  unset backup_old_file__file
+  unset backup_old_file__backup
+  return 0
 }
 
 ##
@@ -999,8 +1040,6 @@ main()
 
   # Version
   version="2.0.0"
-
-  hosts="" # Leave this blank
 
   # Options
   remove_backups=0
@@ -1167,12 +1206,13 @@ main()
   apply_blacklist "${HOSTS_BLACKLIST}" || cancel_sudoloop
   remove_duplicates || cancel_sudoloop
   sort_entries || cancel_sudoloop
-  add_new_destination || cancel_sudoloop
+  add_new_destination "${dst_ip}" || cancel_sudoloop
 
   # Install
-  generate_new_hosts_file || cancel_sudoloop
-  dst_backup=$(create_backup_name "${dst_hosts}" ) || cancel_sudoloop
-  backup_old_file || cancel_sudoloop
+  hosts=
+  hosts="$(generate_new_hosts_file)" || cancel_sudoloop
+  dst_backup="$(create_backup_name "${dst_hosts}")"
+  backup_old_file "${needs_sudo}" "${dst_hosts}" "${dst_backup}" || cancel_sudoloop
   install_new_hosts_file || cancel_sudoloop
   fix_file_permissons "${dst_hosts}" || cancel_sudoloop
   fix_file_permissons "${dst_backup}" || cancel_sudoloop
