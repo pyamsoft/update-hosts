@@ -43,6 +43,10 @@ VERSION="2.1.0"
 
 readonly SUDOLOCK="/tmp/update-hosts.sudolock"
 
+# Set a sanitized PATH
+unset PATH
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
 #       can occur when using traceroute, netstat and the like.
 readonly HOSTS_HEADER="
@@ -369,19 +373,36 @@ check_for_download_ability()
 check_for_binary()
 {
   check_for_binary__bin="$1"
-
-  if ! which "${check_for_binary__bin}" > /dev/null 2>&1; then
-    printf -- "The '%s' binary is required for this script.\n" \
-      "${check_for_binary__bin}"
-    printf -- "Please install '%s' onto your system.\n" \
-      "${check_for_binary__bin}"
-
-    unset check_for_binary__bin
+  check_for_binary__old_ifs="${IFS}"
+  if [ -z "${check_for_binary__bin}" ]; then
+    error_msg "Must specify a path to a binary"
     return 1
   fi
 
+  IFS=":"
+  for check_for_binary__path in ${PATH}; do
+    check_for_binary__result=
+    check_for_binary__result="${check_for_binary__path}/${check_for_binary__bin}"
+    if [ -e "${check_for_binary__result}" ]; then
+      IFS="${check_for_binary__old_ifs}"
+
+      unset check_for_binary__result
+      unset check_for_binary__bin
+      unset check_for_binary__old_ifs
+      unset check_for_binary__path
+      return 0
+    fi
+
+    unset check_for_binary__result
+  done
+
+  error_msg "Binary '${check_for_binary__bin}' not found in \$PATH"
+
+  unset check_for_binary__result
   unset check_for_binary__bin
-  return 0
+  unset check_for_binary__old_ifs
+  unset check_for_binary__path
+  return 1
 }
 
 ##
@@ -1147,6 +1168,24 @@ print_version()
 }
 
 ##
+# Print out help
+print_help()
+{
+  print_version
+  printf -- "  Options:\n"
+  printf -- "     -h | --help     Display help\n"
+  printf -- "     -v | --version  Display version\n"
+  printf -- "     -r | --remove   Remove backups\n"
+  printf -- "     -n | --noroot   Do not require root to output\n"
+  printf -- "     -i | --ipset    Also download ipset sources\n"
+  printf -- "     --output-hosts  The file to output hosts to\n"
+  printf -- "     --output-ipset  The file to output ipsets to\n"
+  printf -- "     --ipset-name    The name of the ipset\n"
+  printf -- "     --dest-ip       The destination IP to use\n"
+  return 0
+}
+
+##
 # Main function which handles the downloading of hosts files
 #
 # $1 needs_sudo
@@ -1291,100 +1330,119 @@ main()
   #   --output-ipset  The file to output ipsets to
   #   --ipset-name    The name of the ipset
   #   --dest-ip       The destination IP to use
-  for arg in "$@"; do
-    case "${arg}" in
-      "-h"|"--help")
-        print_version
-        printf -- "  Options:\n"
-        printf -- "     -h | --help     Display help\n"
-        printf -- "     -v | --version  Display version\n"
-        printf -- "     -r | --remove   Remove backups\n"
-        printf -- "     -n | --noroot   Do not require root to output\n"
-        printf -- "     -i | --ipset    Also download ipset sources\n"
-        printf -- "     --output-hosts  The file to output hosts to\n"
-        printf -- "     --output-ipset  The file to output ipsets to\n"
-        printf -- "     --ipset-name    The name of the ipset\n"
-        printf -- "     --dest-ip       The destination IP to use\n"
-        return 0
-        ;;
-      "-v"|"--version")
-        print_version
-        return 0
-        ;;
-      "-r"|"--remove")
-        remove_backups=1
-        shift
-        ;;
-      "--output-hosts")
-        shift
-        if [ $# -ge 1 ]; then
-          if  [ -z "$1" ]; then
-            error_msg "Must specify an output file name."
-            return 1
-          else
-            dst_hosts="$1"
-            shift
-          fi
-        else
-          error_msg "Must specify an output file name."
+  #
+  # While risky to call eval, this is one way to
+  # emulate the bash indirect_expansion ability
+  if [ $# -gt 0 ]; then
+    long_option=""
+    optind_expanded=
+    eval optind_expanded="\$${OPTIND}"
+    while [ -n "${optind_expanded}" ]; do
+      while getopts ":hvrni-:" option; do
+        # Set only on long option with arg
+        if [ -n "${long_option}" ]; then
+          error_msg "Long option --${long_option} expects argument"
           return 1
         fi
-        ;;
-      "--output-ipset")
-        shift
-        if [ $# -ge 1 ]; then
-          if  [ -z "$1" ]; then
-            error_msg "Must specify an output file name."
+
+        long_option=""
+        case "${option}" in
+          -)
+            info_msg "parse long option: -${option}${OPTARG}"
+            case "${OPTARG}" in
+              help)
+                print_help
+                return 0
+                ;;
+              version)
+                print_version
+                return 0
+                ;;
+              remove)
+                remove_backups=1
+                ;;
+              noroot)
+                require_root=0
+                ;;
+              ipset)
+                manage_ipsets=1
+                ;;
+              output-hosts|output-ipset|ipset-name|dest-ip)
+                long_option="${OPTARG}"
+                ;;
+              *)
+                # We must provide our own error message in this case
+                error_msg "Illegal option --${OPTARG}"
+                print_help
+                return 1
+                ;;
+            esac
+            ;;
+          h)
+            print_help
+            return 0
+            ;;
+          v)
+            print_version
+            return 0
+            ;;
+          r)
+            remove_backups=1
+            ;;
+          n)
+            require_root=0
+            ;;
+          i)
+            manage_ipsets=1
+            ;;
+          *)
+            error_msg "Illegal option -${OPTARG}"
+            print_help
             return 1
-          else
-            dst_ipset="$1"
-            shift
-          fi
-        else
-          error_msg "Must specify an output file name."
+            ;;
+        esac
+      done
+
+      # Re-establish the current OPTIND target
+      if [ $# -ge ${OPTIND} ]; then
+        eval optind_expanded="\$${OPTIND}"
+      else
+        optind_expanded=""
+      fi
+
+      if [ -z "${optind_expanded}" ]; then
+        if [ -n "${long_option}" ]; then
+          error_msg "Long option --${long_option} expects argument"
           return 1
-        fi
-        ;;
-      "--ipset-name")
-        shift
-        if [ $# -ge 1 ]; then
-          if  [ -z "$1" ]; then
-            error_msg "Must specify an ipset name."
-            return 1
-          else
-            ipset_name="$1"
-            shift
-          fi
         else
-          error_msg "Must specify an ipset name."
-          return 1
+          break
         fi
-        ;;
-      "--dest-ip")
-        shift
-        if [ $# -ge 1 ]; then
-          if  [ -z "$1" ]; then
-            error_msg "Must specify an IP."
-            return 1
-          else
-            dst_ip="$1"
-            shift
-          fi
-        else
-          error_msg "Must specify an IP."
-          return 1
-        fi
-        ;;
-      "-n"|"--noroot")
-        require_root=0
-        shift
-        ;;
-      "-i"|"--ipset")
-        manage_ipsets=1
-        shift
-        ;;
-    esac
-  done
+      else
+        # This is a plain arg and should be handled by one of the options which takes an argument
+        case "${long_option}" in
+          output-hosts)
+            dst_hosts="${optind_expanded}"
+            ;;
+          output-ipset)
+            dst_ipset="${optind_expanded}"
+            ;;
+          dest-ip)
+            dst_ip="${optind_expanded}"
+            ;;
+          ipset-name)
+            ipset_name="${optind_expanded}"
+            ;;
+        esac
+
+        # Set back to null
+        long_option=""
+      fi
+
+      # Shift the options
+      shift $OPTIND
+      OPTIND=1
+    done
+  fi
 
   # Trap return signals
   trap cancel_sudoloop INT
