@@ -30,6 +30,12 @@
 # Modified by:
 #  pyamsoft <pyam(dot)soft(at)gmail(dot)com>
 
+# Prevent the script from being sourced
+if [ "$(basename "$_")" != "update-hosts" ]; then
+  # Return, script was sourced
+  return 0
+fi
+
 # Configuration:
 
 # Version
@@ -1419,21 +1425,16 @@ main()
   cancel_sudoloop
 }
 
-if [ "$(basename "$_")" != "update-hosts" ]; then
-  # Return, script was sourced
-  return 0
-else
-  # For more information about these particular options, see
-  #    https://stackoverflow.com/questions/13468481/when-to-use-set-e
-  set -u
+# For more information about these particular options, see
+#    https://stackoverflow.com/questions/13468481/when-to-use-set-e
+set -u
 
-  # Export the LC as the default C so that we do not run into locale based quirks
-  export LC_ALL=C
+# Export the LC as the default C so that we do not run into locale based quirks
+export LC_ALL=C
 
-  __temp_files="" # Leave blank
-  __pids="" # Leave blank
-  __blocklist="" # Leave blank
+__temp_files="" # Leave blank
+__pids="" # Leave blank
+__blocklist="" # Leave blank
 
-  main "$@"
-fi
+main "$@"
 # vim: set syntax=sh tabstop=2 softtabstop=2 shiftwidth=2 shiftround expandtab:
