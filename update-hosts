@@ -31,11 +31,11 @@
 #  pyamsoft <pyam(dot)soft(at)gmail(dot)com>
 
 # Configuration:
-readonly sudolock="/tmp/update-hosts.sudolock"
+readonly SUDOLOCK="/tmp/update-hosts.sudolock"
 
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
 #       can occur when using traceroute, netstat and the like.
-readonly hosts_header="
+readonly HOSTS_HEADER="
 127.0.0.1 $(uname -n) localhost
 255.255.255.255 broadcasthost
 # Fixes a display anomaly in traceroute and netstat
@@ -45,7 +45,7 @@ readonly hosts_header="
 # The base hosts_sources
 # Provides a basic amount of protection without breaking sites, or breaking
 # only a minimal amount of sites
-readonly base_hosts_sources="
+readonly BASE_HOSTS_SOURCES="
   http://winhelp2002.mvps.org/hosts.txt
   http://someonewhocares.org/hosts/hosts
   https://www.malwaredomainlist.com/hostslist/hosts.txt
@@ -94,14 +94,14 @@ readonly base_hosts_sources="
 
 
 # The hosts_sources that will be parsed into the hosts file.
-# By default only the hosts_sources in the ${base_hosts_sources} list
+# By default only the hosts_sources in the ${BASE_HOSTS_SOURCES} list
 # are included, additional hosts_sources can be included by
 # appending them onto lines following the base-hosts_sources line.
 # Destinations and duplicate entries do not matter, as they will
 # be sanitized and duplicates will be stripped out.
-readonly hosts_sources="
+readonly HOSTS_SOURCES="
 
-  ${base_hosts_sources}
+  ${BASE_HOSTS_SOURCES}
 
 "
 
@@ -118,7 +118,7 @@ readonly hosts_sources="
 # some sites breaking when blocking certain hosts
 #
 # Update 2016/03/15
-readonly hosts_whitelist='
+readonly HOSTS_WHITELIST='
   google-analytics\.com$
   ^analytics\.google\.com$
   adf\.ly$
@@ -196,7 +196,7 @@ readonly hosts_whitelist='
 # Only exact strings, no regex supported
 #    agor.io: Jumpscare
 #    pinion.gg: Ads in Counter Strike: Global Offensive and other games
-readonly hosts_blacklist='
+readonly HOSTS_BLACKLIST='
   agor.io
   www.agor.io
   adback.pinion.gg
@@ -244,7 +244,7 @@ readonly hosts_blacklist='
 # The base ipsets
 # Provides a basic amount of protection without breaking sites, or breaking
 # only a minimal amount of sites
-readonly base_ipset_sources="
+readonly BASE_IPSET_SOURCES="
     http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
     http://danger.rulez.sk/projects/bruteforceblocker/blist.php
     http://cinsscore.com/list/ci-badguys.txt
@@ -264,12 +264,12 @@ readonly base_ipset_sources="
 # appending them onto lines following the base-sources line.
 # Destinations and duplicate entries do not matter, as they will
 # be sanitized and duplicates will be stripped out.
-readonly ipset_sources="
+readonly IPSET_SOURCES="
 
-  ${base_ipset_sources}
+  ${BASE_IPSET_SOURCES}
 
 "
-readonly ipset_whitelist='
+readonly IPSET_WHITELIST='
 127.0.0.1
 0.0.0.0
 255.255.255.255
@@ -277,7 +277,7 @@ readonly ipset_whitelist='
 
 # BLACKLIST IPS
 # Only exact strings, no regex supported
-readonly ipset_blacklist='
+readonly IPSET_BLACKLIST='
 '
 
 ##
@@ -627,7 +627,7 @@ add_new_destination()
 generate_new_hosts_file()
 {
   generate_new_hosts_file__header=
-  generate_new_hosts_file__header=$(printf -- "# <hosts_header>%s# </hosts_header>\n" "${hosts_header}")
+  generate_new_hosts_file__header=$(printf -- "# <hosts_header>%s# </hosts_header>\n" "${HOSTS_HEADER}")
   generate_new_hosts_file__header=$(printf -- "# %s\n%s\n" "$(date)" "${generate_new_hosts_file__header}")
   hosts=$(printf -- "%s\n# <blocklist>\n%s\n# </blocklist>" \
     "${generate_new_hosts_file__header}" "${blocklist}")
@@ -739,8 +739,8 @@ remove_all_backup_files()
 
 sudoloop()
 {
-  touch "${sudolock}"
-  while [ -e "${sudolock}" ]; do
+  touch "${SUDOLOCK}"
+  while [ -e "${SUDOLOCK}" ]; do
     sudo -n -v
     sleep 2
   done
@@ -765,7 +765,7 @@ cleanup()
 
 cancel_sudoloop()
 {
-  [ -e "${sudolock}" ] && rm -f "${sudolock}"
+  [ -e "${SUDOLOCK}" ] && rm -f "${SUDOLOCK}"
 
   cleanup
 
@@ -952,12 +952,12 @@ main()
 
   # Download
   action_msg "Downloading hosts_sources lists..."
-  download_sources "$(decide_dl_client)" "${hosts_sources}" "process_hosts_sources" || cancel_sudoloop
+  download_sources "$(decide_dl_client)" "${HOSTS_SOURCES}" "process_hosts_sources" || cancel_sudoloop
 
   # Parse
   action_msg "Generating hosts file..."
-  apply_whitelist "${hosts_whitelist}" || cancel_sudoloop
-  apply_blacklist "${hosts_blacklist}" || cancel_sudoloop
+  apply_whitelist "${HOSTS_WHITELIST}" || cancel_sudoloop
+  apply_blacklist "${HOSTS_BLACKLIST}" || cancel_sudoloop
   remove_duplicates || cancel_sudoloop
   sort_entries || cancel_sudoloop
   add_new_destination || cancel_sudoloop
@@ -990,12 +990,12 @@ main()
   printf -- "\n\n"
   print_ipset_config || exit 1
   action_msg "Downloading ipset_sources lists..."
-  download_sources "$(decide_dl_client)" "${ipset_sources}" "process_ipset_sources" || cancel_sudoloop
+  download_sources "$(decide_dl_client)" "${IPSET_SOURCES}" "process_ipset_sources" || cancel_sudoloop
 
   # Parse
   action_msg "Generating ipset..."
-  apply_whitelist "${ipset_whitelist}" || cancel_sudoloop
-  apply_blacklist "${ipset_blacklist}" || cancel_sudoloop
+  apply_whitelist "${IPSET_WHITELIST}" || cancel_sudoloop
+  apply_blacklist "${IPSET_BLACKLIST}" || cancel_sudoloop
   remove_duplicates || cancel_sudoloop
   sort_entries || cancel_sudoloop
 
