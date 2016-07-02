@@ -30,32 +30,12 @@
 # Modified by:
 #  pyamsoft <pyam(dot)soft(at)gmail(dot)com>
 
-# For more information about these particular options, see
-#    https://stackoverflow.com/questions/13468481/when-to-use-set-e
-set -u
-
-# Export the LC as the default C so that we do not run into locale based quirks
-export LC_ALL=C
-
-# Version
-version="2.0.0"
-
 # Configuration:
 readonly sudolock="/tmp/update-hosts.sudolock"
 
-temp_files=""
-pids="" # Leave blank
-blocklist="" # Leave this blank
-hosts="" # Leave this blank
-
-# Options
-remove_backups=0
-require_root=1
-manage_ipsets=0
-
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
 #       can occur when using traceroute, netstat and the like.
-hosts_header="
+readonly hosts_header="
 127.0.0.1 $(uname -n) localhost
 255.255.255.255 broadcasthost
 # Fixes a display anomaly in traceroute and netstat
@@ -646,10 +626,11 @@ add_new_destination()
 ##
 generate_new_hosts_file()
 {
-  hosts_header=$(printf -- "# <hosts_header>%s# </hosts_header>\n" "${hosts_header}")
-  hosts_header=$(printf -- "# %s\n%s\n" "$(date)" "${hosts_header}")
+  generate_new_hosts_file__header=
+  generate_new_hosts_file__header=$(printf -- "# <hosts_header>%s# </hosts_header>\n" "${hosts_header}")
+  generate_new_hosts_file__header=$(printf -- "# %s\n%s\n" "$(date)" "${generate_new_hosts_file__header}")
   hosts=$(printf -- "%s\n# <blocklist>\n%s\n# </blocklist>" \
-    "${hosts_header}" "${blocklist}")
+    "${generate_new_hosts_file__header}" "${blocklist}")
 }
 
 ##
@@ -799,6 +780,26 @@ print_version()
 
 main()
 {
+  # For more information about these particular options, see
+  #    https://stackoverflow.com/questions/13468481/when-to-use-set-e
+  set -u
+
+  # Export the LC as the default C so that we do not run into locale based quirks
+  export LC_ALL=C
+
+  # Version
+  version="2.0.0"
+
+  temp_files=""
+  pids="" # Leave blank
+  blocklist="" # Leave this blank
+  hosts="" # Leave this blank
+
+  # Options
+  remove_backups=0
+  require_root=1
+  manage_ipsets=0
+
   # Script begins here
   dst_hosts="/etc/hosts"
   dst_ipset="/etc/ipset.conf"
@@ -833,7 +834,7 @@ main()
   #   --output-ipset  The file to output ipsets to
   #   --ipset-name    The name of the ipset
   #   --dest-ip       The destination IP to use
-  for arg in $@; do
+  for arg in "$@"; do
     case "${arg}" in
       "-h"|"--help")
         print_version
