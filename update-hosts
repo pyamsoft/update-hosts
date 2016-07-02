@@ -333,12 +333,20 @@ check_for_binary()
 
 ##
 # Print out the hosts configuration
+#
+# $1 hosts file location
+# $2 hosts destination IP
 ##
 print_hosts_config()
 {
+  print_hosts_config__file="$1"
+  print_hosts_config__ip="$2"
   action_msg "Hosts Configuration:"
-  info_msg "Hosts location: ${dst_hosts}"
-  info_msg "Destination IP: ${dst_ip}"
+  info_msg "Hosts location: ${print_hosts_config__file}"
+  info_msg "Destination IP: ${print_hosts_config__ip}"
+
+  unset print_hosts_config__file
+  unset print_hosts_config__ip
 }
 
 ##
@@ -948,7 +956,7 @@ main()
   fi
 
   # Process begins:
-  print_hosts_config
+  print_hosts_config "${dst_hosts}" "${dst_ip}"
 
   # Download
   action_msg "Downloading hosts_sources lists..."
