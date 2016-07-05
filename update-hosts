@@ -1485,6 +1485,7 @@ main()
 # For more information about these particular options, see
 #    https://stackoverflow.com/questions/13468481/when-to-use-set-e
 set -u
+set -o pipefail
 
 # Export the LC as the default C so that we do not run into locale based quirks
 export LC_ALL=C
