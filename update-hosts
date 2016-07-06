@@ -402,6 +402,7 @@ check_for_binary()
     unset check_for_binary__result
   done
 
+  IFS="${check_for_binary__old_ifs}"
   error_msg "Binary '${check_for_binary__bin}' not found in \$PATH"
 
   unset check_for_binary__result
@@ -450,8 +451,10 @@ print_ipset_config()
 
   # The ipset must exist first for this script to work
   # check for existence here
-  ${print_ipset_config__sudo} ipset list "${print_ipset_config__name}" > /dev/null 2>&1 || {
-    error_msg "The ipset: ${print_ipset_config__name} must exist before running this script."
+  ${print_ipset_config__sudo} ipset list "${print_ipset_config__name}" \
+    > /dev/null 2>&1 || {
+    error_msg "The ipset: ${print_ipset_config__name} must \
+      exist before running this script."
     error_msg "Create it using: # ipset create ${print_ipset_config__name}"
 
     unset print_ipset_config__sudo
@@ -502,8 +505,10 @@ process_ipset_sources()
   process_ipset_sources__file="$1"
   process_ipset_sources__url="$2"
 
-  change_eol "${process_ipset_sources__file}" "${process_ipset_sources__url}"
-  select_ip_lines "${process_ipset_sources__file}" "${process_ipset_sources__url}"
+  change_eol "${process_ipset_sources__file}" \
+    "${process_ipset_sources__url}"
+  select_ip_lines "${process_ipset_sources__file}" \
+    "${process_ipset_sources__url}"
 
   unset process_ipset_sources__file
   unset process_ipset_sources__url
@@ -521,11 +526,16 @@ process_hosts_sources()
   process_hosts_sources__file="$1"
   process_hosts_sources__url="$2"
 
-  change_eol "${process_hosts_sources__file}" "${process_hosts_sources__url}"
-  select_host_lines "${process_hosts_sources__file}" "${process_hosts_sources__url}"
-  remove_untrusted_domain "${process_hosts_sources__file}" "${process_hosts_sources__url}"
-  normalize_to_lowercase "${process_hosts_sources__file}" "${process_hosts_sources__url}"
-  remove_local_entries "${process_hosts_sources__file}" "${process_hosts_sources__url}"
+  change_eol "${process_hosts_sources__file}" \
+    "${process_hosts_sources__url}"
+  select_host_lines "${process_hosts_sources__file}" \
+    "${process_hosts_sources__url}"
+  remove_untrusted_domain "${process_hosts_sources__file}" \
+    "${process_hosts_sources__url}"
+  normalize_to_lowercase "${process_hosts_sources__file}" \
+    "${process_hosts_sources__url}"
+  remove_local_entries "${process_hosts_sources__file}" \
+    "${process_hosts_sources__url}"
 
   unset process_hosts_sources__file
   unset process_hosts_sources__url
@@ -549,17 +559,20 @@ download_to_tempfile()
   download_to_tempfile__content=
 
   info_msg "Downloading from ${download_to_tempfile__url}"
-  download_to_tempfile__content="$(printf -- "%s" "$(${download_to_tempfile__client} "${download_to_tempfile__url}")")"
+  download_to_tempfile__content="$(printf -- "%s" \
+    "$(${download_to_tempfile__client} "${download_to_tempfile__url}")")"
   if [ -z "${download_to_tempfile__content}" ]; then
     info_msg "  Failed to download from: ${download_to_tempfile__url}"
     return 1
   fi
 
   # Guarantee an empty file
-  printf -- "%s\n" "${download_to_tempfile__content}" > "${download_to_tempfile__file}"
+  printf -- "%s\n" "${download_to_tempfile__content}" \
+    > "${download_to_tempfile__file}"
 
   # Run after download processing hook
-  "${download_to_tempfile__process_hook}" "${download_to_tempfile__file}" "${download_to_tempfile__url}"
+  "${download_to_tempfile__process_hook}" "${download_to_tempfile__file}" \
+    "${download_to_tempfile__url}"
 
   unset download_to_tempfile__client
   unset download_to_tempfile__process_hook
@@ -591,7 +604,9 @@ download_sources()
     # Add the tempfile to list of temporary files
     __temp_files="${download_sources__tempfile} "${__temp_files}
 
-    download_to_tempfile "${download_sources__client}" "${download_sources__url}" "${download_sources__tempfile}" "${download_sources__process_hook}" &
+    download_to_tempfile "${download_sources__client}" \
+      "${download_sources__url}" "${download_sources__tempfile}" \
+      "${download_sources__process_hook}" &
 
     # Add the pid to list of pids
     __pids="${__pids} $!"
@@ -725,7 +740,8 @@ remove_untrusted_domain()
   remove_untrusted_domain__file="$1"
   remove_untrusted_domain__url="$2"
   info_msg "Remove old destination: ${remove_untrusted_domain__url} (${remove_untrusted_domain__file})"
-  sed -i -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g' "${remove_untrusted_domain__file}"
+  sed -i -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g' \
+    "${remove_untrusted_domain__file}"
 
   unset remove_untrusted_domain__file
   unset remove_untrusted_domain__url
@@ -750,8 +766,10 @@ normalize_to_lowercase()
   info_msg "Transform all entries to lowercase: ${normalize_to_lowercase__url} (${normalize_to_lowercase__file})"
 
   normalize_to_lowercase__content=
-  normalize_to_lowercase__content="$(awk '{print tolower($0)}' "${normalize_to_lowercase__file}")"
-  printf -- "${normalize_to_lowercase__content}" > "${normalize_to_lowercase__file}"
+  normalize_to_lowercase__content="$(awk '{print tolower($0)}' \
+    "${normalize_to_lowercase__file}")"
+  printf -- "${normalize_to_lowercase__content}" \
+    > "${normalize_to_lowercase__file}"
 
   unset normalize_to_lowercase__file
   unset normalize_to_lowercase__url
@@ -796,7 +814,8 @@ apply_whitelist()
   fi
 
   for apply_whitelist__domain in ${apply_whitelist__whitelist}; do
-    __blocklist="$(printf -- "%s\n" "${__blocklist}" | sed -r "/${apply_whitelist__domain}/d")"
+    __blocklist="$(printf -- "%s\n" "${__blocklist}" \
+      | sed -r "/${apply_whitelist__domain}/d")"
     unset apply_whitelist__domain
   done
 
@@ -832,7 +851,8 @@ apply_blacklist()
   if [ -z "${__blocklist}" ]; then
     __blocklist="$(printf -- "%s\n" "${apply_blacklist__domains}")"
   else
-    __blocklist="$(printf -- "%s\n%s\n" "${__blocklist}" "${apply_blacklist__domains}")"
+    __blocklist="$(printf -- "%s\n%s\n" "${__blocklist}" \
+      "${apply_blacklist__domains}")"
   fi
 
   unset apply_blacklist__domains
@@ -889,7 +909,8 @@ generate_new_hosts_file()
   generate_new_hosts_file__header=
 
   info_msg "Create new hosts file"
-  generate_new_hosts_file__header="$(printf -- "# <hosts_header>%s# </hosts_header>\n" "${HOSTS_HEADER}")"
+  generate_new_hosts_file__header="$(printf -- \
+    "# <hosts_header>%s# </hosts_header>\n" "${HOSTS_HEADER}")"
   generate_new_hosts_file__header="$(printf -- "# %s\n%s\n" \
     "$(date)" \
     "${generate_new_hosts_file__header}")"
@@ -918,7 +939,8 @@ backup_old_file()
 
   if [ -f "${backup_old_file__file}" ]; then
     info_msg "Creating backup of original file..."
-    ${backup_old_file__sudo} cp "${backup_old_file__file}" "${backup_old_file__backup}" || {
+    ${backup_old_file__sudo} cp "${backup_old_file__file}" \
+      "${backup_old_file__backup}" || {
       error_msg "Failed to copy to file ${backup_old_file__backup}"
 
       unset backup_old_file__sudo
@@ -951,7 +973,8 @@ install_new_hosts_file()
 
   info_msg "Installing new hosts file..."
   printf -- "%s\n" "${install_new_hosts_file__hosts}" \
-    | ${install_new_hosts_file__sudo} tee "${install_new_hosts_file__destination}" > /dev/null \
+    | ${install_new_hosts_file__sudo} tee \
+    "${install_new_hosts_file__destination}" > /dev/null \
     || {
     error_msg "Failed to output to file ${install_new_hosts_file__destination}"
 
@@ -983,8 +1006,10 @@ install_ipset_blocklist()
   action_msg "Install the ipset blocklist"
   info_msg "Clear existing block list"
   printf -- "" \
-    | ${install_ipset_blocklist__sudo} tee "${install_ipset_blocklist__file}" > /dev/null
-  ${install_ipset_blocklist__sudo} ipset flush "${install_ipset_blocklist__name}"
+    | ${install_ipset_blocklist__sudo} \
+    tee "${install_ipset_blocklist__file}" > /dev/null
+  ${install_ipset_blocklist__sudo} ipset \
+    flush "${install_ipset_blocklist__name}"
 
   info_msg "Create new blocklist"
   # Save here just to get the create line
@@ -992,9 +1017,11 @@ install_ipset_blocklist()
     "${install_ipset_blocklist__name}" -file "${install_ipset_blocklist__file}"
 
   info_msg "Add new IPs to the block list"
-  __blocklist=$(printf -- "%s\n" "${__blocklist}" | sed -e 's/^/add blocklist /')
+  __blocklist=$(printf -- "%s\n" "${__blocklist}" \
+    | sed -e 's/^/add blocklist /')
   printf -- "%s\n" "${__blocklist}" \
-    | ${install_ipset_blocklist__sudo} tee -a "${install_ipset_blocklist__file}" > /dev/null \
+    | ${install_ipset_blocklist__sudo} \
+    tee -a "${install_ipset_blocklist__file}" > /dev/null \
     || {
     error_msg "Failed to add ipset to blocklist"
 
@@ -1005,7 +1032,8 @@ install_ipset_blocklist()
   }
 
   info_msg "Commit new ipset"
-  ${install_ipset_blocklist__sudo} ipset restore -exist -file "${install_ipset_blocklist__file}"
+  ${install_ipset_blocklist__sudo} ipset \
+    restore -exist -file "${install_ipset_blocklist__file}"
 
   unset install_ipset_blocklist__sudo
   unset install_ipset_blocklist__file
@@ -1071,11 +1099,13 @@ print_file_differences()
 
   print_file_differences__old_number=0
   if [ -f "${print_file_differences__old}" ]; then
-    print_file_differences__old_number=$(wc -l < "${print_file_differences__old}")
+    print_file_differences__old_number=$(wc -l \
+      < "${print_file_differences__old}")
   fi
 
   print_file_differences__new_number=
-  print_file_differences__new_number=$(wc -l < "${print_file_differences__new}")
+  print_file_differences__new_number=$(wc -l \
+    < "${print_file_differences__new}")
 
   # Echo out the result
   printf -- "%b + %b%s %bentries added! (%b + %b%s %b)\n" \
@@ -1100,9 +1130,11 @@ remove_all_backup_files()
 {
   remove_all_backup_files__sudo="$1"
   remove_all_backup_files__file="$2"
-  for remove_all_backup_files__temp in "${remove_all_backup_files__file}".backup.*; do
+  for remove_all_backup_files__temp in \
+    "${remove_all_backup_files__file}".backup.*; do
     info_msg "Removing backup file: ${remove_all_backup_files__temp}..."
-    ${remove_all_backup_files__sudo} rm -f "${remove_all_backup_files__temp}" > /dev/null 2>&1
+    ${remove_all_backup_files__sudo} rm -f \
+      "${remove_all_backup_files__temp}" > /dev/null 2>&1
     unset remove_all_backup_files__temp
   done
 
@@ -1210,7 +1242,8 @@ main_hosts()
 
   # Download
   action_msg "Downloading hosts_sources lists..."
-  download_sources "$(decide_dl_client)" "${HOSTS_SOURCES}" "process_hosts_sources" || cancel_sudoloop
+  download_sources "$(decide_dl_client)" "${HOSTS_SOURCES}" \
+    "process_hosts_sources" || cancel_sudoloop
 
   # Parse
   action_msg "Generating hosts file..."
@@ -1224,15 +1257,21 @@ main_hosts()
   hosts=
   hosts="$(generate_new_hosts_file)" || cancel_sudoloop
   main_hosts__file_backup="$(create_backup_name "${main_hosts__file}")"
-  backup_old_file "${main_hosts__sudo}" "${main_hosts__file}" "${main_hosts__file_backup}" || cancel_sudoloop
-  install_new_hosts_file "${main_hosts__sudo}" "${hosts}" "${main_hosts__file}" || cancel_sudoloop
-  fix_file_permissons "${main_hosts__sudo}" "${main_hosts__file}" || cancel_sudoloop
-  fix_file_permissons "${main_hosts__sudo}" "${main_hosts__file_backup}" || cancel_sudoloop
-  print_file_differences "${main_hosts__file}" "${main_hosts__file_backup}" || cancel_sudoloop
+  backup_old_file "${main_hosts__sudo}" "${main_hosts__file}" \
+    "${main_hosts__file_backup}" || cancel_sudoloop
+  install_new_hosts_file "${main_hosts__sudo}" "${hosts}" \
+    "${main_hosts__file}" || cancel_sudoloop
+  fix_file_permissons "${main_hosts__sudo}" \
+    "${main_hosts__file}" || cancel_sudoloop
+  fix_file_permissons "${main_hosts__sudo}" \
+    "${main_hosts__file_backup}" || cancel_sudoloop
+  print_file_differences "${main_hosts__file}" \
+    "${main_hosts__file_backup}" || cancel_sudoloop
 
   # Cleanup
   if [ "${main_hosts__remove_backup}" -eq 1 ]; then
-    remove_all_backup_files "${main_hosts__sudo}" "${main_hosts__file}" || cancel_sudoloop
+    remove_all_backup_files "${main_hosts__sudo}" \
+      "${main_hosts__file}" || cancel_sudoloop
   fi
 
   unset hosts
@@ -1260,11 +1299,13 @@ main_ipsets()
 
   # Begin
   printf -- "\n\n"
-  print_ipset_config "${main_ipsets__sudo}" "${main_ipsets__file}" "${main_ipsets__name}" || return 1
+  print_ipset_config "${main_ipsets__sudo}" \
+    "${main_ipsets__file}" "${main_ipsets__name}" || return 1
 
   # Download
   action_msg "Downloading ipset_sources lists..."
-  download_sources "$(decide_dl_client)" "${IPSET_SOURCES}" "process_ipset_sources" || cancel_sudoloop
+  download_sources "$(decide_dl_client)" "${IPSET_SOURCES}" \
+    "process_ipset_sources" || cancel_sudoloop
 
   # Parse
   action_msg "Generating ipset..."
@@ -1274,16 +1315,23 @@ main_ipsets()
   sort_entries || cancel_sudoloop
 
   # Install
-  main_ipsets__file_backup=$(create_backup_name "${main_ipsets__file}" ) || cancel_sudoloop
-  backup_old_file "${main_ipsets__sudo}" "${main_ipsets__file}" "${main_ipsets__file_backup}" || cancel_sudoloop
-  install_ipset_blocklist "${main_ipsets__sudo}" "${main_ipsets__file}" "${main_ipsets__name}" || cancel_sudoloop
-  fix_file_permissons "${main_ipsets__sudo}" "${main_ipsets__file}" || cancel_sudoloop
-  fix_file_permissons "${main_ipsets__sudo}" "${main_ipsets__file_backup}" || cancel_sudoloop
-  print_file_differences "${main_ipsets__file}" "${main_ipsets__file_backup}" || cancel_sudoloop
+  main_ipsets__file_backup=$(create_backup_name \
+    "${main_ipsets__file}" ) || cancel_sudoloop
+  backup_old_file "${main_ipsets__sudo}" "${main_ipsets__file}" \
+    "${main_ipsets__file_backup}" || cancel_sudoloop
+  install_ipset_blocklist "${main_ipsets__sudo}" "${main_ipsets__file}" \
+    "${main_ipsets__name}" || cancel_sudoloop
+  fix_file_permissons "${main_ipsets__sudo}" \
+    "${main_ipsets__file}" || cancel_sudoloop
+  fix_file_permissons "${main_ipsets__sudo}" \
+    "${main_ipsets__file_backup}" || cancel_sudoloop
+  print_file_differences "${main_ipsets__file}" \
+    "${main_ipsets__file_backup}" || cancel_sudoloop
 
   # Cleanup
   if [ "${main_ipsets__remove_backup}" -eq 1 ]; then
-    remove_all_backup_files "${main_ipsets__sudo}" "${main_ipsets__file}" || cancel_sudoloop
+    remove_all_backup_files "${main_ipsets__sudo}" \
+      "${main_ipsets__file}" || cancel_sudoloop
   fi
 
   unset main_ipsets__sudo
@@ -1423,7 +1471,8 @@ main()
           break
         fi
       else
-        # This is a plain arg and should be handled by one of the options which takes an argument
+        # This is a plain arg and should be handled by
+        # one of the options which takes an argument
         case "${long_option}" in
           output-hosts)
             dst_hosts="${optind_expanded}"
@@ -1482,7 +1531,8 @@ main()
   # Main process
 
   # Parse hosts files
-  main_hosts "${needs_sudo}" "${dst_hosts}" "${dst_ip}" "${remove_backups}" || cancel_sudoloop
+  main_hosts "${needs_sudo}" "${dst_hosts}" \
+    "${dst_ip}" "${remove_backups}" || cancel_sudoloop
 
   if [ "${manage_ipsets}" -eq 0 ]; then
     # End here
@@ -1493,7 +1543,8 @@ main()
   cleanup
 
   check_for_binary ipset || cancel_sudoloop
-  main_ipsets "${needs_sudo}" "${dst_ipset}" "${ipset_name}" "${remove_backups}" || cancel_sudoloop
+  main_ipsets "${needs_sudo}" "${dst_ipset}" \
+    "${ipset_name}" "${remove_backups}" || cancel_sudoloop
 
   # Finish
   cancel_sudoloop
