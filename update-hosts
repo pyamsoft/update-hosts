@@ -1438,14 +1438,25 @@ main()
             ipset_name="${optind_expanded}"
             ;;
         esac
-
-        # Set back to null
-        long_option=""
       fi
 
-      # Shift the options
-      shift $OPTIND
-      OPTIND=1
+      # Set back to null
+      long_option=
+
+      option_shift_count="${OPTIND}"
+      while [ "$#" -lt "${option_shift_count}" ]; do
+        option_shift_count=$((option_shift_count - 1))
+      done
+
+      # Need this here incase the loop doesn't run
+      if [ "$#" -ge "${option_shift_count}" ]; then
+        # Shift the options
+        shift ${option_shift_count}
+        OPTIND=1
+      fi
+
+      # Unset
+      unset option_shift_count
     done
   fi
 
