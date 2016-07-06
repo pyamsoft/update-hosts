@@ -30,11 +30,17 @@
 # Modified by:
 #  pyamsoft <pyam(dot)soft(at)gmail(dot)com>
 
+# Will cause calls to
+#
+# $ sh update-hosts
+#
+# to fail.
+#
 # Prevent the script from being sourced
-if [ "$(basename "$_")" != "update-hosts" ]; then
-  # Return, script was sourced
-  return 0
-fi
+# if [ "$(basename "$_")" != "update-hosts" ]; then
+#   # Return, script was sourced
+#   return 0
+# fi
 
 # Configuration:
 
