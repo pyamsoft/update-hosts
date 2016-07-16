@@ -605,6 +605,8 @@ download_sources()
 
   for download_sources__url in ${download_sources__sources}; do
     if [ -n "${download_sources__url}" ]; then
+      download_sources__url="$(printf -- "${download_sources__url}" \
+        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
       case "${download_sources__url}" in
         \#*)
           # Comments are skipped
@@ -853,6 +855,8 @@ apply_whitelist()
 
   for apply_whitelist__domain in ${apply_whitelist__whitelist}; do
     if [ -n "${apply_whitelist__domain}" ]; then
+      apply_whitelist__domain="$(printf -- "${apply_whitelist__domain}" \
+        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
       case "${apply_whitelist__domain}" in
         \#*)
           # Skip comments
@@ -888,6 +892,8 @@ apply_blacklist()
 
   for apply_blacklist__domain in ${apply_blacklist__blacklist}; do
     if [ -n "${apply_blacklist__domain}" ]; then
+      apply_blacklist__domain="$(printf -- "${apply_blacklist__domain}" \
+        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
       case "${apply_blacklist__domain}" in
         \#*)
           # Skip comments
@@ -1195,6 +1201,8 @@ remove_all_backup_files()
   remove_all_backup_files__file="$2"
   for remove_all_backup_files__temp in \
     "${remove_all_backup_files__file}".backup.*; do
+    remove_all_backup_files__temp="$(printf -- "${remove_all_backup_files__temp}" \
+      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     if [ -n "${remove_all_backup_files__temp}" ]; then
       info_msg "Removing backup file: ${remove_all_backup_files__temp}..."
       ${remove_all_backup_files__sudo} rm -f \
@@ -1230,6 +1238,8 @@ cleanup()
   # Kill runaway pids
   for p in ${__pids}; do
     if [ -n "${p}" ]; then
+      p="$(printf -- "${p}" \
+        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
       kill "${p}" > /dev/null 2>&1
     fi
   done
@@ -1237,6 +1247,8 @@ cleanup()
   # rm leftover files
   for temp in ${__temp_files}; do
     if [ -n "${temp}" ]; then
+      temp="$(printf -- "${temp}" \
+        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
       rm -f "${temp}" > /dev/null 2>&1
     fi
   done
