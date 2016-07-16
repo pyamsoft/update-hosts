@@ -387,19 +387,21 @@ check_for_binary()
 
   IFS=":"
   for check_for_binary__path in ${PATH}; do
-    check_for_binary__result=
-    check_for_binary__result="${check_for_binary__path}/${check_for_binary__bin}"
-    if [ -e "${check_for_binary__result}" ]; then
-      IFS="${check_for_binary__old_ifs}"
+    if [ -n "${check_for_binary__path}" ]; then
+      check_for_binary__result=
+      check_for_binary__result="${check_for_binary__path}/${check_for_binary__bin}"
+      if [ -e "${check_for_binary__result}" ]; then
+        IFS="${check_for_binary__old_ifs}"
+
+        unset check_for_binary__result
+        unset check_for_binary__bin
+        unset check_for_binary__old_ifs
+        unset check_for_binary__path
+        return 0
+      fi
 
       unset check_for_binary__result
-      unset check_for_binary__bin
-      unset check_for_binary__old_ifs
-      unset check_for_binary__path
-      return 0
     fi
-
-    unset check_for_binary__result
   done
 
   error_msg "Binary '${check_for_binary__bin}' not found in \$PATH"
@@ -602,21 +604,31 @@ download_sources()
   download_sources__process_hook="$3"
 
   for download_sources__url in ${download_sources__sources}; do
-    download_sources__tempfile=
-    download_sources__tempfile="$(mktemp)"
+    if [ -n "${download_sources__url}" ]; then
+      case "${download_sources__url}" in
+        \#*)
+          # Comments are skipped
+          continue
+          ;;
+        *)
+          download_sources__tempfile=
+          download_sources__tempfile="$(mktemp)"
 
-    # Add the tempfile to list of temporary files
-    __temp_files="${download_sources__tempfile} "${__temp_files}
+          # Add the tempfile to list of temporary files
+          __temp_files="${download_sources__tempfile} "${__temp_files}
 
-    download_to_tempfile "${download_sources__client}" \
-      "${download_sources__url}" "${download_sources__tempfile}" \
-      "${download_sources__process_hook}" &
+          download_to_tempfile "${download_sources__client}" \
+            "${download_sources__url}" "${download_sources__tempfile}" \
+            "${download_sources__process_hook}" &
 
-    # Add the pid to list of pids
-    __pids="${__pids} $!"
+          # Add the pid to list of pids
+          __pids="${__pids} $!"
 
-    unset download_sources__tempfile
-    unset download_sources__url
+          unset download_sources__tempfile
+          unset download_sources__url
+          ;;
+      esac
+    fi
   done
 
   # Wait for all parallel downloads to finish
@@ -840,9 +852,19 @@ apply_whitelist()
   fi
 
   for apply_whitelist__domain in ${apply_whitelist__whitelist}; do
-    __blocklist="$(printf -- "%s\n" "${__blocklist}" \
-      | sed -r "/${apply_whitelist__domain}/d")"
-    unset apply_whitelist__domain
+    if [ -n "${apply_whitelist__domain}" ]; then
+      case "${apply_whitelist__domain}" in
+        \#*)
+          # Skip comments
+          continue
+          ;;
+        *)
+          __blocklist="$(printf -- "%s\n" "${__blocklist}" \
+            | sed -r "/${apply_whitelist__domain}/d")"
+          unset apply_whitelist__domain
+          ;;
+      esac
+    fi
   done
 
   unset apply_whitelist__whitelist
@@ -865,12 +887,22 @@ apply_blacklist()
   apply_blacklist__domains=""
 
   for apply_blacklist__domain in ${apply_blacklist__blacklist}; do
-    if [ -z "${apply_blacklist__domains}" ]; then
-      apply_blacklist__domains="${apply_blacklist__domain}"
-    else
-      apply_blacklist__domains="$(printf -- "%s\n%s\n" \
-        "${apply_blacklist__domains}" \
-        "${apply_blacklist__domain}")"
+    if [ -n "${apply_blacklist__domain}" ]; then
+      case "${apply_blacklist__domain}" in
+        \#*)
+          # Skip comments
+          continue
+          ;;
+        *)
+          if [ -z "${apply_blacklist__domains}" ]; then
+            apply_blacklist__domains="${apply_blacklist__domain}"
+          else
+            apply_blacklist__domains="$(printf -- "%s\n%s\n" \
+              "${apply_blacklist__domains}" \
+              "${apply_blacklist__domain}")"
+          fi
+          ;;
+      esac
     fi
   done
 
@@ -1163,10 +1195,12 @@ remove_all_backup_files()
   remove_all_backup_files__file="$2"
   for remove_all_backup_files__temp in \
     "${remove_all_backup_files__file}".backup.*; do
-    info_msg "Removing backup file: ${remove_all_backup_files__temp}..."
-    ${remove_all_backup_files__sudo} rm -f \
-      "${remove_all_backup_files__temp}" > /dev/null 2>&1
-    unset remove_all_backup_files__temp
+    if [ -n "${remove_all_backup_files__temp}" ]; then
+      info_msg "Removing backup file: ${remove_all_backup_files__temp}..."
+      ${remove_all_backup_files__sudo} rm -f \
+        "${remove_all_backup_files__temp}" > /dev/null 2>&1
+      unset remove_all_backup_files__temp
+    fi
   done
 
   unset remove_all_backup_files__sudo
@@ -1195,12 +1229,16 @@ cleanup()
 {
   # Kill runaway pids
   for p in ${__pids}; do
-    kill "${p}" > /dev/null 2>&1
+    if [ -n "${p}" ]; then
+      kill "${p}" > /dev/null 2>&1
+    fi
   done
 
   # rm leftover files
   for temp in ${__temp_files}; do
-    rm -f "${temp}" > /dev/null 2>&1
+    if [ -n "${temp}" ]; then
+      rm -f "${temp}" > /dev/null 2>&1
+    fi
   done
 
   unset __blocklist
