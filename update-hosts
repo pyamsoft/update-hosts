@@ -66,8 +66,11 @@ readonly HOSTS_HEADER="
 # Provides a basic amount of protection without breaking sites, or breaking
 # only a minimal amount of sites
 readonly BASE_HOSTS_SOURCES="
+  # HTTP Sources
   http://winhelp2002.mvps.org/hosts.txt
   http://someonewhocares.org/hosts/hosts
+
+  # HTTPS Sources
   https://www.malwaredomainlist.com/hostslist/hosts.txt
   https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
   https://adaway.org/hosts.txt
@@ -217,8 +220,11 @@ readonly HOSTS_WHITELIST='
 #    agor.io: Jumpscare
 #    pinion.gg: Ads in Counter Strike: Global Offensive and other games
 readonly HOSTS_BLACKLIST='
+  # Jump scare websites
   agor.io
   www.agor.io
+
+  # CSGO Ads
   adback.pinion.gg
   api.pinion.gg
   bin.pinion.gg
@@ -265,10 +271,13 @@ readonly HOSTS_BLACKLIST='
 # Provides a basic amount of protection without breaking sites, or breaking
 # only a minimal amount of sites
 readonly BASE_IPSET_SOURCES="
+    # HTTP Sources
     http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
     http://danger.rulez.sk/projects/bruteforceblocker/blist.php
     http://cinsscore.com/list/ci-badguys.txt
     http://blocklist.greensnow.co/greensnow.txt
+
+    # HTTPS Sources
     https://www.openbl.org/lists/base.txt
     https://www.autoshun.org/files/shunlist.csv
     https://lists.blocklist.de/lists/all.txt
@@ -604,12 +613,12 @@ download_sources()
   download_sources__process_hook="$3"
 
   # Set the IFS to newlines only
-  old_ifs="${IFS}"
-  export IFS="
+  download_sources__old_ifs="${IFS}"
+  IFS="
 "
   for download_sources__url in ${download_sources__sources}; do
     # Set the IFS back to normal
-    export IFS="${old_ifs}"
+    IFS="${download_sources__old_ifs}"
 
     download_sources__url="$(printf -- "${download_sources__url}" \
       | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
@@ -645,7 +654,7 @@ download_sources()
   done
 
   # Set the IFS back to normal
-  export IFS="${old_ifs}"
+  IFS="${download_sources__old_ifs}"
 
   # Wait for all parallel downloads to finish
   # Instead of taking a long time in total, this will only take as long
@@ -867,7 +876,15 @@ apply_whitelist()
     return 1
   fi
 
+  apply_whitelist__old_ifs="${IFS}"
+
+  # Set IFS to newline
+  IFS="
+"
   for apply_whitelist__domain in ${apply_whitelist__whitelist}; do
+    # Set IFS back to normal
+    IFS="${apply_whitelist__old_ifs}"
+
     apply_whitelist__domain="$(printf -- "${apply_whitelist__domain}" \
       | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     if [ -n "${apply_whitelist__domain}" ]; then
@@ -883,7 +900,14 @@ apply_whitelist()
           ;;
       esac
     fi
+
+    # Set IFS back to newline
+    IFS="
+"
   done
+
+  # Set IFS back to normal
+  IFS="${apply_whitelist__old_ifs}"
 
   unset apply_whitelist__whitelist
   return 0
@@ -904,7 +928,15 @@ apply_blacklist()
   # Domains initialized as first hosts_blacklist entry
   apply_blacklist__domains=""
 
+  apply_blacklist__old_ifs="${IFS}"
+
+  # Set IFS to newline
+  IFS="
+"
   for apply_blacklist__domain in ${apply_blacklist__blacklist}; do
+    # Set IFS back to normal
+    IFS="${apply_blacklist__old_ifs}"
+
     apply_blacklist__domain="$(printf -- "${apply_blacklist__domain}" \
       | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     if [ -n "${apply_blacklist__domain}" ]; then
@@ -924,7 +956,14 @@ apply_blacklist()
           ;;
       esac
     fi
+
+    # Set IFS to newline
+    IFS="
+"
   done
+
+  # Set IFS back to normal
+  IFS="${apply_blacklist__old_ifs}"
 
   if [ -z "${__blocklist}" ]; then
     __blocklist="$(printf -- "%s\n" "${apply_blacklist__domains}")"
