@@ -603,10 +603,17 @@ download_sources()
   download_sources__sources="$2"
   download_sources__process_hook="$3"
 
+  # Set the IFS to newlines only
+  old_ifs="${IFS}"
+  export IFS="
+"
   for download_sources__url in ${download_sources__sources}; do
+    # Set the IFS back to normal
+    export IFS="${old_ifs}"
+
+    download_sources__url="$(printf -- "${download_sources__url}" \
+      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     if [ -n "${download_sources__url}" ]; then
-      download_sources__url="$(printf -- "${download_sources__url}" \
-        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
       case "${download_sources__url}" in
         \#*)
           # Comments are skipped
@@ -631,7 +638,14 @@ download_sources()
           ;;
       esac
     fi
+
+    # Set the IFS back to weird
+    IFS="
+"
   done
+
+  # Set the IFS back to normal
+  export IFS="${old_ifs}"
 
   # Wait for all parallel downloads to finish
   # Instead of taking a long time in total, this will only take as long
@@ -854,9 +868,9 @@ apply_whitelist()
   fi
 
   for apply_whitelist__domain in ${apply_whitelist__whitelist}; do
+    apply_whitelist__domain="$(printf -- "${apply_whitelist__domain}" \
+      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     if [ -n "${apply_whitelist__domain}" ]; then
-      apply_whitelist__domain="$(printf -- "${apply_whitelist__domain}" \
-        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
       case "${apply_whitelist__domain}" in
         \#*)
           # Skip comments
@@ -891,9 +905,9 @@ apply_blacklist()
   apply_blacklist__domains=""
 
   for apply_blacklist__domain in ${apply_blacklist__blacklist}; do
+    apply_blacklist__domain="$(printf -- "${apply_blacklist__domain}" \
+      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     if [ -n "${apply_blacklist__domain}" ]; then
-      apply_blacklist__domain="$(printf -- "${apply_blacklist__domain}" \
-        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
       case "${apply_blacklist__domain}" in
         \#*)
           # Skip comments
@@ -1237,18 +1251,18 @@ cleanup()
 {
   # Kill runaway pids
   for p in ${__pids}; do
+    p="$(printf -- "${p}" \
+      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     if [ -n "${p}" ]; then
-      p="$(printf -- "${p}" \
-        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
       kill "${p}" > /dev/null 2>&1
     fi
   done
 
   # rm leftover files
   for temp in ${__temp_files}; do
+    temp="$(printf -- "${temp}" \
+      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     if [ -n "${temp}" ]; then
-      temp="$(printf -- "${temp}" \
-        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
       rm -f "${temp}" > /dev/null 2>&1
     fi
   done
