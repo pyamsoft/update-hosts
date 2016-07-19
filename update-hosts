@@ -499,7 +499,10 @@ curl -fsSL --connect-timeout 40 --max-time 60 -A 'Mozilla/5.0'
 EOF
 )"
   else
-    decide_dl_client__cmd="wget -T 10 -qO- -A 'Mozilla/5.0'"
+    decide_dl_client__cmd="$(cat << EOF
+wget -T 10 -qO- -A 'Mozilla/5.0'
+EOF
+)"
   fi
 
   # Echo before unsetting
