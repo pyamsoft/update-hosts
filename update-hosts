@@ -1025,7 +1025,6 @@ generate_new_hosts_file()
 {
   generate_new_hosts_file__header=
 
-  info_msg "Create new hosts file"
   generate_new_hosts_file__header="$(printf -- \
     "# <hosts_header>%s# </hosts_header>\n" "${HOSTS_HEADER}")"
   generate_new_hosts_file__header="$(printf -- "# %s\n%s\n" \
@@ -1392,6 +1391,8 @@ main_hosts()
   add_new_destination "${main_hosts__ip}" || cancel_sudoloop
 
   # Install
+
+  info_msg "Create new hosts file"
   hosts=
   hosts="$(generate_new_hosts_file)" || cancel_sudoloop
   main_hosts__file_backup="$(create_backup_name \
