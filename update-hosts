@@ -467,7 +467,7 @@ print_ipset_config()
 The ipset: ${print_ipset_config__name} must exist before running this script.
 EOF
 )"
-    error_msg "Create it using: # ipset create ${print_ipset_config__name}"
+    error_msg "Create it using: # ipset create ${print_ipset_config__name} hash:net"
 
     unset print_ipset_config__sudo
     unset print_ipset_config__file
