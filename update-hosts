@@ -213,6 +213,15 @@ readonly HOSTS_WHITELIST='
   snoobi\.com$
   esellerate\.net$
   ^dw\.cbsi\.com$
+  ^data\.netscope\.marktest\.pt$
+  ^gapt.\hit\.gemius\.pl$
+  naiadsystems\.com$
+  ^static\.adf\.ly$
+  emarketer\.com$
+  tapad\.com$
+  ^staticxx\.facebook\.com$
+  ^sp\.computershopper\.com$
+  localytics\.com$
 '
 
 # hosts_blacklist DOMAINS
