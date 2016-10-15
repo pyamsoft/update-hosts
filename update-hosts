@@ -55,6 +55,9 @@ export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
 #       can occur when using traceroute, netstat and the like.
+#
+# NOTE: This header will be directly inserted into the generated hosts file.
+#       We intentionally leave the spacing as is.
 readonly HOSTS_HEADER="
 127.0.0.1 $(uname -n) localhost
 255.255.255.255 broadcasthost
@@ -140,100 +143,118 @@ readonly HOSTS_SOURCES="
 # Though not a great solution, this seems to be the only way to get around
 # some sites breaking when blocking certain hosts
 #
-# Update 2016/03/15
-readonly HOSTS_WHITELIST='
+# Because we cannot guarantee that the domains shipped in the whitelist
+# are the full domain names, we do not qualify them with '^'
+#
+# Update 2016/10/15
+readonly SHIPPED_WHITELIST='
   google-analytics\.com$
-  ^analytics\.google\.com$
+  analytics\.google\.com$
   adf\.ly$
-  ^widget-cdn\.rpxnow\.com$
-  ^tags\.tiqcdn\.com$
+  widget-cdn\.rpxnow\.com$
+  tags\.tiqcdn\.com$
   statcounter\.com$
-  ^cdn-static\.liverail\.com$
-  ^vox-static\.liverail\.com$
-  ^s0\.2mdn\.net$
-  ^cdn-i\.dmdentertainment\.com$
-  ^cdn\.vurb\.com$
-  ^target\.122\.2o7\.net$
-  ^adm\.fwmrm\.net$
+  cdn-static\.liverail\.com$
+  vox-static\.liverail\.com$
+  s0\.2mdn\.net$
+  cdn-i\.dmdentertainment\.com$
+  cdn\.vurb\.com$
+  target\.122\.2o7\.net$
+  adm\.fwmrm\.net$
   mopub\.com$
   safelinking\.net$
   outbrain\.com$
   inc\.com$
   flurry\.com$
-  ^c\.speedtest\.net$
+  c\.speedtest\.net$
   boldchat\.com$
   mixpanel\.com$
-  ^charlie\.strim.io$
-  ^ovh\.strim.io$
-  cdn\.turner\.com$
-  ^yui\.yahooapis\.com$
-  ^top\.mail\.ru$
-  ^css\.washingtonpost\.com$
+  charlie\.strim.io$
+  ovh\.strim.io$
+  dn\.turner\.com$
+  yui\.yahooapis\.com$
+  top\.mail\.ru$
+  css\.washingtonpost\.com$
   pcekspert\.com$
   clickbank\.com$
   yandex\.ru$
   yastatic\.net$
   carbonads\.net$
-  ^imasdk\.googleapis\.com$
+  imasdk\.googleapis\.com$
   2o7\.net$
   quantcast\.com$
-  ^css5\.gaanacdn\.com$
-  ^keen\.github\.io$
-  ^cdn\.phoenix\.intergi\.com$
+  css5\.gaanacdn\.com$
+  keen\.github\.io$
+  cdn\.phoenix\.intergi\.com$
   kissmetrics\.com$
   viewpoint\.com$
   woopra\.com$
   monetate\.net$
-  ^googleads\.g\.doubleclick\.net$
-  ^img\.echohosting\.cafe24\.com$
+  googleads\.g\.doubleclick\.net$
+  img\.echohosting\.cafe24\.com$
   googletagmanager\.com$
-  ^partner\.googleadservices\.com$
+  partner\.googleadservices\.com$
   pagefair\.com$
-  ^ssl\.cdn-redfin\.com$
-  ^www\.southwest\.com$
+  ssl\.cdn-redfin\.com$
+  www\.southwest\.com$
   marketwatch\.com$
   cloudfront\.net$
   nationalreview\.com$
   liveperson\.net$
   taboola\.com$
-  ^ticketmaster\.122\.2o7\.net$
+  ticketmaster\.122\.2o7\.net$
   phoronix\.com$
-  ^files\.explosm\.net$
-  ^cdn\.segment\.com$
+  files\.explosm\.net$
+  cdn\.segment\.com$
   sorted\.org$
-  ^\analytics\.edgekey\.net$
+  analytics\.edgekey\.net$
   tfag\.de$
   ^nav\.files\.bbci\.co\.uk$
   gamespot\.com$
   umbro\.com$
-  ^shop\.puppetlabs\.com$
+  shop\.puppetlabs\.com$
   flightradar24\.com$
-  ^premium\.soundcloud\.com$
-  ^stats\.bbc\.co\.uk$
+  premium\.soundcloud\.com$
+  stats\.bbc\.co\.uk$
   snoobi\.com$
   esellerate\.net$
-  ^dw\.cbsi\.com$
-  ^data\.netscope\.marktest\.pt$
-  ^gapt.\hit\.gemius\.pl$
+  dw\.cbsi\.com$
+  data\.netscope\.marktest\.pt$
+  gapt.\hit\.gemius\.pl$
   naiadsystems\.com$
-  ^static\.adf\.ly$
+  static\.adf\.ly$
   emarketer\.com$
   tapad\.com$
-  ^staticxx\.facebook\.com$
-  ^sp\.computershopper\.com$
+  staticxx\.facebook\.com$
+  sp\.computershopper\.com$
   localytics\.com$
+  p\.jwpcdn\.com$
+  media2\.intoday\.in$
+  styletagassets\.com$
+  outlook\.live\.com$
+  uim\.tifbs\.net$
 '
 
-# hosts_blacklist DOMAINS
+# User defined whitelist
+readonly USER_WHITELIST='
+'
+
+# Add any of your own custom whitelist modifications to the USER_WHITELIST variable
+readonly HOSTS_WHITELIST="
+  ${SHIPPED_WHITELIST}
+  ${USER_WHITELIST}
+"
+
+# Jump scare websites
 # Only exact strings, no regex supported
-#    agor.io: Jumpscare
-#    pinion.gg: Ads in Counter Strike: Global Offensive and other games
-readonly HOSTS_BLACKLIST='
-  # Jump scare websites
+readonly JUMPSCARE_BLACKLIST='
   agor.io
   www.agor.io
+'
 
-  # CSGO Ads
+# CSGO Ads
+# Only exact strings, no regex supported
+readonly ADVERTISEMENT_BLACKLIST='
   adback.pinion.gg
   api.pinion.gg
   bin.pinion.gg
@@ -276,24 +297,37 @@ readonly HOSTS_BLACKLIST='
   www.pinion.gg
 '
 
+# User defined blacklist
+# Only exact strings, no regex supported
+readonly USER_BLACKLIST='
+'
+
+# hosts_blacklist DOMAINS
+# Only exact strings, no regex supported
+readonly HOSTS_BLACKLIST="
+  ${JUMPSCARE_BLACKLIST}
+  ${ADVERTISEMENT_BLACKLIST}
+  ${USER_BLACKLIST}
+"
+
 # The base ipsets
 # Provides a basic amount of protection without breaking sites, or breaking
 # only a minimal amount of sites
 readonly BASE_IPSET_SOURCES="
-    # HTTP Sources
-    http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
-    http://danger.rulez.sk/projects/bruteforceblocker/blist.php
-    http://cinsscore.com/list/ci-badguys.txt
-    http://blocklist.greensnow.co/greensnow.txt
+  # HTTP Sources
+  http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
+  http://danger.rulez.sk/projects/bruteforceblocker/blist.php
+  http://cinsscore.com/list/ci-badguys.txt
+  http://blocklist.greensnow.co/greensnow.txt
 
-    # HTTPS Sources
-    https://www.openbl.org/lists/base.txt
-    https://www.autoshun.org/files/shunlist.csv
-    https://lists.blocklist.de/lists/all.txt
-    https://www.stopforumspam.com/downloads/toxic_ip_cidr.txt
-    https://www.spamhaus.org/drop/drop.lasso
-    https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=1.1.1.1
-    https://www.maxmind.com/en/proxy-detection-sample-list
+  # HTTPS Sources
+  https://www.openbl.org/lists/base.txt
+  https://www.autoshun.org/files/shunlist.csv
+  https://lists.blocklist.de/lists/all.txt
+  https://www.stopforumspam.com/downloads/toxic_ip_cidr.txt
+  https://www.spamhaus.org/drop/drop.lasso
+  https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=1.1.1.1
+  https://www.maxmind.com/en/proxy-detection-sample-list
 "
 
 # The sources that will be parsed into the ipset.
@@ -308,9 +342,9 @@ readonly IPSET_SOURCES="
 
 "
 readonly IPSET_WHITELIST='
-127.0.0.1
-0.0.0.0
-255.255.255.255
+  127.0.0.1
+  0.0.0.0
+  255.255.255.255
 '
 
 # BLACKLIST IPS
