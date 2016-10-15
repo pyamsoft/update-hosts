@@ -243,12 +243,14 @@ readonly HOSTS_WHITELIST="
 "
 
 # Jump scare websites
+# Only exact strings, no regex supported
 readonly JUMPSCARE_BLACKLIST='
   agor.io
   www.agor.io
 '
 
 # CSGO Ads
+# Only exact strings, no regex supported
 readonly ADVERTISEMENT_BLACKLIST='
   adback.pinion.gg
   api.pinion.gg
@@ -293,14 +295,13 @@ readonly ADVERTISEMENT_BLACKLIST='
 '
 
 # User defined blacklist
+# Only exact strings, no regex supported
 readonly USER_BLACKLIST='
 '
 
 # hosts_blacklist DOMAINS
 # Only exact strings, no regex supported
-#    agor.io: Jumpscare
-#    pinion.gg: Ads in Counter Strike: Global Offensive and other games
-readonly SHIPPED_BLACKLIST="
+readonly HOSTS_BLACKLIST="
   ${JUMPSCARE_BLACKLIST}
   ${ADVERTISEMENT_BLACKLIST}
   ${USER_BLACKLIST}
