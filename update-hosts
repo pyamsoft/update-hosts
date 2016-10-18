@@ -300,6 +300,13 @@ readonly ADVERTISEMENT_BLACKLIST='
 # Things like phishing, malvertising, malware and so forth
 readonly BAD_SITE_BLACKLIST='
   com.com
+  01net.com
+  chip.de
+  download.cnet.com
+  sourceforge.net
+  softonic.com
+  flexytalk.net
+  quickdomainfwd.com
 '
 
 # User defined blacklist
