@@ -74,10 +74,10 @@ readonly BASE_HOSTS_SOURCES="
   http://someonewhocares.org/hosts/hosts
 
   # HTTPS Sources
+  https://adaway.org/hosts.txt
+  https://hosts-file.net/ad_servers.txt
   https://www.malwaredomainlist.com/hostslist/hosts.txt
   https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
-  https://adaway.org/hosts.txt
-  https://www.malwaredomainlist.com/hostslist/hosts.txt
   https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
   https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt
   https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
@@ -95,13 +95,12 @@ readonly BASE_HOSTS_SOURCES="
 # breaking some sites
 #
 # readonly hosts_file_net_parts="
-#   http://hosts-file.net/ad_servers.txt
-#   http://hosts-file.net/emd.txt
-#   http://hosts-file.net/exp.txt
-#   http://hosts-file.net/fsa.txt
-#   http://hosts-file.net/hjk.txt
-#   http://hosts-file.net/mmt.txt
-#   http://hosts-file.net/psh.txt
+#   https://hosts-file.net/emd.txt
+#   https://hosts-file.net/exp.txt
+#   https://hosts-file.net/fsa.txt
+#   https://hosts-file.net/hjk.txt
+#   https://hosts-file.net/mmt.txt
+#   https://hosts-file.net/psh.txt
 # "
 
 # These entries are very large, and may break certain sites
