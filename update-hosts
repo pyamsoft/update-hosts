@@ -45,7 +45,7 @@
 # Configuration:
 
 # Version
-VERSION="2.1.4"
+VERSION="2.1.5"
 
 readonly SUDOLOCK="/tmp/update-hosts.sudolock"
 
