@@ -72,6 +72,7 @@ readonly BASE_HOSTS_SOURCES="
   # HTTP Sources
   http://winhelp2002.mvps.org/hosts.txt
   http://someonewhocares.org/hosts/hosts
+  http://hosts-file.net/ad_servers.txt
 
   # HTTPS Sources
   https://www.malwaredomainlist.com/hostslist/hosts.txt
@@ -95,7 +96,6 @@ readonly BASE_HOSTS_SOURCES="
 # breaking some sites
 #
 # readonly hosts_file_net_parts="
-#   http://hosts-file.net/ad_servers.txt
 #   http://hosts-file.net/emd.txt
 #   http://hosts-file.net/exp.txt
 #   http://hosts-file.net/fsa.txt
