@@ -296,6 +296,12 @@ readonly ADVERTISEMENT_BLACKLIST='
   www.pinion.gg
 '
 
+# Any websites that may be deemed unsafe for various reasons
+# Things like phishing, malvertising, malware and so forth
+readonly BAD_SITE_BLACKLIST='
+  com.com
+'
+
 # User defined blacklist
 # Only exact strings, no regex supported
 readonly USER_BLACKLIST='
@@ -306,6 +312,7 @@ readonly USER_BLACKLIST='
 readonly HOSTS_BLACKLIST="
   ${JUMPSCARE_BLACKLIST}
   ${ADVERTISEMENT_BLACKLIST}
+  ${BAD_SITE_BLACKLIST}
   ${USER_BLACKLIST}
 "
 
