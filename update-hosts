@@ -108,7 +108,7 @@ readonly BASE_HOSTS_SOURCES="
 # Instead of downloading the entire hosts file and additional parts
 # the split download above is recommended. The parts that you do not
 # desire can be ignored individually instead of an all or nothing approach.
-# The two hosts_sources below are generally not recommended nor needed. If you do
+# The two hosts_sources below are generally not recommended nor needed. If you
 # wish to use them, be sure to comment out the above hosts-file.net entries
 # or you will largely be pulling duplicate hosts_sources.
 #
@@ -238,7 +238,8 @@ readonly SHIPPED_WHITELIST='
 readonly USER_WHITELIST='
 '
 
-# Add any of your own custom whitelist modifications to the USER_WHITELIST variable
+# Add any of your own custom whitelist modifications to the USER_WHITELIST
+# variable
 readonly HOSTS_WHITELIST="
   ${SHIPPED_WHITELIST}
   ${USER_WHITELIST}
@@ -679,7 +680,7 @@ download_sources()
     # Set the IFS back to normal
     IFS="${download_sources__old_ifs}"
 
-    download_sources__url="$(printf -- "${download_sources__url}" \
+    download_sources__url="$(printf -- "%s" "${download_sources__url}" \
       | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     if [ -n "${download_sources__url}" ]; then
       case "${download_sources__url}" in
@@ -803,7 +804,7 @@ EOF
     "${select_host_lines__file}")"
 
   # Echo out result
-  printf -- "${select_host_lines__content}" > "${select_host_lines__file}"
+  printf -- "%s" "${select_host_lines__content}" > "${select_host_lines__file}"
 
   unset select_host_lines__file
   unset select_host_lines__url
@@ -831,7 +832,7 @@ EOF
     "${select_ip_lines__file}")"
 
   # Echo out result
-  printf -- "${select_ip_lines__content}" > "${select_ip_lines__file}"
+  printf -- "%s" "${select_ip_lines__content}" > "${select_ip_lines__file}"
 
   unset select_ip_lines__content
   unset select_ip_lines__file
@@ -886,7 +887,7 @@ EOF
   normalize_to_lowercase__content=
   normalize_to_lowercase__content="$(awk '{print tolower($0)}' \
     "${normalize_to_lowercase__file}")"
-  printf -- "${normalize_to_lowercase__content}" \
+  printf -- "%s" "${normalize_to_lowercase__content}" \
     > "${normalize_to_lowercase__file}"
 
   unset normalize_to_lowercase__file
@@ -944,7 +945,7 @@ apply_whitelist()
     # Set IFS back to normal
     IFS="${apply_whitelist__old_ifs}"
 
-    apply_whitelist__domain="$(printf -- "${apply_whitelist__domain}" \
+    apply_whitelist__domain="$(printf -- "%s" "${apply_whitelist__domain}" \
       | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     if [ -n "${apply_whitelist__domain}" ]; then
       case "${apply_whitelist__domain}" in
@@ -996,7 +997,7 @@ apply_blacklist()
     # Set IFS back to normal
     IFS="${apply_blacklist__old_ifs}"
 
-    apply_blacklist__domain="$(printf -- "${apply_blacklist__domain}" \
+    apply_blacklist__domain="$(printf -- "%s" "${apply_blacklist__domain}" \
       | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     if [ -n "${apply_blacklist__domain}" ]; then
       case "${apply_blacklist__domain}" in
@@ -1259,7 +1260,7 @@ create_backup_name()
   create_backup_name__file="$1"
 
   # Echo out file name
-  printf -- "${create_backup_name__file}.backup.$(date +%Y%m%d)"
+  printf -- "%s.backup.%s" "${create_backup_name__file}" "$(date +%Y%m%d)"
 
   unset create_backup_name__file
   return 0
@@ -1312,7 +1313,8 @@ remove_all_backup_files()
   remove_all_backup_files__file="$2"
   for remove_all_backup_files__temp in \
     "${remove_all_backup_files__file}".backup.*; do
-    remove_all_backup_files__temp="$(printf -- "${remove_all_backup_files__temp}" \
+    remove_all_backup_files__temp="$(printf -- "%s" \
+      "${remove_all_backup_files__temp}" \
       | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     if [ -n "${remove_all_backup_files__temp}" ]; then
       info_msg "Removing backup file: ${remove_all_backup_files__temp}..."
@@ -1348,7 +1350,7 @@ cleanup()
 {
   # Kill runaway pids
   for p in ${__pids}; do
-    p="$(printf -- "${p}" \
+    p="$(printf -- "%s" "${p}" \
       | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     if [ -n "${p}" ]; then
       kill "${p}" > /dev/null 2>&1
@@ -1357,7 +1359,7 @@ cleanup()
 
   # rm leftover files
   for temp in ${__temp_files}; do
-    temp="$(printf -- "${temp}" \
+    temp="$(printf -- "%s" "${temp}" \
       | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     if [ -n "${temp}" ]; then
       rm -f "${temp}" > /dev/null 2>&1
@@ -1392,7 +1394,7 @@ cancel_sudoloop()
 # Echoes out the current version held by the constant VERSION
 print_version()
 {
-  printf -- "update-hosts[${VERSION}]\n"
+  printf -- "update-hosts[%s]\n" "${VERSION}"
   echo
 
   return 0
@@ -1403,7 +1405,7 @@ print_version()
 print_help()
 {
   print_version
-  printf -- "$(cat << EOF
+  printf -- "%s\n" "$(cat << EOF
 Options:
    -h | --help     Display help
    -v | --version  Display version
@@ -1415,7 +1417,7 @@ Options:
    --ipset-name    The name of the ipset
    --dest-ip       The destination IP to use
 EOF
-)\n"
+)"
   return 0
 }
 
