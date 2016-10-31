@@ -343,6 +343,10 @@ readonly BASE_IPSET_SOURCES="
   https://www.maxmind.com/en/proxy-detection-sample-list
 "
 
+# Other ipset sources
+#
+# http://danger.rulez.sk/projects/bruteforceblocker/blist.php
+
 # The sources that will be parsed into the ipset.
 # By default only the sources in the ${base_sources} list
 # are included, additional sources can be included by
