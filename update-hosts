@@ -45,7 +45,7 @@
 # Configuration:
 
 # Version
-VERSION="2.1.5"
+VERSION="2.2.0"
 
 readonly SUDOLOCK="/tmp/update-hosts.sudolock"
 
@@ -240,8 +240,10 @@ readonly USER_WHITELIST='
 
 # Add any of your own custom whitelist modifications to the USER_WHITELIST
 # variable
+#
+# As of version 2.2.0, unbreak list is not added by default
+# ${UNBREAK_WHITELIST}
 readonly HOSTS_WHITELIST="
-  ${UNBREAK_WHITELIST}
   ${USER_WHITELIST}
 "
 
