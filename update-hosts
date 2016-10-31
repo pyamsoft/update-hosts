@@ -146,7 +146,7 @@ readonly HOSTS_SOURCES="
 # are the full domain names, we do not qualify them with '^'
 #
 # Update 2016/10/15
-readonly SHIPPED_WHITELIST='
+readonly UNBREAK_WHITELIST='
   google-analytics\.com$
   analytics\.google\.com$
   adf\.ly$
@@ -241,7 +241,7 @@ readonly USER_WHITELIST='
 # Add any of your own custom whitelist modifications to the USER_WHITELIST
 # variable
 readonly HOSTS_WHITELIST="
-  ${SHIPPED_WHITELIST}
+  ${UNBREAK_WHITELIST}
   ${USER_WHITELIST}
 "
 
@@ -330,7 +330,6 @@ readonly HOSTS_BLACKLIST="
 readonly BASE_IPSET_SOURCES="
   # HTTP Sources
   http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
-  http://danger.rulez.sk/projects/bruteforceblocker/blist.php
   http://cinsscore.com/list/ci-badguys.txt
   http://blocklist.greensnow.co/greensnow.txt
   http://www.openbl.org/lists/base.txt
