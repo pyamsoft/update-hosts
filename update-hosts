@@ -72,6 +72,7 @@ readonly BASE_HOSTS_SOURCES="
   # HTTP Sources
   http://winhelp2002.mvps.org/hosts.txt
   http://someonewhocares.org/hosts/hosts
+  http://malwaredomains.lehigh.edu/files/justdomains
 
   # HTTPS Sources
   https://adaway.org/hosts.txt
