@@ -45,7 +45,7 @@
 # Configuration:
 
 # Version
-VERSION="2.2.2"
+VERSION="2.3.0"
 
 readonly SUDOLOCK="/tmp/update-hosts.sudolock"
 
@@ -1787,7 +1787,8 @@ set -u
 # set -o pipefail
 
 # Export the LC as the default C so that we do not run into locale based quirks
-export LC_ALL=C
+LC_ALL=C
+export LC_ALL
 
 __temp_files="" # Leave blank
 __pids="" # Leave blank
