@@ -246,7 +246,7 @@ readonly USER_WHITELIST='
 #
 # As of version 2.2.0, unbreak list is not added by default
 # ${UNBREAK_WHITELIST}
-readonly HOSTS_WHITELIST="
+HOSTS_WHITELIST="
   ${USER_WHITELIST}
 "
 
@@ -1420,6 +1420,7 @@ Options:
    -r | --remove   Remove backups
    -n | --noroot   Do not require root to output
    -i | --ipset    Also download ipset sources
+   -u | --ubreak   Auto apply the unbreak whitelist
    --output-hosts  The file to output hosts to
    --output-ipset  The file to output ipsets to
    --ipset-name    The name of the ipset
@@ -1558,6 +1559,7 @@ main()
   remove_backups=0
   require_root=1
   manage_ipsets=0
+  apply_unbreak=0
 
   # Script begins here
   dst_hosts="/etc/hosts"
@@ -1589,6 +1591,7 @@ main()
   #   -r | --remove   Remove backups
   #   -n | --noroot   Do not require root to output.
   #   -i | --ipset    Also download ipset sources
+  #   -u | --unbreak  Auto apply the Unbreak whitelist
   #   --output-hosts  The file to output hosts to
   #   --output-ipset  The file to output ipsets to
   #   --ipset-name    The name of the ipset
@@ -1601,7 +1604,7 @@ main()
     optind_expanded=
     eval optind_expanded="\$${OPTIND}"
     while [ -n "${optind_expanded}" ]; do
-      while getopts ":hvrni-:" option; do
+      while getopts ":hvrniu-:" option; do
         # Set only on long option with arg
         if [ -n "${long_option}" ]; then
           error_msg "Long option --${long_option} expects argument"
@@ -1628,6 +1631,9 @@ main()
                 ;;
               ipset)
                 manage_ipsets=1
+                ;;
+              unbreak)
+                apply_unbreak=1
                 ;;
               output-hosts|output-ipset|ipset-name|dest-ip)
                 long_option="${OPTARG}"
@@ -1656,6 +1662,9 @@ main()
             ;;
           i)
             manage_ipsets=1
+            ;;
+          u)
+            apply_unbreak=1
             ;;
           *)
             error_msg "Illegal option -${OPTARG}"
@@ -1738,6 +1747,16 @@ main()
 
 
   # Main process
+  if [ "${apply_unbreak}" -eq 1 ]; then
+    # Dynamically apply the unreak whitelist
+    action_msg "You are applying the Unbreak whitelist!"
+    info_msg "While this may fix many broken websites, it may also pose"
+    info_msg "a potential privacy or security risk. Use at your own discretion"
+    HOSTS_WHITELIST="
+    ${UNBREAK_WHITELIST}
+    ${HOSTS_WHITELIST}
+    "
+  fi
 
   # Parse hosts files
   main_hosts "${needs_sudo}" "${dst_hosts}" \
