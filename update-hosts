@@ -528,16 +528,10 @@ print_ipset_config()
   # check for existence here
   ${print_ipset_config__sudo} ipset \
     list "${print_ipset_config__name}" > /dev/null 2>&1 || {
-    error_msg "$(cat << EOF
-The ipset: ${print_ipset_config__name} must exist before running this script.
-EOF
-)"
-    error_msg "Create it using: # ipset create ${print_ipset_config__name} hash:net"
+    action_msg "Ipset ${print_ipset_config__name} does not exist, creating it"
 
-    unset print_ipset_config__sudo
-    unset print_ipset_config__file
-    unset print_ipset_config__name
-    return 1
+    # Make the ipset
+    ${print_ipset_config__sudo} ipset create "${print_ipset_config__name}" hash:ip
   }
 
   unset print_ipset_config__sudo
@@ -1201,6 +1195,14 @@ install_ipset_blocklist()
     "${install_ipset_blocklist__name}" \
     -file "${install_ipset_blocklist__file}"
 
+  # Because we use /32 ip addresses from our sources, this is not currently
+  # useful, but may be in the future
+  # check_for_binary iprange && {
+  #   # If we have the iprange binary, run an optimization on the set
+  #   info_msg "Optimize ipset using iprange"
+  #   __blocklist=$(printf -- "%s" "${__blocklist}" | iprange --ipset-reduce 20)
+  # }
+
   info_msg "Add new IPs to the block list"
   __blocklist=$(printf -- "%s\n" "${__blocklist}" \
     | sed -e 's/^/add blocklist /')
@@ -1506,6 +1508,11 @@ main_ipsets()
   main_ipsets__file="$2"
   main_ipsets__name="$3"
   main_ipsets__remove_backup="$4"
+
+  if [ -z "${main_ipsets__sudo}" ] && [ "$(id -u)" -ne 0 ]; then
+    error_msg "ipset functionality requires root user privileges"
+    return 1
+  fi
 
   # Begin
   printf -- "\n\n"
