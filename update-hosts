@@ -531,7 +531,7 @@ print_ipset_config()
     action_msg "Ipset ${print_ipset_config__name} does not exist, creating it"
 
     # Make the ipset
-    ${print_ipset_config__sudo} ipset create "${print_ipset_config__name}" hash:net
+    ${print_ipset_config__sudo} ipset create "${print_ipset_config__name}" hash:net maxelem $((1024 * 128))
   }
 
   unset print_ipset_config__sudo
