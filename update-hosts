@@ -1422,7 +1422,7 @@ Options:
    -r | --remove   Remove backups
    -n | --noroot   Do not require root to output
    -i | --ipset    Also download ipset sources
-   -u | --ubreak   Auto apply the unbreak whitelist
+   -u | --unbreak   Auto apply the unbreak whitelist
    --output-hosts  The file to output hosts to
    --output-ipset  The file to output ipsets to
    --ipset-name    The name of the ipset
