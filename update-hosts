@@ -683,7 +683,7 @@ download_sources()
     IFS="${download_sources__old_ifs}"
 
     download_sources__url="$(printf -- "%s" "${download_sources__url}" \
-      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+      | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
     if [ -n "${download_sources__url}" ]; then
       case "${download_sources__url}" in
         \#*)
@@ -948,7 +948,7 @@ apply_whitelist()
     IFS="${apply_whitelist__old_ifs}"
 
     apply_whitelist__domain="$(printf -- "%s" "${apply_whitelist__domain}" \
-      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+      | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
     if [ -n "${apply_whitelist__domain}" ]; then
       case "${apply_whitelist__domain}" in
         \#*)
@@ -1000,7 +1000,7 @@ apply_blacklist()
     IFS="${apply_blacklist__old_ifs}"
 
     apply_blacklist__domain="$(printf -- "%s" "${apply_blacklist__domain}" \
-      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+      | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
     if [ -n "${apply_blacklist__domain}" ]; then
       case "${apply_blacklist__domain}" in
         \#*)
@@ -1204,8 +1204,7 @@ install_ipset_blocklist()
   }
 
   info_msg "Add new IPs to the block list"
-  __blocklist=$(printf -- "%s\n" "${__blocklist}" \
-    | sed -e 's/^/add blocklist /')
+  __blocklist=$(printf -- "%s\n" "${__blocklist}" | sed 's/^/add blocklist /')
   printf -- "%s\n" "${__blocklist}" \
     | ${install_ipset_blocklist__sudo} tee \
     -a "${install_ipset_blocklist__file}" > /dev/null \
@@ -1325,7 +1324,7 @@ remove_all_backup_files()
     "${remove_all_backup_files__file}".backup.*; do
     remove_all_backup_files__temp="$(printf -- "%s" \
       "${remove_all_backup_files__temp}" \
-      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+      | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
     if [ -n "${remove_all_backup_files__temp}" ]; then
       info_msg "Removing backup file: ${remove_all_backup_files__temp}..."
       ${remove_all_backup_files__sudo} rm -f \
@@ -1361,7 +1360,7 @@ cleanup()
   # Kill runaway pids
   for p in ${__pids}; do
     p="$(printf -- "%s" "${p}" \
-      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+      | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
     if [ -n "${p}" ]; then
       kill "${p}" > /dev/null 2>&1
     fi
@@ -1370,7 +1369,7 @@ cleanup()
   # rm leftover files
   for temp in ${__temp_files}; do
     temp="$(printf -- "%s" "${temp}" \
-      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+      | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
     if [ -n "${temp}" ]; then
       rm -f "${temp}" > /dev/null 2>&1
     fi
