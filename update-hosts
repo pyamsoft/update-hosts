@@ -900,7 +900,7 @@ EOF
   # Regex for ip addresses with an optional netmask
   readonly IP_CIDR_REGEX='^([[:digit:]]{1,3}\.){3}[[:digit:]]{1,3}($|/([[:digit:]]|[1-2][[:digit:]]|3[0-2]))$'
 
-  select_ip_lines__content="$(grep -oE "${IP_CIDR_REGEX}" \
+  select_ip_lines__content="$(sed -n "/^${IP_CIDR_REGEX}/p" \
     "${select_ip_lines__file}")"
 
   # Echo out result
@@ -961,7 +961,7 @@ Transform all entries to lowercase: ${normalize_to_lowercase__url} \
 EOF
 )"
 
-  normalize_to_lowercase__content="$(awk '{print tolower($0)}' \
+  normalize_to_lowercase__content="$(awk '{tolower($0)}' \
     "${normalize_to_lowercase__file}")"
   printf -- "%s" "${normalize_to_lowercase__content}" \
     > "${normalize_to_lowercase__file}"
@@ -989,9 +989,16 @@ Remove local entries: ${remove_local_entries__url} \
 (${remove_local_entries__file})
 EOF
 )"
-  sed -n -i -r '/^(localhost|localhost.localdomain|local|broadcasthost)$/!p' \
-    "${remove_local_entries__file}"
 
+  # Remove any lines which include things like localhost, or localhost.localdomain
+  readonly LOCAL_DOMAIN_REGEX='/\.\local[[:blank:]]*$/d'
+
+  remove_local_entries__content="$(sed "${LOCAL_DOMAIN_REGEX}" \
+    < "${remove_local_entries__file}")"
+  printf -- "%s" "${remove_local_entries__content}" \
+    > "${remove_local_entries__file}"
+
+  unset remove_local_entries__content
   unset remove_local_entries__file
   unset remove_local_entries__url
   return 0
