@@ -348,7 +348,6 @@ readonly BASE_IPSET_SOURCES="
   http://www.openbl.org/lists/base.txt
 
   # HTTPS Sources
-  https://www.autoshun.org/files/shunlist.csv
   https://lists.blocklist.de/lists/all.txt
   https://www.stopforumspam.com/downloads/toxic_ip_cidr.txt
   https://www.spamhaus.org/drop/drop.lasso
