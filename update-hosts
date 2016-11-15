@@ -828,10 +828,14 @@ Remove any comments from file: ${trim_whitespace__url} (${trim_whitespace__file}
 EOF
 )"
 
-  # Removes comments from files
+  # Trim whitespace from lines
   trim_whitespace__contents="$(sed 's/[[:blank:]]*$//g' < "${trim_whitespace__file}")"
   trim_whitespace__contents="$(printf -- "%s" "${trim_whitespace__contents}" \
     | sed 's/^[[:blank:]]*//g')"
+
+  # Remove empty lines
+  trim_whitespace__contents="$(printf -- "%s" "${trim_whitespace__contents}" \
+    | sed '/^$/d')"
   printf -- "%s\n" "${trim_whitespace__contents}" > "${trim_whitespace__file}"
 
   unset trim_whitespace__contents
