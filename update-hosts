@@ -586,6 +586,8 @@ process_ipset_sources()
     "${process_ipset_sources__url}"
   remove_comments "${process_ipset_sources__file}" \
     "${process_ipset_sources__url}"
+  trim_whitespace "${process_ipset_sources__file}" \
+    "${process_ipset_sources__url}"
   select_ip_lines "${process_ipset_sources__file}" \
     "${process_ipset_sources__url}"
 
@@ -608,6 +610,8 @@ process_hosts_sources()
   change_eol "${process_hosts_sources__file}" \
     "${process_hosts_sources__url}"
   remove_comments "${process_hosts_sources__file}" \
+    "${process_hosts_sources__url}"
+  trim_whitespace "${process_hosts_sources__file}" \
     "${process_hosts_sources__url}"
   select_host_lines "${process_hosts_sources__file}" \
     "${process_hosts_sources__url}"
@@ -785,7 +789,7 @@ EOF
 }
 
 ##
-# Change EOL from DOS to Unix format
+# Remove comments from files
 #
 # $1 file location
 # $2 source url
@@ -806,6 +810,33 @@ EOF
   unset remove_comments__contents
   unset remove_comments__file
   unset remove_comments__url
+  return 0
+}
+
+##
+# Remove whitespace from files
+#
+# $1 file location
+# $2 source url
+##
+trim_whitespace()
+{
+  trim_whitespace__file="$1"
+  trim_whitespace__url="$2"
+  info_msg "$(cat << EOF
+Remove any comments from file: ${trim_whitespace__url} (${trim_whitespace__file})
+EOF
+)"
+
+  # Removes comments from files
+  trim_whitespace__contents="$(sed 's/[[:space:]]*$//g' < "${trim_whitespace__file}")"
+  trim_whitespace__contents="$(printf -- "%s" "${trim_whitespace__contents}" \
+    | sed 's/^[[:space:]]*//g')"
+  printf -- "%s\n" "${trim_whitespace__contents}" > "${trim_whitespace__file}"
+
+  unset trim_whitespace__contents
+  unset trim_whitespace__file
+  unset trim_whitespace__url
   return 0
 }
 
