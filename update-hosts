@@ -691,7 +691,7 @@ download_sources()
     IFS="${download_sources__old_ifs}"
 
     download_sources__url="$(printf -- "%s" "${download_sources__url}" \
-      | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
+      | sed 's/^[[:blank:]]*//' | sed 's/[[:blank:]]*$//')"
     if [ -n "${download_sources__url}" ]; then
       case "${download_sources__url}" in
         \#*)
@@ -829,9 +829,9 @@ EOF
 )"
 
   # Removes comments from files
-  trim_whitespace__contents="$(sed 's/[[:space:]]*$//g' < "${trim_whitespace__file}")"
+  trim_whitespace__contents="$(sed 's/[[:blank:]]*$//g' < "${trim_whitespace__file}")"
   trim_whitespace__contents="$(printf -- "%s" "${trim_whitespace__contents}" \
-    | sed 's/^[[:space:]]*//g')"
+    | sed 's/^[[:blank:]]*//g')"
   printf -- "%s\n" "${trim_whitespace__contents}" > "${trim_whitespace__file}"
 
   unset trim_whitespace__contents
@@ -920,7 +920,7 @@ Remove old destination: ${remove_untrusted_domain__url} \
 (${remove_untrusted_domain__file})
 EOF
 )"
-  sed -i -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:space:]]+//g' \
+  sed -i -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:blank:]]+//g' \
     "${remove_untrusted_domain__file}"
 
   unset remove_untrusted_domain__file
@@ -1011,7 +1011,7 @@ apply_whitelist()
     IFS="${apply_whitelist__old_ifs}"
 
     apply_whitelist__domain="$(printf -- "%s" "${apply_whitelist__domain}" \
-      | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
+      | sed 's/^[[:blank:]]*//' | sed 's/[[:blank:]]*$//')"
     if [ -n "${apply_whitelist__domain}" ]; then
       case "${apply_whitelist__domain}" in
         \#*)
@@ -1063,7 +1063,7 @@ apply_blacklist()
     IFS="${apply_blacklist__old_ifs}"
 
     apply_blacklist__domain="$(printf -- "%s" "${apply_blacklist__domain}" \
-      | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
+      | sed 's/^[[:blank:]]*//' | sed 's/[[:blank:]]*$//')"
     if [ -n "${apply_blacklist__domain}" ]; then
       case "${apply_blacklist__domain}" in
         \#*)
@@ -1387,7 +1387,7 @@ remove_all_backup_files()
     "${remove_all_backup_files__file}".backup.*; do
     remove_all_backup_files__temp="$(printf -- "%s" \
       "${remove_all_backup_files__temp}" \
-      | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
+      | sed 's/^[[:blank:]]*//' | sed 's/[[:blank:]]*$//')"
     if [ -n "${remove_all_backup_files__temp}" ]; then
       info_msg "Removing backup file: ${remove_all_backup_files__temp}..."
       ${remove_all_backup_files__sudo} rm -f \
@@ -1423,7 +1423,7 @@ cleanup()
   # Kill runaway pids
   for p in ${__pids}; do
     p="$(printf -- "%s" "${p}" \
-      | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
+      | sed 's/^[[:blank:]]*//' | sed 's/[[:blank:]]*$//')"
     if [ -n "${p}" ]; then
       kill "${p}" > /dev/null 2>&1
     fi
@@ -1432,7 +1432,7 @@ cleanup()
   # rm leftover files
   for temp in ${__temp_files}; do
     temp="$(printf -- "%s" "${temp}" \
-      | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')"
+      | sed 's/^[[:blank:]]*//' | sed 's/[[:blank:]]*$//')"
     if [ -n "${temp}" ]; then
       rm -f "${temp}" > /dev/null 2>&1
     fi
