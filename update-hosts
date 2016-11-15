@@ -374,9 +374,6 @@ readonly IPSET_WHITELIST='
 readonly IPSET_BLACKLIST='
 '
 
-# Some regular expressions for handling host names and IP addresses
-readonly REGEX_SELECT_IP_ADDRESS='([0-9]{1,3}\.){3}[0-9]{1,3}'
-
 ##
 # Display a general message
 ##
@@ -897,8 +894,11 @@ select_ip_lines()
 Select only IP lines: ${select_ip_lines__url} (${select_ip_lines__file})
 EOF
 )"
-  select_ip_lines__content=
-  select_ip_lines__content="$(grep -oE "${REGEX_SELECT_IP_ADDRESS}" \
+
+  # Regex for ip addresses with an optional netmask
+  readonly IP_CIDR_REGEX='^([[:digit:]]{1,3}\.){3}[[:digit:]]{1,3}($|/([[:digit:]]|[1-2][[:digit:]]|3[0-2]))$'
+
+  select_ip_lines__content="$(grep -oE "${IP_CIDR_REGEX}" \
     "${select_ip_lines__file}")"
 
   # Echo out result
