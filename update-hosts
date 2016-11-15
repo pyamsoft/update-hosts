@@ -45,7 +45,7 @@
 # Configuration:
 
 # Version
-VERSION="2.4.0"
+VERSION="2.4.1"
 
 readonly SUDOLOCK="/tmp/update-hosts.sudolock"
 
@@ -916,9 +916,7 @@ EOF
     }' "${select_ip_lines__file}")"
 
   # Echo out result
-  cat "${select_ip_lines__file}" > "/home/pyamsoft/${select_ip_lines__file}.before"
   printf -- "%s" "${select_ip_lines__content}" > "${select_ip_lines__file}"
-  printf -- "%s" "${select_ip_lines__content}" > "/home/pyamsoft/${select_ip_lines__file}.after"
 
   unset select_ip_lines__content
   unset select_ip_lines__file
