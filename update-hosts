@@ -1548,8 +1548,8 @@ main_hosts()
   action_msg "Generating hosts file..."
   apply_whitelist "${HOSTS_WHITELIST}" || cancel_sudoloop
   apply_blacklist "${HOSTS_BLACKLIST}" || cancel_sudoloop
-  remove_duplicates || cancel_sudoloop
   sort_entries || cancel_sudoloop
+  remove_duplicates || cancel_sudoloop
   add_new_destination "${main_hosts__ip}" || cancel_sudoloop
 
   # Install
@@ -1618,8 +1618,8 @@ main_ipsets()
   action_msg "Generating ipset..."
   apply_whitelist "${IPSET_WHITELIST}" || cancel_sudoloop
   apply_blacklist "${IPSET_BLACKLIST}" || cancel_sudoloop
-  remove_duplicates || cancel_sudoloop
   sort_entries || cancel_sudoloop
+  remove_duplicates || cancel_sudoloop
 
   # Install
   main_ipsets__file_backup=$(create_backup_name \
