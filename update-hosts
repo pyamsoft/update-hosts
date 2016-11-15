@@ -557,12 +557,12 @@ decide_dl_client()
 
   if which curl > /dev/null 2>&1; then
     decide_dl_client__cmd="$(cat << EOF
-curl -fsSL --connect-timeout 40 --max-time 60 -A 'Mozilla/5.0'
+curl -fsSL -A 'Mozilla/5.0'
 EOF
 )"
   else
     decide_dl_client__cmd="$(cat << EOF
-wget -T 10 -qO- -A 'Mozilla/5.0'
+wget -qO- -U 'Mozilla/5.0'
 EOF
 )"
   fi
