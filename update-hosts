@@ -526,7 +526,7 @@ print_ipset_config()
     action_msg "Ipset ${print_ipset_config__name} does not exist, creating it"
 
     # Make the ipset
-    ${print_ipset_config__sudo} ipset create "${print_ipset_config__name}" hash:net maxelem $((1024 * 128))
+    ${print_ipset_config__sudo} ipset create "${print_ipset_config__name}" hash:net
   }
 
   unset print_ipset_config__sudo
@@ -685,8 +685,9 @@ download_sources()
     # Set the IFS back to normal
     IFS="${download_sources__old_ifs}"
 
+    # Trim spaces and strip comments
     download_sources__url="$(printf -- "%s" "${download_sources__url}" \
-      | sed 's/^[[:blank:]]*//' | sed 's/[[:blank:]]*$//')"
+      | sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//; s/#.*$//g')"
     if [ -n "${download_sources__url}" ]; then
       case "${download_sources__url}" in
         \#*)
@@ -794,7 +795,8 @@ remove_comments()
   remove_comments__file="$1"
   remove_comments__url="$2"
   info_msg "$(cat << EOF
-Remove any comments from file: ${remove_comments__url} (${remove_comments__file})
+Remove any comments from file: ${remove_comments__url} \
+(${remove_comments__file})
 EOF
 )"
 
@@ -819,14 +821,14 @@ trim_whitespace()
   trim_whitespace__file="$1"
   trim_whitespace__url="$2"
   info_msg "$(cat << EOF
-Remove any comments from file: ${trim_whitespace__url} (${trim_whitespace__file})
+Remove any comments from file: ${trim_whitespace__url} \
+(${trim_whitespace__file})
 EOF
 )"
 
   # Trim whitespace from lines
-  trim_whitespace__contents="$(sed 's/[[:blank:]]*$//g' < "${trim_whitespace__file}")"
-  trim_whitespace__contents="$(printf -- "%s" "${trim_whitespace__contents}" \
-    | sed 's/^[[:blank:]]*//g')"
+  trim_whitespace__contents="$(sed 's/[[:blank:]]*$//g; s/^[[:blank:]]*//g' \
+    < "${trim_whitespace__file}")"
 
   # Remove empty lines
   trim_whitespace__contents="$(printf -- "%s" "${trim_whitespace__contents}" \
