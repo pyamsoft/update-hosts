@@ -998,7 +998,7 @@ EOF
 )"
 
   # Remove any lines which include things like localhost, or localhost.localdomain
-  readonly LOCAL_DOMAIN_REGEX='/\.\local[[:blank:]]*$/d'
+  readonly LOCAL_DOMAIN_REGEX='/\.\localdomain[[:blank:]]*$/d; /\.\local[[:blank:]]*$/d'
 
   remove_local_entries__content="$(sed "${LOCAL_DOMAIN_REGEX}" \
     < "${remove_local_entries__file}")"
