@@ -379,6 +379,7 @@ readonly IPSET_WHITELIST='
 # BLACKLIST IPS
 # Only exact strings, no regex supported
 readonly IPSET_BLACKLIST='
+  1.1.1.1
 '
 
 ##
