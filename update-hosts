@@ -584,6 +584,8 @@ process_ipset_sources()
 
   change_eol "${process_ipset_sources__file}" \
     "${process_ipset_sources__url}"
+  remove_comments "${process_ipset_sources__file}" \
+    "${process_ipset_sources__url}"
   select_ip_lines "${process_ipset_sources__file}" \
     "${process_ipset_sources__url}"
 
@@ -604,6 +606,8 @@ process_hosts_sources()
   process_hosts_sources__url="$2"
 
   change_eol "${process_hosts_sources__file}" \
+    "${process_hosts_sources__url}"
+  remove_comments "${process_hosts_sources__file}" \
     "${process_hosts_sources__url}"
   select_host_lines "${process_hosts_sources__file}" \
     "${process_hosts_sources__url}"
@@ -777,6 +781,31 @@ EOF
   unset change_eol__contents
   unset change_eol__file
   unset change_eol__url
+  return 0
+}
+
+##
+# Change EOL from DOS to Unix format
+#
+# $1 file location
+# $2 source url
+##
+remove_comments()
+{
+  remove_comments__file="$1"
+  remove_comments__url="$2"
+  info_msg "$(cat << EOF
+Remove any comments from file: ${remove_comments__url} (${remove_comments__file})
+EOF
+)"
+
+  # Removes comments from files
+  remove_comments__contents="$(sed 's/#.*$//g' < "${remove_comments__file}")"
+  printf -- "%s\n" "${remove_comments__contents}" > "${remove_comments__file}"
+
+  unset remove_comments__contents
+  unset remove_comments__file
+  unset remove_comments__url
   return 0
 }
 
