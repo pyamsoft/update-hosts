@@ -1669,6 +1669,7 @@ main()
   check_for_binary sed || return 1
   check_for_binary grep || return 1
   check_for_binary sort || return 1
+  check_for_binary uniq || return 1
   check_for_binary touch || return 1
   check_for_binary sleep || return 1
   check_for_binary rm || return 1
