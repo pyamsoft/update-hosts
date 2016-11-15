@@ -1018,7 +1018,7 @@ apply_whitelist()
     IFS="${apply_whitelist__old_ifs}"
 
     apply_whitelist__domain="$(printf -- "%s" "${apply_whitelist__domain}" \
-      | sed 's/^[[:blank:]]*//' | sed 's/[[:blank:]]*$//')"
+      | sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//; s/#.*$/g')"
     if [ -n "${apply_whitelist__domain}" ]; then
       case "${apply_whitelist__domain}" in
         \#*)
@@ -1027,7 +1027,7 @@ apply_whitelist()
           ;;
         *)
           __blocklist="$(printf -- "%s\n" "${__blocklist}" \
-            | sed -r "/${apply_whitelist__domain}/d")"
+            | sed "/${apply_whitelist__domain}/d")"
           unset apply_whitelist__domain
           ;;
       esac
@@ -1070,7 +1070,7 @@ apply_blacklist()
     IFS="${apply_blacklist__old_ifs}"
 
     apply_blacklist__domain="$(printf -- "%s" "${apply_blacklist__domain}" \
-      | sed 's/^[[:blank:]]*//' | sed 's/[[:blank:]]*$//')"
+      | sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//; s/#.*$/g')"
     if [ -n "${apply_blacklist__domain}" ]; then
       case "${apply_blacklist__domain}" in
         \#*)
@@ -1115,7 +1115,7 @@ apply_blacklist()
 remove_duplicates()
 {
   info_msg "Remove duplicate entries"
-  __blocklist="$(printf -- "%s\n" "${__blocklist}" | awk '!a[$0]++')"
+  __blocklist="$(printf -- "%s\n" "${__blocklist}" | tr '[:upper:]' '[:lower:]')"
 
   return 0
 }
@@ -1126,7 +1126,7 @@ remove_duplicates()
 sort_entries()
 {
   info_msg "Sort entries"
-  __blocklist="$(printf -- "%s\n" "${__blocklist}" | sort -n)"
+  __blocklist="$(printf -- "%s\n" "${__blocklist}" | sort)"
 
   return 0
 }
