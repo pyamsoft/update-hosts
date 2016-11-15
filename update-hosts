@@ -908,7 +908,7 @@ EOF
   # Regex for ip addresses with an optional netmask
   readonly IP_CIDR_REGEX='^([[:digit:]]{1,3}\.){3}[[:digit:]]{1,3}($|/([[:digit:]]|[1-2][[:digit:]]|3[0-2]))$'
 
-  select_ip_lines__content="$(sed -n "/^${IP_CIDR_REGEX}/p" \
+  select_ip_lines__content="$(sed -n "/^\(${IP_CIDR_REGEX}[[:blank]]\)/p" \
     "${select_ip_lines__file}")"
 
   # Echo out result
