@@ -927,9 +927,14 @@ Remove old destination: ${remove_untrusted_domain__url} \
 (${remove_untrusted_domain__file})
 EOF
 )"
-  sed -i -r 's/^([0-9]{1,3}\.){3}[0-9]{1,3}[[:blank:]]+//g' \
-    "${remove_untrusted_domain__file}"
 
+  # Remove any domain that may be included in the downloaded file
+  remove_untrusted_domain__content="$(sed 's/^.\{1,\}[[:blank:]]\{1,\}//g' \
+    < "${remove_untrusted_domain__file}")"
+  printf -- "%s" "${remove_untrusted_domain__content}" \
+    > "${remove_untrusted_domain__file}"
+
+  unset remove_untrusted_domain__content
   unset remove_untrusted_domain__file
   unset remove_untrusted_domain__url
   return 0
@@ -956,7 +961,6 @@ Transform all entries to lowercase: ${normalize_to_lowercase__url} \
 EOF
 )"
 
-  normalize_to_lowercase__content=
   normalize_to_lowercase__content="$(awk '{print tolower($0)}' \
     "${normalize_to_lowercase__file}")"
   printf -- "%s" "${normalize_to_lowercase__content}" \
@@ -1115,7 +1119,7 @@ apply_blacklist()
 remove_duplicates()
 {
   info_msg "Remove duplicate entries"
-  __blocklist="$(printf -- "%s\n" "${__blocklist}" | tr '[:upper:]' '[:lower:]')"
+  __blocklist="$(printf -- "%s\n" "${__blocklist}" | uniq)"
 
   return 0
 }
