@@ -907,19 +907,18 @@ Select only IP lines: ${select_ip_lines__url} (${select_ip_lines__file})
 EOF
 )"
 
-  # These regex are long because they are checking for valid IP addresses only
-  # Regex for ip addresses with an optional netmask
-  readonly IP_REGEX_CIDR='(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))'
-  readonly IP_REGEX='(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])'
-
-  # KLUDGE
-  # Relies still on grep -oE but I can't think of any other way
-  # to get a match, and only the match itself at any location in the line
-  select_ip_lines__content="$(grep -oE -e "${IP_REGEX_CIDR}" -e "${IP_REGEX}" \
-    "${select_ip_lines__file}")"
+  # Use awk to emulate grep -oE
+  # we pass the regex in as a regex constant so that it is not evaulated wrongly by the shell
+  # This regex is long because checks for valid IP addresses only
+  select_ip_lines__content="$(awk \
+    'match($0, /(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(|\/([0-9]|[1-2][0-9]|3[0-2]))/) {
+      print substr($0, RSTART, RLENGTH)
+    }' "${select_ip_lines__file}")"
 
   # Echo out result
+  cat "${select_ip_lines__file}" > "/home/pyamsoft/${select_ip_lines__file}.before"
   printf -- "%s" "${select_ip_lines__content}" > "${select_ip_lines__file}"
+  printf -- "%s" "${select_ip_lines__content}" > "/home/pyamsoft/${select_ip_lines__file}.after"
 
   unset select_ip_lines__content
   unset select_ip_lines__file
@@ -1667,7 +1666,6 @@ main()
   # Check for required binaries, return out if they are not present
   check_for_download_ability || return 1
   check_for_binary sed || return 1
-  check_for_binary grep || return 1
   check_for_binary sort || return 1
   check_for_binary uniq || return 1
   check_for_binary touch || return 1
@@ -1681,6 +1679,7 @@ main()
   check_for_binary chmod || return 1
   check_for_binary mktemp || return 1
   check_for_binary cat || return 1
+  check_for_binary awk || return 1
 
   # Handle options
   # Options
