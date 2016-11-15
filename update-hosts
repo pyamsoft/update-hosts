@@ -1020,7 +1020,7 @@ apply_whitelist()
 {
   apply_whitelist__whitelist="$1"
 
-  info_msg "Apply hosts_whitelist"
+  info_msg "Apply whitelist entries"
   if [ -z "${__blocklist}" ]; then
     error_msg "Block list is empty"
     return 1
@@ -1072,7 +1072,7 @@ apply_blacklist()
 {
   apply_blacklist__blacklist="$1"
 
-  info_msg "Apply hosts_blacklist"
+  info_msg "Apply blacklist entries"
   # Cache the hosts_blacklist domains so that the entire block list
   # does not have to be echoed each time.
   # Domains initialized as first hosts_blacklist entry
