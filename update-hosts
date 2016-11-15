@@ -770,8 +770,11 @@ change_eol()
 Change EOL to Unix format: ${change_eol__url} (${change_eol__file})
 EOF
 )"
-  sed -r -i 's/$//' "${change_eol__file}"
+  # Use tr instead of GNU sed extension
+  change_eol__contents="(tr -d '\r' < ${change_eol__file})"
+  printf -- "%s\n" "${change_eol__contents}" > "${change_eol__file}"
 
+  unset change_eol__contents
   unset change_eol__file
   unset change_eol__url
   return 0
@@ -1583,6 +1586,7 @@ main()
   check_for_binary rm || return 1
   check_for_binary awk || return 1
   check_for_binary tee || return 1
+  check_for_binary tr || return 1
   check_for_binary cp || return 1
   check_for_binary wc || return 1
   check_for_binary printf || return 1
