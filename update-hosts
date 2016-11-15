@@ -829,7 +829,7 @@ trim_whitespace()
   trim_whitespace__file="$1"
   trim_whitespace__url="$2"
   info_msg "$(cat << EOF
-Remove any comments from file: ${trim_whitespace__url} \
+Trim whitespace from lines in: ${trim_whitespace__url} \
 (${trim_whitespace__file})
 EOF
 )"
