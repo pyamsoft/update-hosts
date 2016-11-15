@@ -950,19 +950,14 @@ normalize_to_lowercase()
 {
   normalize_to_lowercase__file="$1"
   normalize_to_lowercase__url="$2"
-  # KLUDGE
-  # Awk for some reason stops parsing after 1024 lines
-  # awk -v tf="$1" '{print tolower($0) > tf}' "$1"
-  #
-  # This is an ugly work around
   info_msg "$(cat << EOF
 Transform all entries to lowercase: ${normalize_to_lowercase__url} \
 (${normalize_to_lowercase__file})
 EOF
 )"
 
-  normalize_to_lowercase__content="$(awk '{tolower($0)}' \
-    "${normalize_to_lowercase__file}")"
+  normalize_to_lowercase__content="$(tr '[:upper:]' '[:lower:]' \
+    < "${normalize_to_lowercase__file}")"
   printf -- "%s" "${normalize_to_lowercase__content}" \
     > "${normalize_to_lowercase__file}"
 
@@ -1662,7 +1657,6 @@ main()
   check_for_binary touch || return 1
   check_for_binary sleep || return 1
   check_for_binary rm || return 1
-  check_for_binary awk || return 1
   check_for_binary tee || return 1
   check_for_binary tr || return 1
   check_for_binary cp || return 1
