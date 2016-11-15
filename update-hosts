@@ -771,7 +771,7 @@ Change EOL to Unix format: ${change_eol__url} (${change_eol__file})
 EOF
 )"
   # Use tr instead of GNU sed extension
-  change_eol__contents="(tr -d '\r' < ${change_eol__file})"
+  change_eol__contents="$(tr -d '\r' < "${change_eol__file}")"
   printf -- "%s\n" "${change_eol__contents}" > "${change_eol__file}"
 
   unset change_eol__contents
