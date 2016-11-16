@@ -455,39 +455,21 @@ check_for_download_ability()
 ##
 check_for_binary()
 {
-  check_for_binary__bin="$1"
-  check_for_binary__old_ifs="${IFS}"
-  if [ -z "${check_for_binary__bin}" ]; then
+  check_binary__bin="$1"
+  if [ -z "${check_binary__bin}" ]; then
     error_msg "Must specify a path to a binary"
+    unset check_binary__bin
     return 1
   fi
 
-  IFS=":"
-  for check_for_binary__path in ${PATH}; do
-    if [ -n "${check_for_binary__path}" ]; then
-      check_for_binary__result=
-      check_for_binary__result="${check_for_binary__path}/${check_for_binary__bin}"
-      if [ -e "${check_for_binary__result}" ]; then
-        IFS="${check_for_binary__old_ifs}"
-
-        unset check_for_binary__result
-        unset check_for_binary__bin
-        unset check_for_binary__old_ifs
-        unset check_for_binary__path
-        return 0
-      fi
-
-      unset check_for_binary__result
-    fi
-  done
-
-  error_msg "Binary '${check_for_binary__bin}' not found in \$PATH"
-
-  unset check_for_binary__result
-  unset check_for_binary__bin
-  unset check_for_binary__old_ifs
-  unset check_for_binary__path
-  return 1
+  if command -v "${check_binary__bin}" > /dev/null 2>&1; then
+    unset check_binary__bin
+    return 0
+  else
+    error_msg "Binary '${check_binary__bin}' not found in \$PATH"
+    unset check_binary__bin
+    return 1
+  fi
 }
 
 ##
