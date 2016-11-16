@@ -42,351 +42,6 @@
 #   return 0
 # fi
 
-# Configuration:
-
-# Version
-VERSION="2.4.1"
-
-readonly SUDOLOCK="/tmp/update-hosts.sudolock"
-
-# Set a sanitized PATH
-# Do not include /usr/local
-PATH="/usr/sbin:/usr/bin:/sbin:/bin"
-export PATH
-
-# NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
-#       can occur when using traceroute, netstat and the like.
-#
-# NOTE: This header will be directly inserted into the generated hosts file.
-#       We intentionally leave the spacing as is.
-#
-# Do some additional checking in case the hostname is localhost so we
-# do not include it twice
-machine_hostname=""
-if check_for_binary hostname; then
-  machine_hostname="$(hostname)"
-  if [ "${machine_hostname}" != "localhost" ]; then
-    machine_hostname="${machine_hostname} localhost"
-  fi
-else
-  machine_hostname="localhost"
-fi
-
-readonly HOSTS_HEADER="
-127.0.0.1 ${machine_hostname}
-# Fixes a display anomaly in traceroute and netstat
-0.0.0.0 0.0.0.0
-"
-unset machine_hostname
-
-# The base hosts_sources
-# Provides a basic amount of protection without breaking sites, or breaking
-# only a minimal amount of sites
-readonly BASE_HOSTS_SOURCES="
-  # HTTP Sources
-  http://winhelp2002.mvps.org/hosts.txt
-  http://someonewhocares.org/hosts/hosts
-  http://malwaredomains.lehigh.edu/files/justdomains
-  http://mirror1.malwaredomains.com/files/immortal_domains.txt
-
-  # HTTPS Sources
-  https://adaway.org/hosts.txt
-  https://www.malwaredomainlist.com/hostslist/hosts.txt
-  https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
-  https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
-  https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt
-  https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
-  https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
-"
-
-# Additional hosts file servers
-# readonly additonal_hosts_sources="
-#   https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
-#   https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
-# "
-
-# Hosts-file.net server classifications
-# Provides more in-depth protection and host blocking at the cost of
-# breaking some sites
-#
-# readonly hosts_file_net_parts="
-#   https://hosts-file.net/ad_servers.txt
-#   https://hosts-file.net/emd.txt
-#   https://hosts-file.net/exp.txt
-#   https://hosts-file.net/fsa.txt
-#   https://hosts-file.net/hjk.txt
-#   https://hosts-file.net/mmt.txt
-#   https://hosts-file.net/psh.txt
-# "
-
-# These entries are very large, and may break certain sites
-# that rely on CDNs or third party hosts_sources
-# Instead of downloading the entire hosts file and additional parts
-# the split download above is recommended. The parts that you do not
-# desire can be ignored individually instead of an all or nothing approach.
-# The two hosts_sources below are generally not recommended nor needed. If you
-# wish to use them, be sure to comment out the above hosts-file.net entries
-# or you will largely be pulling duplicate hosts_sources.
-#
-# readonly hosts_file_net_full="
-#   http://hosts-file.net/download/hosts.txt
-#   http://hosts-file.net/hphosts-partial.txt
-# "
-
-
-# The hosts_sources that will be parsed into the hosts file.
-# By default only the hosts_sources in the ${BASE_HOSTS_SOURCES} list
-# are included, additional hosts_sources can be included by
-# appending them onto lines following the base-hosts_sources line.
-# Destinations and duplicate entries do not matter, as they will
-# be sanitized and duplicates will be stripped out.
-readonly HOSTS_SOURCES="
-
-  ${BASE_HOSTS_SOURCES}
-
-"
-
-# Regex allowed
-#  '\.com$'   -> all domains that end with '.com'
-#  '^example' -> all domains that start with 'example'
-#  '^sub.\example\.org$' -> literal domain 'sub.exmaple.org'
-
-# Due to the binary yes or no nature of hosts file, all of the domains that
-# relate in some way to the uBlock0 Unbreak list will be added here.
-# This is to allow uBlock0 to block the specific parts of the domains, while
-# not breaking other sites that actually rely on them
-# Though not a great solution, this seems to be the only way to get around
-# some sites breaking when blocking certain hosts
-#
-# Because we cannot guarantee that the domains shipped in the whitelist
-# are the full domain names, we do not qualify them with '^'
-#
-# Update 2016/10/15
-readonly UNBREAK_WHITELIST='
-  google-analytics\.com$
-  analytics\.google\.com$
-  adf\.ly$
-  widget-cdn\.rpxnow\.com$
-  tags\.tiqcdn\.com$
-  statcounter\.com$
-  cdn-static\.liverail\.com$
-  vox-static\.liverail\.com$
-  s0\.2mdn\.net$
-  cdn-i\.dmdentertainment\.com$
-  cdn\.vurb\.com$
-  target\.122\.2o7\.net$
-  adm\.fwmrm\.net$
-  mopub\.com$
-  safelinking\.net$
-  outbrain\.com$
-  inc\.com$
-  flurry\.com$
-  c\.speedtest\.net$
-  boldchat\.com$
-  mixpanel\.com$
-  charlie\.strim.io$
-  ovh\.strim.io$
-  dn\.turner\.com$
-  yui\.yahooapis\.com$
-  top\.mail\.ru$
-  css\.washingtonpost\.com$
-  pcekspert\.com$
-  clickbank\.com$
-  yandex\.ru$
-  yastatic\.net$
-  carbonads\.net$
-  imasdk\.googleapis\.com$
-  2o7\.net$
-  quantcast\.com$
-  css5\.gaanacdn\.com$
-  keen\.github\.io$
-  cdn\.phoenix\.intergi\.com$
-  kissmetrics\.com$
-  viewpoint\.com$
-  woopra\.com$
-  monetate\.net$
-  googleads\.g\.doubleclick\.net$
-  img\.echohosting\.cafe24\.com$
-  googletagmanager\.com$
-  partner\.googleadservices\.com$
-  pagefair\.com$
-  ssl\.cdn-redfin\.com$
-  www\.southwest\.com$
-  marketwatch\.com$
-  cloudfront\.net$
-  nationalreview\.com$
-  liveperson\.net$
-  taboola\.com$
-  ticketmaster\.122\.2o7\.net$
-  phoronix\.com$
-  files\.explosm\.net$
-  cdn\.segment\.com$
-  sorted\.org$
-  analytics\.edgekey\.net$
-  tfag\.de$
-  ^nav\.files\.bbci\.co\.uk$
-  gamespot\.com$
-  umbro\.com$
-  shop\.puppetlabs\.com$
-  flightradar24\.com$
-  premium\.soundcloud\.com$
-  stats\.bbc\.co\.uk$
-  snoobi\.com$
-  esellerate\.net$
-  dw\.cbsi\.com$
-  data\.netscope\.marktest\.pt$
-  gapt.\hit\.gemius\.pl$
-  naiadsystems\.com$
-  static\.adf\.ly$
-  emarketer\.com$
-  tapad\.com$
-  staticxx\.facebook\.com$
-  sp\.computershopper\.com$
-  localytics\.com$
-  p\.jwpcdn\.com$
-  media2\.intoday\.in$
-  styletagassets\.com$
-  outlook\.live\.com$
-  uim\.tifbs\.net$
-'
-
-# User defined whitelist
-readonly USER_WHITELIST='
-'
-
-# Add any of your own custom whitelist modifications to the USER_WHITELIST
-# variable
-#
-# As of version 2.2.0, unbreak list is not added by default
-# ${UNBREAK_WHITELIST}
-HOSTS_WHITELIST="
-  ${USER_WHITELIST}
-"
-
-# Jump scare websites
-# Only exact strings, no regex supported
-readonly JUMPSCARE_BLACKLIST='
-  agor.io
-  www.agor.io
-'
-
-# CSGO Ads
-# Only exact strings, no regex supported
-readonly ADVERTISEMENT_BLACKLIST='
-  adback.pinion.gg
-  api.pinion.gg
-  bin.pinion.gg
-  blog.pinion.gg
-  bork.pinion.gg
-  calendar.pinion.gg
-  cdn.pinion.gg
-  cp.pinion.gg
-  crm.pinion.gg
-  delivery.pinion.gg
-  direct.pinion.gg
-  docs.pinion.gg
-  immuniser.pinion.gg
-  kermit.pinion.gg
-  legacy.pinion.gg
-  log.pinion.gg
-  mail.pinion.gg
-  mailer.pinion.gg
-  motd.pinion.gg
-  ns1.pinion.gg
-  ns2.pinion.gg
-  ns3.pinion.gg
-  ns4.pinion.gg
-  ns5.pinion.gg
-  ns6.pinion.gg
-  office.pinion.gg
-  oscar.pinion.gg
-  pinion-log.pinion.gg
-  pinion.gg
-  pog.pinion.gg
-  quartermaster.pinion.gg
-  seen.pinion.gg
-  stage.pinion.gg
-  templ4d2.pinion.gg
-  tix.pinion.gg
-  transcoded.pinion.gg
-  video.pinion.gg
-  voip.pinion.gg
-  wiki.pinion.gg
-  www.pinion.gg
-'
-
-# Any websites that may be deemed unsafe for various reasons
-# Things like phishing, malvertising, malware and so forth
-readonly BAD_SITE_BLACKLIST='
-  com.com
-  01net.com
-  chip.de
-  download.cnet.com
-  sourceforge.net
-  softonic.com
-  flexytalk.net
-  quickdomainfwd.com
-'
-
-# User defined blacklist
-# Only exact strings, no regex supported
-readonly USER_BLACKLIST='
-'
-
-# hosts_blacklist DOMAINS
-# Only exact strings, no regex supported
-readonly HOSTS_BLACKLIST="
-  ${JUMPSCARE_BLACKLIST}
-  ${ADVERTISEMENT_BLACKLIST}
-  ${BAD_SITE_BLACKLIST}
-  ${USER_BLACKLIST}
-"
-
-# The base ipsets
-# Provides a basic amount of protection without breaking sites, or breaking
-# only a minimal amount of sites
-readonly BASE_IPSET_SOURCES="
-  # HTTP Sources
-  http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
-  http://cinsscore.com/list/ci-badguys.txt
-  http://blocklist.greensnow.co/greensnow.txt
-  http://www.openbl.org/lists/base.txt
-
-  # HTTPS Sources
-  https://lists.blocklist.de/lists/all.txt
-  https://www.stopforumspam.com/downloads/toxic_ip_cidr.txt
-  https://www.spamhaus.org/drop/drop.lasso
-  https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=1.1.1.1
-  https://www.maxmind.com/en/proxy-detection-sample-list
-"
-
-# Other ipset sources
-#
-# http://danger.rulez.sk/projects/bruteforceblocker/blist.php
-
-# The sources that will be parsed into the ipset.
-# By default only the sources in the ${base_sources} list
-# are included, additional sources can be included by
-# appending them onto lines following the base-sources line.
-# Destinations and duplicate entries do not matter, as they will
-# be sanitized and duplicates will be stripped out.
-readonly IPSET_SOURCES="
-
-  ${BASE_IPSET_SOURCES}
-
-"
-readonly IPSET_WHITELIST='
-  127.0.0.1
-  0.0.0.0
-  255.255.255.255
-'
-
-# BLACKLIST IPS
-# Only exact strings, no regex supported
-readonly IPSET_BLACKLIST='
-  1.1.1.1
-'
-
 ##
 # Display a general message
 ##
@@ -1871,6 +1526,351 @@ set -u
 # Export the LC as the default C so that we do not run into locale based quirks
 LC_ALL=C
 export LC_ALL
+
+# Configuration:
+
+# Version
+VERSION="2.4.1"
+
+readonly SUDOLOCK="/tmp/update-hosts.sudolock"
+
+# Set a sanitized PATH
+# Do not include /usr/local
+PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+export PATH
+
+# NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
+#       can occur when using traceroute, netstat and the like.
+#
+# NOTE: This header will be directly inserted into the generated hosts file.
+#       We intentionally leave the spacing as is.
+#
+# Do some additional checking in case the hostname is localhost so we
+# do not include it twice
+machine_hostname=""
+if check_for_binary hostname; then
+  machine_hostname="$(hostname)"
+  if [ "${machine_hostname}" != "localhost" ]; then
+    machine_hostname="${machine_hostname} localhost"
+  fi
+else
+  machine_hostname="localhost"
+fi
+
+readonly HOSTS_HEADER="
+127.0.0.1 ${machine_hostname}
+# Fixes a display anomaly in traceroute and netstat
+0.0.0.0 0.0.0.0
+"
+unset machine_hostname
+
+# The base hosts_sources
+# Provides a basic amount of protection without breaking sites, or breaking
+# only a minimal amount of sites
+readonly BASE_HOSTS_SOURCES="
+  # HTTP Sources
+  http://winhelp2002.mvps.org/hosts.txt
+  http://someonewhocares.org/hosts/hosts
+  http://malwaredomains.lehigh.edu/files/justdomains
+  http://mirror1.malwaredomains.com/files/immortal_domains.txt
+
+  # HTTPS Sources
+  https://adaway.org/hosts.txt
+  https://www.malwaredomainlist.com/hostslist/hosts.txt
+  https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
+  https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
+  https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt
+  https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
+  https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
+"
+
+# Additional hosts file servers
+# readonly additonal_hosts_sources="
+#   https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
+#   https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
+# "
+
+# Hosts-file.net server classifications
+# Provides more in-depth protection and host blocking at the cost of
+# breaking some sites
+#
+# readonly hosts_file_net_parts="
+#   https://hosts-file.net/ad_servers.txt
+#   https://hosts-file.net/emd.txt
+#   https://hosts-file.net/exp.txt
+#   https://hosts-file.net/fsa.txt
+#   https://hosts-file.net/hjk.txt
+#   https://hosts-file.net/mmt.txt
+#   https://hosts-file.net/psh.txt
+# "
+
+# These entries are very large, and may break certain sites
+# that rely on CDNs or third party hosts_sources
+# Instead of downloading the entire hosts file and additional parts
+# the split download above is recommended. The parts that you do not
+# desire can be ignored individually instead of an all or nothing approach.
+# The two hosts_sources below are generally not recommended nor needed. If you
+# wish to use them, be sure to comment out the above hosts-file.net entries
+# or you will largely be pulling duplicate hosts_sources.
+#
+# readonly hosts_file_net_full="
+#   http://hosts-file.net/download/hosts.txt
+#   http://hosts-file.net/hphosts-partial.txt
+# "
+
+
+# The hosts_sources that will be parsed into the hosts file.
+# By default only the hosts_sources in the ${BASE_HOSTS_SOURCES} list
+# are included, additional hosts_sources can be included by
+# appending them onto lines following the base-hosts_sources line.
+# Destinations and duplicate entries do not matter, as they will
+# be sanitized and duplicates will be stripped out.
+readonly HOSTS_SOURCES="
+
+  ${BASE_HOSTS_SOURCES}
+
+"
+
+# Regex allowed
+#  '\.com$'   -> all domains that end with '.com'
+#  '^example' -> all domains that start with 'example'
+#  '^sub.\example\.org$' -> literal domain 'sub.exmaple.org'
+
+# Due to the binary yes or no nature of hosts file, all of the domains that
+# relate in some way to the uBlock0 Unbreak list will be added here.
+# This is to allow uBlock0 to block the specific parts of the domains, while
+# not breaking other sites that actually rely on them
+# Though not a great solution, this seems to be the only way to get around
+# some sites breaking when blocking certain hosts
+#
+# Because we cannot guarantee that the domains shipped in the whitelist
+# are the full domain names, we do not qualify them with '^'
+#
+# Update 2016/10/15
+readonly UNBREAK_WHITELIST='
+  google-analytics\.com$
+  analytics\.google\.com$
+  adf\.ly$
+  widget-cdn\.rpxnow\.com$
+  tags\.tiqcdn\.com$
+  statcounter\.com$
+  cdn-static\.liverail\.com$
+  vox-static\.liverail\.com$
+  s0\.2mdn\.net$
+  cdn-i\.dmdentertainment\.com$
+  cdn\.vurb\.com$
+  target\.122\.2o7\.net$
+  adm\.fwmrm\.net$
+  mopub\.com$
+  safelinking\.net$
+  outbrain\.com$
+  inc\.com$
+  flurry\.com$
+  c\.speedtest\.net$
+  boldchat\.com$
+  mixpanel\.com$
+  charlie\.strim.io$
+  ovh\.strim.io$
+  dn\.turner\.com$
+  yui\.yahooapis\.com$
+  top\.mail\.ru$
+  css\.washingtonpost\.com$
+  pcekspert\.com$
+  clickbank\.com$
+  yandex\.ru$
+  yastatic\.net$
+  carbonads\.net$
+  imasdk\.googleapis\.com$
+  2o7\.net$
+  quantcast\.com$
+  css5\.gaanacdn\.com$
+  keen\.github\.io$
+  cdn\.phoenix\.intergi\.com$
+  kissmetrics\.com$
+  viewpoint\.com$
+  woopra\.com$
+  monetate\.net$
+  googleads\.g\.doubleclick\.net$
+  img\.echohosting\.cafe24\.com$
+  googletagmanager\.com$
+  partner\.googleadservices\.com$
+  pagefair\.com$
+  ssl\.cdn-redfin\.com$
+  www\.southwest\.com$
+  marketwatch\.com$
+  cloudfront\.net$
+  nationalreview\.com$
+  liveperson\.net$
+  taboola\.com$
+  ticketmaster\.122\.2o7\.net$
+  phoronix\.com$
+  files\.explosm\.net$
+  cdn\.segment\.com$
+  sorted\.org$
+  analytics\.edgekey\.net$
+  tfag\.de$
+  ^nav\.files\.bbci\.co\.uk$
+  gamespot\.com$
+  umbro\.com$
+  shop\.puppetlabs\.com$
+  flightradar24\.com$
+  premium\.soundcloud\.com$
+  stats\.bbc\.co\.uk$
+  snoobi\.com$
+  esellerate\.net$
+  dw\.cbsi\.com$
+  data\.netscope\.marktest\.pt$
+  gapt.\hit\.gemius\.pl$
+  naiadsystems\.com$
+  static\.adf\.ly$
+  emarketer\.com$
+  tapad\.com$
+  staticxx\.facebook\.com$
+  sp\.computershopper\.com$
+  localytics\.com$
+  p\.jwpcdn\.com$
+  media2\.intoday\.in$
+  styletagassets\.com$
+  outlook\.live\.com$
+  uim\.tifbs\.net$
+'
+
+# User defined whitelist
+readonly USER_WHITELIST='
+'
+
+# Add any of your own custom whitelist modifications to the USER_WHITELIST
+# variable
+#
+# As of version 2.2.0, unbreak list is not added by default
+# ${UNBREAK_WHITELIST}
+HOSTS_WHITELIST="
+  ${USER_WHITELIST}
+"
+
+# Jump scare websites
+# Only exact strings, no regex supported
+readonly JUMPSCARE_BLACKLIST='
+  agor.io
+  www.agor.io
+'
+
+# CSGO Ads
+# Only exact strings, no regex supported
+readonly ADVERTISEMENT_BLACKLIST='
+  adback.pinion.gg
+  api.pinion.gg
+  bin.pinion.gg
+  blog.pinion.gg
+  bork.pinion.gg
+  calendar.pinion.gg
+  cdn.pinion.gg
+  cp.pinion.gg
+  crm.pinion.gg
+  delivery.pinion.gg
+  direct.pinion.gg
+  docs.pinion.gg
+  immuniser.pinion.gg
+  kermit.pinion.gg
+  legacy.pinion.gg
+  log.pinion.gg
+  mail.pinion.gg
+  mailer.pinion.gg
+  motd.pinion.gg
+  ns1.pinion.gg
+  ns2.pinion.gg
+  ns3.pinion.gg
+  ns4.pinion.gg
+  ns5.pinion.gg
+  ns6.pinion.gg
+  office.pinion.gg
+  oscar.pinion.gg
+  pinion-log.pinion.gg
+  pinion.gg
+  pog.pinion.gg
+  quartermaster.pinion.gg
+  seen.pinion.gg
+  stage.pinion.gg
+  templ4d2.pinion.gg
+  tix.pinion.gg
+  transcoded.pinion.gg
+  video.pinion.gg
+  voip.pinion.gg
+  wiki.pinion.gg
+  www.pinion.gg
+'
+
+# Any websites that may be deemed unsafe for various reasons
+# Things like phishing, malvertising, malware and so forth
+readonly BAD_SITE_BLACKLIST='
+  com.com
+  01net.com
+  chip.de
+  download.cnet.com
+  sourceforge.net
+  softonic.com
+  flexytalk.net
+  quickdomainfwd.com
+'
+
+# User defined blacklist
+# Only exact strings, no regex supported
+readonly USER_BLACKLIST='
+'
+
+# hosts_blacklist DOMAINS
+# Only exact strings, no regex supported
+readonly HOSTS_BLACKLIST="
+  ${JUMPSCARE_BLACKLIST}
+  ${ADVERTISEMENT_BLACKLIST}
+  ${BAD_SITE_BLACKLIST}
+  ${USER_BLACKLIST}
+"
+
+# The base ipsets
+# Provides a basic amount of protection without breaking sites, or breaking
+# only a minimal amount of sites
+readonly BASE_IPSET_SOURCES="
+  # HTTP Sources
+  http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
+  http://cinsscore.com/list/ci-badguys.txt
+  http://blocklist.greensnow.co/greensnow.txt
+  http://www.openbl.org/lists/base.txt
+
+  # HTTPS Sources
+  https://lists.blocklist.de/lists/all.txt
+  https://www.stopforumspam.com/downloads/toxic_ip_cidr.txt
+  https://www.spamhaus.org/drop/drop.lasso
+  https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=1.1.1.1
+  https://www.maxmind.com/en/proxy-detection-sample-list
+"
+
+# Other ipset sources
+#
+# http://danger.rulez.sk/projects/bruteforceblocker/blist.php
+
+# The sources that will be parsed into the ipset.
+# By default only the sources in the ${base_sources} list
+# are included, additional sources can be included by
+# appending them onto lines following the base-sources line.
+# Destinations and duplicate entries do not matter, as they will
+# be sanitized and duplicates will be stripped out.
+readonly IPSET_SOURCES="
+
+  ${BASE_IPSET_SOURCES}
+
+"
+readonly IPSET_WHITELIST='
+  127.0.0.1
+  0.0.0.0
+  255.255.255.255
+'
+
+# BLACKLIST IPS
+# Only exact strings, no regex supported
+readonly IPSET_BLACKLIST='
+  1.1.1.1
+'
 
 __temp_files="" # Leave blank
 __pids="" # Leave blank
