@@ -62,9 +62,14 @@ export PATH
 #
 # Do some additional checking in case the hostname is localhost so we
 # do not include it twice
-machine_hostname="$(uname -n)"
-if [ "${machine_hostname}" != "localhost" ]; then
-  machine_hostname="${machine_hostname} localhost"
+machine_hostname=""
+if check_for_binary hostname; then
+  machine_hostname="$(hostname)"
+  if [ "${machine_hostname}" != "localhost" ]; then
+    machine_hostname="${machine_hostname} localhost"
+  fi
+else
+  machine_hostname="localhost"
 fi
 
 readonly HOSTS_HEADER="
