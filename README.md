@@ -30,10 +30,10 @@ The main differences being:
 - http://winhelp2002.mvps.org/hosts.txt
 - http://someonewhocares.org/hosts/hosts
 - http://malwaredomains.lehigh.edu/files/justdomains
-- https://www.malwaredomainlist.com/hostslist/hosts.txt
-- https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
+- http://mirror1.malwaredomains.com/files/immortal_domains.txt
 - https://adaway.org/hosts.txt
 - https://www.malwaredomainlist.com/hostslist/hosts.txt
+- https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
 - https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
 - https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt
 - https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
@@ -43,24 +43,22 @@ The main differences being:
 
 - https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
 - https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
-- http://hosts-file.net/ad_servers.txt
-- http://hosts-file.net/emd.txt
-- http://hosts-file.net/exp.txt
-- http://hosts-file.net/fsa.txt
-- http://hosts-file.net/hjk.txt
-- http://hosts-file.net/mmt.txt
-- http://hosts-file.net/psh.txt
+- https://hosts-file.net/ad_servers.txt
+- https://hosts-file.net/emd.txt
+- https://hosts-file.net/exp.txt
+- https://hosts-file.net/fsa.txt
+- https://hosts-file.net/hjk.txt
+- https://hosts-file.net/mmt.txt
+- https://hosts-file.net/psh.txt
 - http://hosts-file.net/download/hosts.txt
 - http://hosts-file.net/hphosts-partial.txt
 
 ## Ipset Sources
 
 - http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
-- http://danger.rulez.sk/projects/bruteforceblocker/blist.php
 - http://cinsscore.com/list/ci-badguys.txt
 - http://blocklist.greensnow.co/greensnow.txt
-- https://www.openbl.org/lists/base.txt
-- https://www.autoshun.org/files/shunlist.csv
+- http://www.openbl.org/lists/base.txt
 - https://lists.blocklist.de/lists/all.txt
 - https://www.stopforumspam.com/downloads/toxic_ip_cidr.txt
 - https://www.spamhaus.org/drop/drop.lasso
