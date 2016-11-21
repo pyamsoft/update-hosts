@@ -1465,7 +1465,7 @@ main()
   fi
 
   # Trap return signals
-  trap cancel_sudoloop INT
+  trap cancel_sudoloop INT TERM
 
   needs_sudo=
   if [ "$(id -u)" -ne 0 ] && [ "${require_root}" -eq 1 ]; then
