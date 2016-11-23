@@ -930,7 +930,16 @@ install_ipset_blocklist()
   check_for_binary iprange && {
     # If we have the iprange binary, run an optimization on the set
     info_msg "Optimize ipset using iprange to reduce entry count"
+
+    # Take count of the entries before and after
+    old_count="$(printf -- "%s" "${__blocklist}" | wc -l)"
     __blocklist=$(printf -- "%s" "${__blocklist}" | iprange --ipset-reduce-entries 1)
+    new_count="$(printf -- "%s" "${__blocklist}" | wc -l)"
+
+    info_msg "Old count: ${old_count}"
+    info_msg "New count: ${new_count}"
+    unset old_count
+    unset new_count
   }
 
   info_msg "Add new IPs to the block list"
