@@ -174,17 +174,19 @@ print_ipset_config()
   print_ipset_config__name="$3"
 
   action_msg "Ipset Configuration:"
-  info_msg "Ipset location: ${print_ipset_config__file}"
-  info_msg "Ipset name: ${print_ipset_config__name}"
+  info_msg "Ipset location: %s" "${print_ipset_config__file}"
+  info_msg "Ipset name: %s" "${print_ipset_config__name}"
 
   # The ipset must exist first for this script to work
   # check for existence here
   ${print_ipset_config__sudo} ipset \
     list "${print_ipset_config__name}" > /dev/null 2>&1 || {
-    action_msg "Ipset ${print_ipset_config__name} does not exist, creating it"
+    action_msg "Ipset %s does not exist, creating it" \
+      "${print_ipset_config__name}"
 
     # Make the ipset
-    ${print_ipset_config__sudo} ipset create "${print_ipset_config__name}" hash:net
+    ${print_ipset_config__sudo} ipset create "${print_ipset_config__name}" \
+      hash:net
   }
 
   unset print_ipset_config__sudo
@@ -206,15 +208,9 @@ decide_dl_client()
   decide_dl_client__cmd=
 
   if which curl > /dev/null 2>&1; then
-    decide_dl_client__cmd="$(cat << EOF
-curl -fsSL -A 'Mozilla/5.0'
-EOF
-)"
+    decide_dl_client__cmd="curl -fsSL -A 'Mozilla/5.0'"
   else
-    decide_dl_client__cmd="$(cat << EOF
-wget -qO- -U 'Mozilla/5.0'
-EOF
-)"
+    decide_dl_client__cmd="wget -qO- -U 'Mozilla/5.0'"
   fi
 
   # Echo before unsetting
@@ -296,11 +292,11 @@ download_to_tempfile()
   download_to_tempfile__process_hook="$4"
   download_to_tempfile__content=
 
-  info_msg "Downloading from ${download_to_tempfile__url}"
+  info_msg "Downloading from %s" "${download_to_tempfile__url}"
   download_to_tempfile__content="$(printf -- "%s" \
     "$(${download_to_tempfile__client} "${download_to_tempfile__url}")")"
   if [ -z "${download_to_tempfile__content}" ]; then
-    info_msg "  Failed to download from: ${download_to_tempfile__url}"
+    info_msg "  Failed to download from: %s" "${download_to_tempfile__url}"
     return 1
   fi
 
@@ -400,8 +396,7 @@ download_sources()
           "${download_sources__tempfile_content}")"
       else
         __blocklist="$(printf -- "%s\n%s\n" \
-          "${__blocklist}" \
-          "${download_sources__tempfile_content}")"
+          "${__blocklist}" "${download_sources__tempfile_content}")"
       fi
     fi
 
@@ -428,10 +423,8 @@ change_eol()
 {
   change_eol__file="$1"
   change_eol__url="$2"
-  info_msg "$(cat << EOF
-Change EOL to Unix format: ${change_eol__url} (${change_eol__file})
-EOF
-)"
+  info_msg "Change EOL to Unix format: %s (%s)" "${change_eol__url}" \
+    "${change_eol__file}"
   # Use tr instead of GNU sed extension
   change_eol__contents="$(tr -d '\r' < "${change_eol__file}")"
   printf -- "%s\n" "${change_eol__contents}" > "${change_eol__file}"
@@ -452,11 +445,8 @@ remove_comments()
 {
   remove_comments__file="$1"
   remove_comments__url="$2"
-  info_msg "$(cat << EOF
-Remove any comments from file: ${remove_comments__url} \
-(${remove_comments__file})
-EOF
-)"
+  info_msg "Remove any comments from file: %s (%s)" "${remove_comments__url}" \
+    "${remove_comments__file}"
 
   # Removes comments from files
   remove_comments__contents="$(sed 's/#.*$//g' < "${remove_comments__file}")"
@@ -478,11 +468,8 @@ trim_whitespace()
 {
   trim_whitespace__file="$1"
   trim_whitespace__url="$2"
-  info_msg "$(cat << EOF
-Trim whitespace from lines in: ${trim_whitespace__url} \
-(${trim_whitespace__file})
-EOF
-)"
+  info_msg "Trim whitespace from lines in: %s (%s)" "${trim_whitespace__url}" \
+    "${trim_whitespace__file}"
 
   # Trim whitespace from lines
   trim_whitespace__contents="$(sed 's/[[:blank:]]*$//g; s/^[[:blank:]]*//g' \
@@ -516,11 +503,8 @@ select_host_lines()
   # sed -n -i -r "/(^(${ip_regex})|^)${domain_regex}/p" "$1"
   #
   # This is an ugly workaround
-  info_msg "$(cat << EOF
-Select only hosts lines: ${select_host_lines__url} \
-(${select_host_lines__file})
-EOF
-)"
+  info_msg "Select only hosts lines: %s (%s)" "${select_host_lines__url}" \
+    "${select_host_lines__file}"
 
   # Technically this does not check that the actual digits are valid IP addresses
   # but that is alright because the IP addresses themselves will be replaced
@@ -552,10 +536,7 @@ select_ip_lines()
   select_ip_lines__file="$1"
   select_ip_lines__url="$2"
 
-  info_msg "$(cat << EOF
-Select only IP lines: ${select_ip_lines__url} (${select_ip_lines__file})
-EOF
-)"
+  info_msg "Select only IP lines: %s (%s)" "${select_ip_lines__url}" "${select_ip_lines__file}"
 
   # Use awk to emulate grep -oE
   # we pass the regex in as a regex constant so that it is not evaulated wrongly by the shell
@@ -584,11 +565,8 @@ remove_untrusted_domain()
 {
   remove_untrusted_domain__file="$1"
   remove_untrusted_domain__url="$2"
-  info_msg "$(cat << EOF
-Remove old destination: ${remove_untrusted_domain__url} \
-(${remove_untrusted_domain__file})
-EOF
-)"
+  info_msg "Remove old destination: %s (%s)" "${remove_untrusted_domain__url}" \
+    "${remove_untrusted_domain__file}"
 
   # Remove any domain that may be included in the downloaded file
   remove_untrusted_domain__content="$(sed 's/^.\{1,\}[[:blank:]]\{1,\}//g' \
@@ -612,11 +590,8 @@ normalize_to_lowercase()
 {
   normalize_to_lowercase__file="$1"
   normalize_to_lowercase__url="$2"
-  info_msg "$(cat << EOF
-Transform all entries to lowercase: ${normalize_to_lowercase__url} \
-(${normalize_to_lowercase__file})
-EOF
-)"
+  info_msg "Transform all entries to lowercase: %s (%s)" \
+    "${normalize_to_lowercase__url}" "${normalize_to_lowercase__file}"
 
   normalize_to_lowercase__content="$(tr '[:upper:]' '[:lower:]' \
     < "${normalize_to_lowercase__file}")"
@@ -641,11 +616,8 @@ remove_local_entries()
   remove_local_entries__file="$1"
   remove_local_entries__url="$2"
 
-  info_msg "$(cat << EOF
-Remove local entries: ${remove_local_entries__url} \
-(${remove_local_entries__file})
-EOF
-)"
+  info_msg "Remove local entries: %s (%s)" "${remove_local_entries__url}" \
+    "${remove_local_entries__file}"
 
   # Remove any lines which include things like localhost, or localhost.localdomain
   readonly LOCAL_DOMAIN_REGEX='/\.\localdomain[[:blank:]]*$/d; /\.\local[[:blank:]]*$/d'
@@ -854,10 +826,11 @@ backup_old_file()
   backup_old_file__backup="$3"
 
   if [ -f "${backup_old_file__file}" ]; then
-    info_msg "Creating backup of original file..."
+    info_msg "Creating backup of original file %s ..." \
+      "${backup_old_file__file}"
     ${backup_old_file__sudo} cp \
       "${backup_old_file__file}" "${backup_old_file__backup}" || {
-      error_msg "Failed to copy to file ${backup_old_file__backup}"
+      error_msg "Failed to copy to file %s" "${backup_old_file__backup}"
 
       unset backup_old_file__sudo
       unset backup_old_file__file
@@ -887,12 +860,14 @@ install_new_hosts_file()
   install_new_hosts_file__hosts="$2"
   install_new_hosts_file__destination="$3"
 
-  info_msg "Installing new hosts file..."
+  info_msg "Installing new hosts file %s..." \
+    "${install_new_hosts_file__destination}"
   printf -- "%s\n" "${install_new_hosts_file__hosts}" \
     | ${install_new_hosts_file__sudo} tee \
     "${install_new_hosts_file__destination}" > /dev/null \
     || {
-    error_msg "Failed to output to file ${install_new_hosts_file__destination}"
+    error_msg "Failed to output to file %s" \
+      "${install_new_hosts_file__destination}"
 
     unset install_new_hosts_file__sudo
     unset install_new_hosts_file__hosts
@@ -987,20 +962,18 @@ fix_file_permissons()
   fix_file_permissons__file="$2"
 
   if [ -f "${fix_file_permissons__file}" ]; then
-    info_msg "Fixing permissions for file ${fix_file_permissons__file}..."
+    info_msg "Fixing permissions for file %s..." "${fix_file_permissons__file}"
     ${fix_file_permissons__sudo} chmod 644 "${fix_file_permissons__file}" \
       || {
-      error_msg "Failed to chmod ${fix_file_permissons__file} to 644"
+      error_msg "Failed to chmod %s to 644" "${fix_file_permissons__file}"
 
       unset fix_file_permissons__sudo
       unset fix_file_permissons__file
       return 1
     }
   else
-    info_msg "$(cat << EOF
-Cannot fix permission for non-existant file ${fix_file_permissons__file}
-EOF
-)"
+    info_msg "Cannot fix permission for non-existant file %s" \
+      "${fix_file_permissons__file}"
   fi
 
   unset fix_file_permissons__sudo
@@ -1327,6 +1300,7 @@ main()
   check_for_binary sleep || return 1
   check_for_binary rm || return 1
   check_for_binary tee || return 1
+  check_for_binary date || return 1
   check_for_binary tr || return 1
   check_for_binary cp || return 1
   check_for_binary wc || return 1
@@ -1359,7 +1333,7 @@ main()
       while getopts ":hvrniu-:" option; do
         # Set only on long option with arg
         if [ -n "${long_option}" ]; then
-          error_msg "Long option --${long_option} expects argument"
+          error_msg "Long option --%s expects argument" "${long_option}"
           return 1
         fi
 
@@ -1392,7 +1366,7 @@ main()
                 ;;
               *)
                 # We must provide our own error message in this case
-                error_msg "Illegal option --${OPTARG}"
+                error_msg "Illegal option --%s" "${OPTARG}"
                 print_help
                 return 1
                 ;;
@@ -1419,7 +1393,7 @@ main()
             apply_unbreak=1
             ;;
           *)
-            error_msg "Illegal option -${OPTARG}"
+            error_msg "Illegal option -%s" "${OPTARG}"
             print_help
             return 1
             ;;
@@ -1433,9 +1407,10 @@ main()
         optind_expanded=""
       fi
 
+      # Long option has argument
       if [ -z "${optind_expanded}" ]; then
         if [ -n "${long_option}" ]; then
-          error_msg "Long option --${long_option} expects argument"
+          error_msg "Long option --%s expects argument" "${long_option}"
           return 1
         else
           break
