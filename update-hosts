@@ -47,13 +47,15 @@
 ##
 action_msg()
 {
-  action_msg__message="$1"
+  if [ "$#" -eq 0 ]; then
+    return 1
+  fi
 
-  printf -- "%b + %b%s%b\n" \
-    "\033[1;33m" \
-    "\033[1;32m" \
-    "${action_msg__message}" \
-    "\033[0m"
+  action_msg__message="$1"
+  shift
+
+  printf -- "%b + %b${action_msg__message}%b\n" "\033[1;33m" "\033[1;32m" \
+    "\033[0m" "$@"
 
   unset action_msg__message
   return 0
@@ -64,13 +66,15 @@ action_msg()
 ##
 error_msg()
 {
-  error_msg__message="$1"
+  if [ "$#" -eq 0 ]; then
+    return 1
+  fi
 
-  printf -- "%b + %b%s%b\n" \
-    "\033[1;33m" \
-    "\033[1;31m" \
-    "${error_msg__message}" \
-    "\033[0m"
+  error_msg__message="$1"
+  shift
+
+  printf -- "%b + %b${error_msg__message}%b\n" "\033[1;33m" "\033[1;31m" \
+    "\033[0m" "$@"
 
   unset error_msg__message
   return 0
@@ -81,10 +85,14 @@ error_msg()
 ##
 info_msg()
 {
-  info_msg__message="$1"
+  if [ "$#" -eq 0 ]; then
+    return 1
+  fi
 
-  printf -- "   - %s\n" \
-    "${info_msg__message}"
+  info_msg__message="$1"
+  shift
+
+  printf -- "   - ${info_msg__message}\n" "$@"
 
   unset info_msg__message
   return 0
@@ -126,7 +134,7 @@ check_for_binary()
     unset check_binary__bin
     return 0
   else
-    error_msg "Binary '${check_binary__bin}' not found in \$PATH"
+    error_msg "Binary '%s' not found in \$PATH" "${check_binary__bin}"
     unset check_binary__bin
     return 1
   fi
@@ -144,8 +152,8 @@ print_hosts_config()
   print_hosts_config__ip="$2"
 
   action_msg "Hosts Configuration:"
-  info_msg "Hosts location: ${print_hosts_config__file}"
-  info_msg "Destination IP: ${print_hosts_config__ip}"
+  info_msg "Hosts location: %s" "${print_hosts_config__file}"
+  info_msg "Destination IP: %s" "${print_hosts_config__ip}"
 
   unset print_hosts_config__file
   unset print_hosts_config__ip
@@ -1025,28 +1033,26 @@ print_file_differences()
   print_file_differences__new="$1"
   print_file_differences__old="$2"
 
-  print_file_differences__old_number=0
+  print_file_differences__old_n=0
   if [ -f "${print_file_differences__old}" ]; then
-    print_file_differences__old_number=$(wc -l \
-      < "${print_file_differences__old}")
+    print_file_differences__old_n=$(wc -l "${print_file_differences__old}")
   fi
 
-  print_file_differences__new_number=
-  print_file_differences__new_number=$(wc -l \
-    < "${print_file_differences__new}")
+  print_file_differences__new_n=
+  print_file_differences__new_n=$(wc -l < "${print_file_differences__new}")
 
   # Echo out the result
+  print_file_differences__diff="$((print_file_differences__new_n - print_file_differences__old_n))"
   printf -- "%b + %b%s %bentries added! (%b + %b%s %b)\n" \
-    "\033[1;33m" "\033[1;32m" "${print_file_differences__new_number}" \
-    "\033[0m" "\033[1;32m" "\033[1;34m" \
-    "$((print_file_differences__new_number \
-    - print_file_differences__old_number))" \
+    "\033[1;33m" "\033[1;32m" "${print_file_differences__new_n}" \
+    "\033[0m" "\033[1;32m" "\033[1;34m" "${print_file_differences__diff}" \
     "\033[0m"
 
+  unset print_file_differences__diff
   unset print_file_differences__old
   unset print_file_differences__new
-  unset print_file_differences__old_number
-  unset print_file_differences__new_number
+  unset print_file_differences__old_n
+  unset print_file_differences__new_n
   return 0
 }
 
@@ -1065,7 +1071,7 @@ remove_all_backup_files()
       "${remove_all_backup_files__temp}" \
       | sed 's/^[[:blank:]]*//' | sed 's/[[:blank:]]*$//')"
     if [ -n "${remove_all_backup_files__temp}" ]; then
-      info_msg "Removing backup file: ${remove_all_backup_files__temp}..."
+      info_msg "Removing backup file: %s..." "${remove_all_backup_files__temp}"
       ${remove_all_backup_files__sudo} rm -f \
         "${remove_all_backup_files__temp}" > /dev/null 2>&1
       unset remove_all_backup_files__temp
