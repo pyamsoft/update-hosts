@@ -92,6 +92,7 @@ info_msg()
   info_msg__message="$1"
   shift
 
+  # shellcheck disable=SC2059
   printf -- "   - ${info_msg__message}\n" "$@"
 
   unset info_msg__message
