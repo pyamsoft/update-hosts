@@ -800,14 +800,59 @@ generate_new_hosts_file()
 
   generate_new_hosts_file__header="$(printf -- \
     "# <hosts_header>%s# </hosts_header>\n" "${HOSTS_HEADER}")"
-  generate_new_hosts_file__header="$(printf -- "# %s\n%s\n" \
+
+  # Log the hosts sources
+  generate_new_hosts_file__sources=""
+
+  # Set the IFS to newlines only
+  generate_new_hosts_file__ifs="${IFS}"
+  IFS="
+"
+  for hosts_source in ${HOSTS_SOURCES}; do
+
+    # Set back to normal IFS
+    IFS="${generate_new_hosts_file__ifs}"
+
+    # Trim spaces and strip comments
+    hosts_source="$(printf -- "%s" "${hosts_source}" \
+      | sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//; s/#.*$//g')"
+    if [ -n "${hosts_source}" ]; then
+      case "${hosts_source}" in
+        \#*)
+          # Comments are skipped
+          continue
+          ;;
+        *)
+          if [ -z "${generate_new_hosts_file__sources}" ]; then
+            generate_new_hosts_file__sources="# ${hosts_source}"
+          else
+            generate_new_hosts_file__sources="# ${hosts_source}
+${generate_new_hosts_file__sources}"
+          fi
+          ;;
+      esac
+    fi
+
+    # Set IFS back
+    IFS="
+"
+    unset hosts_source
+  done
+
+  # Leave a note
+  generate_new_hosts_file__sources="# File is generated from the following sources:
+${generate_new_hosts_file__sources}"
+
+  generate_new_hosts_file__header="$(printf -- "# %s\n%s\n%s\n" \
     "$(date)" \
+    "${generate_new_hosts_file__sources}" \
     "${generate_new_hosts_file__header}")"
 
   printf -- "%s\n# <blocklist>\n%s\n# </blocklist>" \
     "${generate_new_hosts_file__header}" \
     "${__blocklist}"
 
+  unset generate_new_hosts_file__sources
   unset generate_new_hosts_file__header
   unset __blocklist
   return 0
