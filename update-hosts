@@ -1511,12 +1511,15 @@ main()
   trap cancel_sudoloop INT TERM
 
   needs_sudo=
-  if [ -w "${dst_hosts}" ]; then
-    # If we can write to the destination, we don't need sudo
-    needs_sudo=""
-  elif [ "$(id -u)" -ne 0 ]; then
-    grab_sudo || return 1
-    needs_sudo="sudo"
+  # If we are not root
+  if [ "$(id -u)" -ne 0 ]; then
+    if [ -w "${dst_hosts}" ]; then
+      # If we can write to the destination, we don't need sudo
+      needs_sudo=""
+    else
+      grab_sudo || return 1
+      needs_sudo="sudo"
+    fi
   else
     error_msg "You cannot run update-hosts as root. Please run as a normal user."
     return 1
