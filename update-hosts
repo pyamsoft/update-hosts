@@ -1321,6 +1321,22 @@ main_ipsets()
   return 0
 }
 
+##
+# Prompts the user for sudo access so that we don't have to ask
+# again in case operations take a long time
+grab_sudo()
+{
+  check_for_binary sudo || return 1
+
+  # initialize sudo
+  sudo -v || return 1
+
+  # Start sudoloop
+  sudoloop &
+
+  return 0
+}
+
 main()
 {
 
@@ -1495,15 +1511,11 @@ main()
   trap cancel_sudoloop INT TERM
 
   needs_sudo=
-  if [ "$(id -u)" -ne 0 ]; then
-    check_for_binary sudo
-
-    # initialize sudo
-    sudo -v || return 1
-
-    # Start sudoloop
-    sudoloop &
-
+  if [ -w "${dst_hosts}" ]; then
+    # If we can write to the destination, we don't need sudo
+    needs_sudo=""
+  elif [ "$(id -u)" -ne 0 ]; then
+    grab_sudo || return 1
     needs_sudo="sudo"
   else
     error_msg "You cannot run update-hosts as root. Please run as a normal user."
@@ -1534,6 +1546,14 @@ main()
 
   # Start fresh
   cleanup
+
+  # At this point, we do need sudo for ipset operations.
+  # Grab it only if we do not already have it
+  if [ -z "${needs_sudo}" ]; then
+    action_msg "sudo is needed for ipset operations..."
+    grab_sudo || return 1
+    needs_sudo="sudo"
+  fi
 
   check_for_binary ipset || cancel_sudoloop
   main_ipsets "${needs_sudo}" "${dst_ipset}" \
