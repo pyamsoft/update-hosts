@@ -164,15 +164,13 @@ print_hosts_config()
 ##
 # Print out the ipset configuration
 #
-# $1 sudo or blank if not needed
-# $2 ipset file location
-# $3 ipset name
+# $1 ipset file location
+# $2 ipset name
 ##
 print_ipset_config()
 {
-  print_ipset_config__sudo="$1"
-  print_ipset_config__file="$2"
-  print_ipset_config__name="$3"
+  print_ipset_config__file="$1"
+  print_ipset_config__name="$2"
 
   action_msg "Ipset Configuration:"
   info_msg "Ipset location: %s" "${print_ipset_config__file}"
@@ -180,17 +178,14 @@ print_ipset_config()
 
   # The ipset must exist first for this script to work
   # check for existence here
-  ${print_ipset_config__sudo} ipset \
-    list "${print_ipset_config__name}" > /dev/null 2>&1 || {
+  sudo ipset list "${print_ipset_config__name}" > /dev/null 2>&1 || {
     action_msg "Ipset %s does not exist, creating it" \
       "${print_ipset_config__name}"
 
     # Make the ipset
-    ${print_ipset_config__sudo} ipset create "${print_ipset_config__name}" \
-      hash:net
+    sudo ipset create "${print_ipset_config__name}" hash:net
   }
 
-  unset print_ipset_config__sudo
   unset print_ipset_config__file
   unset print_ipset_config__name
   return 0
@@ -566,6 +561,7 @@ remove_untrusted_domain()
 {
   remove_untrusted_domain__file="$1"
   remove_untrusted_domain__url="$2"
+
   info_msg "Remove old destination: %s (%s)" "${remove_untrusted_domain__url}" \
     "${remove_untrusted_domain__file}"
 
@@ -591,6 +587,7 @@ normalize_to_lowercase()
 {
   normalize_to_lowercase__file="$1"
   normalize_to_lowercase__url="$2"
+
   info_msg "Transform all entries to lowercase: %s (%s)" \
     "${normalize_to_lowercase__url}" "${normalize_to_lowercase__file}"
 
@@ -861,24 +858,20 @@ ${generate_new_hosts_file__sources}"
 ##
 # Backup original file
 #
-# $1 needs_sudo
-# $2 file name
-# $3 backup name
+# $1 file name
+# $2 backup name
 ##
 backup_old_file()
 {
-  backup_old_file__sudo="$1"
-  backup_old_file__file="$2"
-  backup_old_file__backup="$3"
+  backup_old_file__file="$1"
+  backup_old_file__backup="$2"
 
   if [ -f "${backup_old_file__file}" ]; then
     info_msg "Creating backup of original file %s ..." \
       "${backup_old_file__file}"
-    ${backup_old_file__sudo} cp \
-      "${backup_old_file__file}" "${backup_old_file__backup}" || {
+    sudo cp "${backup_old_file__file}" "${backup_old_file__backup}" || {
       error_msg "Failed to copy to file %s" "${backup_old_file__backup}"
 
-      unset backup_old_file__sudo
       unset backup_old_file__file
       unset backup_old_file__backup
       return 1
@@ -887,7 +880,6 @@ backup_old_file()
     info_msg "No original file exists to create backup"
   fi
 
-  unset backup_old_file__sudo
   unset backup_old_file__file
   unset backup_old_file__backup
   return 0
@@ -896,32 +888,27 @@ backup_old_file()
 ##
 # Install the new hosts file to the destination
 #
-# $1 needs_sudo
-# $2 hosts file content
-# $3 file destination location
+# $1 hosts file content
+# $2 file destination location
 ##
 install_new_hosts_file()
 {
-  install_new_hosts_file__sudo="$1"
-  install_new_hosts_file__hosts="$2"
-  install_new_hosts_file__destination="$3"
+  install_new_hosts_file__hosts="$1"
+  install_new_hosts_file__destination="$2"
 
   info_msg "Installing new hosts file %s..." \
     "${install_new_hosts_file__destination}"
   printf -- "%s\n" "${install_new_hosts_file__hosts}" \
-    | ${install_new_hosts_file__sudo} tee \
-    "${install_new_hosts_file__destination}" > /dev/null \
+    | sudo tee "${install_new_hosts_file__destination}" > /dev/null \
     || {
     error_msg "Failed to output to file %s" \
       "${install_new_hosts_file__destination}"
 
-    unset install_new_hosts_file__sudo
     unset install_new_hosts_file__hosts
     unset install_new_hosts_file__destination
     return 1
   }
 
-  unset install_new_hosts_file__sudo
   unset install_new_hosts_file__hosts
   unset install_new_hosts_file__destination
   return 0
@@ -931,27 +918,22 @@ install_new_hosts_file()
 # Installs the ipset into the file given and then commits to the
 # named ipset
 #
-# $1 needs_sudo
-# $2 ipset detination file
-# $3 ipset name
+# $1 ipset detination file
+# $2 ipset name
 install_ipset_blocklist()
 {
-  install_ipset_blocklist__sudo="$1"
-  install_ipset_blocklist__file="$2"
-  install_ipset_blocklist__name="$3"
+  install_ipset_blocklist__file="$1"
+  install_ipset_blocklist__name="$2"
 
   action_msg "Install the ipset blocklist"
   info_msg "Clear existing block list"
   printf -- "" \
-    | ${install_ipset_blocklist__sudo} \
-    tee "${install_ipset_blocklist__file}" > /dev/null
-  ${install_ipset_blocklist__sudo} ipset \
-    flush "${install_ipset_blocklist__name}"
+    | sudo tee "${install_ipset_blocklist__file}" > /dev/null
+  sudo ipset flush "${install_ipset_blocklist__name}"
 
   info_msg "Create new blocklist"
   # Save here just to get the create line
-  ${install_ipset_blocklist__sudo} ipset save \
-    "${install_ipset_blocklist__name}" \
+  sudo ipset save "${install_ipset_blocklist__name}" \
     -file "${install_ipset_blocklist__file}"
 
   # Because we have a bunch of /32 addresses, we attempt to reduce the
@@ -973,10 +955,8 @@ install_ipset_blocklist()
 
   info_msg "Add new IPs to the block list"
   __blocklist=$(printf -- "%s\n" "${__blocklist}" | sed 's/^/add blocklist /')
-  printf -- "%s\n" "${__blocklist}" \
-    | ${install_ipset_blocklist__sudo} tee \
-    -a "${install_ipset_blocklist__file}" > /dev/null \
-    || {
+  printf -- "%s\n" "${__blocklist}" | sudo tee \
+    -a "${install_ipset_blocklist__file}" > /dev/null || {
     error_msg "Failed to add ipset to blocklist"
 
     unset install_ipset_blocklist__sudo
@@ -986,8 +966,7 @@ install_ipset_blocklist()
   }
 
   info_msg "Commit new ipset"
-  ${install_ipset_blocklist__sudo} ipset restore \
-    -exist -file "${install_ipset_blocklist__file}"
+  sudo ipset restore -exist -file "${install_ipset_blocklist__file}"
 
   unset install_ipset_blocklist__sudo
   unset install_ipset_blocklist__file
@@ -999,21 +978,17 @@ install_ipset_blocklist()
 ##
 # Fixes permission on file to 644
 #
-# $1 needs_sudo
-# $2 file to fix
+# $1 file to fix
 ##
 fix_file_permissons()
 {
-  fix_file_permissons__sudo="$1"
-  fix_file_permissons__file="$2"
+  fix_file_permissons__file="$1"
 
   if [ -f "${fix_file_permissons__file}" ]; then
-    info_msg "Fixing permissions for file %s..." "${fix_file_permissons__file}"
-    ${fix_file_permissons__sudo} chmod 644 "${fix_file_permissons__file}" \
-      || {
+    info_msg "Fixing permissions for file %s" "${fix_file_permissons__file}"
+    sudo chmod 644 "${fix_file_permissons__file}" || {
       error_msg "Failed to chmod %s to 644" "${fix_file_permissons__file}"
 
-      unset fix_file_permissons__sudo
       unset fix_file_permissons__file
       return 1
     }
@@ -1022,13 +997,13 @@ fix_file_permissons()
       "${fix_file_permissons__file}"
   fi
 
-  unset fix_file_permissons__sudo
   unset fix_file_permissons__file
   return 0
 }
 
 ##
 # Create a backup file name by appending the current date
+#
 # $1 file name
 create_backup_name()
 {
@@ -1078,12 +1053,11 @@ print_file_differences()
 ##
 # Remove all backup files that start with the given pattern
 #
-# $1 needs_sudo
-# $2 normal file name
+# $1 normal file name
 remove_all_backup_files()
 {
-  remove_all_backup_files__sudo="$1"
-  remove_all_backup_files__file="$2"
+  remove_all_backup_files__file="$1"
+
   for remove_all_backup_files__temp in \
     "${remove_all_backup_files__file}".backup.*; do
     remove_all_backup_files__temp="$(printf -- "%s" \
@@ -1091,13 +1065,11 @@ remove_all_backup_files()
       | sed 's/^[[:blank:]]*//' | sed 's/[[:blank:]]*$//')"
     if [ -n "${remove_all_backup_files__temp}" ]; then
       info_msg "Removing backup file: %s..." "${remove_all_backup_files__temp}"
-      ${remove_all_backup_files__sudo} rm -f \
-        "${remove_all_backup_files__temp}" > /dev/null 2>&1
+      sudo rm -f "${remove_all_backup_files__temp}" > /dev/null 2>&1
       unset remove_all_backup_files__temp
     fi
   done
 
-  unset remove_all_backup_files__sudo
   unset remove_all_backup_files__file
   return 0
 }
@@ -1197,16 +1169,14 @@ EOF
 ##
 # Main function which handles the downloading of hosts files
 #
-# $1 needs_sudo
-# $2 hosts file destination
-# $3 destination IP address
-# $4 remove backups
+# $1 hosts file destination
+# $2 destination IP address
+# $3 remove backups
 main_hosts()
 {
-  main_hosts__sudo="$1"
-  main_hosts__file="$2"
-  main_hosts__ip="$3"
-  main_hosts__remove_backup="$4"
+  main_hosts__file="$1"
+  main_hosts__ip="$2"
+  main_hosts__remove_backup="$3"
 
   # Configuration
   print_hosts_config "${main_hosts__file}" "${main_hosts__ip}"
@@ -1231,25 +1201,20 @@ main_hosts()
   hosts="$(generate_new_hosts_file)" || cancel_sudoloop
   main_hosts__file_backup="$(create_backup_name \
     "${main_hosts__file}")" || cancel_sudoloop
-  backup_old_file "${main_hosts__sudo}" \
-    "${main_hosts__file}" "${main_hosts__file_backup}" || cancel_sudoloop
-  install_new_hosts_file "${main_hosts__sudo}" \
-    "${hosts}" "${main_hosts__file}" || cancel_sudoloop
-  fix_file_permissons "${main_hosts__sudo}" \
-    "${main_hosts__file}" || cancel_sudoloop
-  fix_file_permissons "${main_hosts__sudo}" \
-    "${main_hosts__file_backup}" || cancel_sudoloop
+  backup_old_file "${main_hosts__file}" "${main_hosts__file_backup}" \
+    || cancel_sudoloop
+  install_new_hosts_file "${hosts}" "${main_hosts__file}" || cancel_sudoloop
+  fix_file_permissons "${main_hosts__file}" || cancel_sudoloop
+  fix_file_permissons "${main_hosts__file_backup}" || cancel_sudoloop
   print_file_differences "${main_hosts__file}" \
     "${main_hosts__file_backup}" || cancel_sudoloop
 
   # Cleanup
   if [ "${main_hosts__remove_backup}" -eq 1 ]; then
-    remove_all_backup_files "${main_hosts__sudo}" \
-      "${main_hosts__file}" || cancel_sudoloop
+    remove_all_backup_files "${main_hosts__file}" || cancel_sudoloop
   fi
 
   unset hosts
-  unset main_hosts__sudo
   unset main_hosts__file
   unset main_hosts__file_backup
   unset main_hosts__ip
@@ -1260,26 +1225,18 @@ main_hosts()
 ##
 # Main function which handles the downloading of ipset files
 #
-# $1 needs_sudo
-# $2 ipset file destination
-# $3 ipset name
-# $4 remove backups
+# $1 ipset file destination
+# $2 ipset name
+# $3 remove backups
 main_ipsets()
 {
-  main_ipsets__sudo="$1"
-  main_ipsets__file="$2"
-  main_ipsets__name="$3"
-  main_ipsets__remove_backup="$4"
-
-  if [ -z "${main_ipsets__sudo}" ] && [ "$(id -u)" -ne 0 ]; then
-    error_msg "ipset functionality requires root user privileges"
-    return 1
-  fi
+  main_ipsets__file="$1"
+  main_ipsets__name="$2"
+  main_ipsets__remove_backup="$3"
 
   # Begin
   printf -- "\n\n"
-  print_ipset_config "${main_ipsets__sudo}" \
-    "${main_ipsets__file}" "${main_ipsets__name}" || return 1
+  print_ipset_config "${main_ipsets__file}" "${main_ipsets__name}" || return 1
 
   # Download
   action_msg "Downloading ipset_sources lists..."
@@ -1294,23 +1251,20 @@ main_ipsets()
   remove_duplicates || cancel_sudoloop
 
   # Install
-  main_ipsets__file_backup=$(create_backup_name \
-    "${main_ipsets__file}" ) || cancel_sudoloop
-  backup_old_file "${main_ipsets__sudo}" \
-    "${main_ipsets__file}" "${main_ipsets__file_backup}" || cancel_sudoloop
-  install_ipset_blocklist "${main_ipsets__sudo}" \
-    "${main_ipsets__file}" "${main_ipsets__name}" || cancel_sudoloop
-  fix_file_permissons "${main_ipsets__sudo}" \
-    "${main_ipsets__file}" || cancel_sudoloop
-  fix_file_permissons "${main_ipsets__sudo}" \
-    "${main_ipsets__file_backup}" || cancel_sudoloop
+  main_ipsets__file_backup=$(create_backup_name "${main_ipsets__file}" ) \
+    || cancel_sudoloop
+  backup_old_file "${main_ipsets__file}" "${main_ipsets__file_backup}" \
+    || cancel_sudoloop
+  install_ipset_blocklist "${main_ipsets__file}" "${main_ipsets__name}" \
+    || cancel_sudoloop
+  fix_file_permissons "${main_ipsets__file}" || cancel_sudoloop
+  fix_file_permissons "${main_ipsets__file_backup}" || cancel_sudoloop
   print_file_differences "${main_ipsets__file}" \
     "${main_ipsets__file_backup}" || cancel_sudoloop
 
   # Cleanup
   if [ "${main_ipsets__remove_backup}" -eq 1 ]; then
-    remove_all_backup_files "${main_ipsets__sudo}" \
-      "${main_ipsets__file}" || cancel_sudoloop
+    remove_all_backup_files "${main_ipsets__file}" || cancel_sudoloop
   fi
 
   unset main_ipsets__sudo
@@ -1494,17 +1448,15 @@ main()
   # Trap return signals
   trap cancel_sudoloop INT TERM
 
-  needs_sudo=
+  # Check that we are running as a normal user
   if [ "$(id -u)" -ne 0 ]; then
-    check_for_binary sudo
+    check_for_binary sudo || return 1
 
     # initialize sudo
     sudo -v || return 1
 
     # Start sudoloop
     sudoloop &
-
-    needs_sudo="sudo"
   else
     error_msg "You cannot run update-hosts as root. Please run as a normal user."
     return 1
@@ -1517,15 +1469,16 @@ main()
     action_msg "You are applying the Unbreak whitelist!"
     info_msg "While this may fix many broken websites, it may also pose"
     info_msg "a potential privacy or security risk. Use at your own discretion"
+
     HOSTS_WHITELIST="
-    ${UNBREAK_WHITELIST}
-    ${HOSTS_WHITELIST}
+      ${UNBREAK_WHITELIST}
+      ${HOSTS_WHITELIST}
     "
   fi
 
   # Parse hosts files
-  main_hosts "${needs_sudo}" "${dst_hosts}" \
-    "${dst_ip}" "${remove_backups}" || cancel_sudoloop
+  main_hosts "${dst_hosts}" "${dst_ip}" "${remove_backups}" \
+    || cancel_sudoloop
 
   if [ "${manage_ipsets}" -eq 0 ]; then
     # End here
@@ -1536,8 +1489,8 @@ main()
   cleanup
 
   check_for_binary ipset || cancel_sudoloop
-  main_ipsets "${needs_sudo}" "${dst_ipset}" \
-    "${ipset_name}" "${remove_backups}" || cancel_sudoloop
+  main_ipsets "${dst_ipset}" "${ipset_name}" "${remove_backups}" \
+    || cancel_sudoloop
 
   # Finish
   cancel_sudoloop
