@@ -1183,7 +1183,6 @@ Options:
    -h | --help     Display help
    -v | --version  Display version
    -r | --remove   Remove backups
-   -n | --noroot   Do not require root to output
    -i | --ipset    Also download ipset sources
    -u | --unbreak  Auto apply the unbreak whitelist
    --output-hosts  The file to output hosts to
@@ -1327,7 +1326,6 @@ main()
 
   # Options
   remove_backups=0
-  require_root=1
   manage_ipsets=0
   apply_unbreak=0
 
@@ -1361,7 +1359,6 @@ main()
   #   -h | --help     Display help
   #   -v | --version  Display version
   #   -r | --remove   Remove backups
-  #   -n | --noroot   Do not require root to output.
   #   -i | --ipset    Also download ipset sources
   #   -u | --unbreak  Auto apply the Unbreak whitelist
   #   --output-hosts  The file to output hosts to
@@ -1376,7 +1373,7 @@ main()
     optind_expanded=
     eval optind_expanded="\$${OPTIND}"
     while [ -n "${optind_expanded}" ]; do
-      while getopts ":hvrniu-:" option; do
+      while getopts ":hvriu-:" option; do
         # Set only on long option with arg
         if [ -n "${long_option}" ]; then
           error_msg "Long option --%s expects argument" "${long_option}"
@@ -1397,9 +1394,6 @@ main()
                 ;;
               remove)
                 remove_backups=1
-                ;;
-              noroot)
-                require_root=0
                 ;;
               ipset)
                 manage_ipsets=1
@@ -1428,9 +1422,6 @@ main()
             ;;
           r)
             remove_backups=1
-            ;;
-          n)
-            require_root=0
             ;;
           i)
             manage_ipsets=1
@@ -1504,7 +1495,7 @@ main()
   trap cancel_sudoloop INT TERM
 
   needs_sudo=
-  if [ "$(id -u)" -ne 0 ] && [ "${require_root}" -eq 1 ]; then
+  if [ "$(id -u)" -ne 0 ]; then
     check_for_binary sudo
 
     # initialize sudo
@@ -1515,7 +1506,8 @@ main()
 
     needs_sudo="sudo"
   else
-    needs_sudo=""
+    error_msg "You cannot run update-hosts as root. Please run as a normal user."
+    return 1
   fi
 
 
