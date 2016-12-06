@@ -1578,7 +1578,7 @@ export LC_ALL
 # Configuration:
 
 # Version
-VERSION="2.4.3"
+VERSION="2.4.4"
 
 readonly SUDOLOCK="/tmp/update-hosts.sudolock"
 
