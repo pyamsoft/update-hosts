@@ -1585,11 +1585,6 @@ VERSION="2.4.5"
 
 readonly SUDOLOCK="/tmp/update-hosts.sudolock"
 
-# Set a sanitized PATH
-# Do not include /usr/local
-PATH="/usr/sbin:/usr/bin:/sbin:/bin"
-export PATH
-
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
 #       can occur when using traceroute, netstat and the like.
 #
