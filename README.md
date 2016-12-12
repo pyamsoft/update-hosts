@@ -106,18 +106,18 @@ specific system.
 ## Options
 
 ```
-update-hosts[2.0.0]
+update-hosts[2.4.6]
 
-  Options:
-     -h | --help     Display help
-     -v | --version  Display version
-     -r | --remove   Remove backups
-     -n | --noroot   Do not require root to output
-     -i | --ipset    Also download ipset sources
-     --output-hosts  The file to output hosts to
-     --output-ipset  The file to output ipsets to
-     --ipset-name    The name of the ipset
-     --dest-ip       The destination IP to use
+Options:
+   -h | --help     Display help
+   -v | --version  Display version
+   -r | --remove   Remove backups
+   -i | --ipset    Also download ipset sources
+   -u | --unbreak  Auto apply the unbreak whitelist
+   --output-hosts  The file to output hosts to
+   --output-ipset  The file to output ipsets to
+   --ipset-name    The name of the ipset
+   --dest-ip       The destination IP to use
 
 ```
 
