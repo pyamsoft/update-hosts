@@ -5,8 +5,8 @@ You can find the original here: http://github.com/zant95/hosts-update
 This script, designed for GNU/Linux, generates a hosts file based on multiple
 sources.
 
-
 ## Why Fork
+
 This fork is mainly maintained for personal use by myself, pyamsoft.  
 I have pushed the changes to this fork incase anyone else desires to use  
 my modifications. Much of the actual parsing code will be the same as the  
@@ -21,9 +21,11 @@ The main differences being:
 - Only supports IPv4 addresses.
 - Supports parallel background downloads without reliance on programs other  
   than the standard coreutils
-- Pulls from a larger range of hosts sources
-- Runs using the standard /bin/sh instead of relying on bash
 - Is named update-hosts instead of hosts-update
+- Provides an optional pre-defined whitelist which matches uBlock0 Unbreak  
+  list to fix websites which are broken by blocking certain hosts.
+- Handles a list of ipset sources as well for blocking IP addresses at the  
+  iptables firewall level.
 
 ## Hosts Sources
 
@@ -66,6 +68,7 @@ The main differences being:
 - https://www.maxmind.com/en/proxy-detection-sample-list
 
 ## What is this for?
+
 To prevent your computer from connecting to domains who serve ads and malware.  
 This will increase the security of your computer and save bandwidth.
 
@@ -78,7 +81,8 @@ git clone https://github.com/pyamsoft/update-hosts
 git checkout master
 ```
 
-## From the Shell
+### From the Shell
+
 1. Download the raw file from the github.com URL:  
 ```
 wget -qO- https://raw.githubusercontent.com/pyamsoft/update-hosts/master/update-hosts  
@@ -90,6 +94,7 @@ curl -sL https://raw.githubusercontent.com/pyamsoft/update-hosts/master/update-h
 download the script and create a scheduled task.
 
 ## Usage
+
 1. READ THE SCRIPT FILE. Make sure that it will do what you want on YOUR
 specific system.
 2. Edit the white/black lists and add the wanted URLs.
@@ -99,6 +104,7 @@ specific system.
 ```
 
 ## Options
+
 ```
 update-hosts[2.0.0]
 
@@ -116,6 +122,7 @@ update-hosts[2.0.0]
 ```
 
 ## Disclaimer
+
 This script replaces the "/etc/hosts" file of your system. It will create a  
 backup of the existing hosts file before hand. This being said, please be sure  
 to be careful when modifying the hosts file.
