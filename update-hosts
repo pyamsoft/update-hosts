@@ -1847,6 +1847,37 @@ readonly ADVERTISEMENT_BLACKLIST='
   voip.pinion.gg
   wiki.pinion.gg
   www.pinion.gg
+
+  # Spotify advertisements
+  media-match.com
+  adclick.g.doublecklick.net
+  www.googleadservices.com
+  open.spotify.com
+  pagead2.googlesyndication.com
+  desktop.spotify.com
+  googleads.g.doubleclick.net
+  pubads.g.doubleclick.net
+  audio2.spotify.com
+  www.omaze.com
+  omaze.com
+  bounceexchange.com
+  pagead46.l.doubleclick.net
+  pagead.l.doubleclick.net
+  googlehosted.l.googleusercontent.com
+  video-ad-stats.googlesyndication.com
+  pagead-googlehosted.l.google.com
+  partnerad.l.doubleclick.net
+  prod.spotify.map.fastlylb.net
+  adserver.adtechus.com
+  na.gmtdmp.com
+  anycast.pixel.adsafeprotected.com
+  d361oi6ppvq2ym.cloudfront.net
+  gads.pubmatic.com
+  idsync-ext.rlcdn.com
+  anycast.pixel.adsafeprotected.com
+  ads-west-colo.adsymptotic.com
+  geo3.ggpht.com
+  showads33000.pubmatic.com
 '
 
 # Any websites that may be deemed unsafe for various reasons
