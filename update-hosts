@@ -1797,6 +1797,7 @@ HOSTS_WHITELIST="
 # Jump scare websites
 # Only exact strings, no regex supported
 readonly JUMPSCARE_BLACKLIST='
+  # Jumpscare
   agor.io
   www.agor.io
 '
@@ -1804,6 +1805,8 @@ readonly JUMPSCARE_BLACKLIST='
 # CSGO Ads
 # Only exact strings, no regex supported
 readonly ADVERTISEMENT_BLACKLIST='
+  # CSGO Advertisements on pinion.gg
+
   adback.pinion.gg
   api.pinion.gg
   bin.pinion.gg
