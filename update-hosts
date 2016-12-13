@@ -1951,14 +1951,6 @@ readonly IPSET_WHITELIST='
 # CIDR supported
 readonly IPSET_BLACKLIST='
   1.1.1.1
-  173.194.0.0/16
-  173.194.65.0/24
-  194.68.165.0/24
-  2.16.4.0/24
-  23.235.43.0/24
-  31.13.76.0/24
-  74.125.0.0/16
-  74.125.136.0/24
 '
 
 __temp_files="" # Leave blank
