@@ -187,7 +187,7 @@ print_ipset_config()
 
     # Make the ipset
     ${print_ipset_config__sudo} ipset create "${print_ipset_config__name}" \
-      hash:net
+      hash:net maxelem $((128 * 1024))
   }
 
   unset print_ipset_config__sudo
