@@ -105,8 +105,8 @@ info_msg()
 ##
 check_for_download_ability()
 {
-  if ! which curl > /dev/null 2>&1; then
-    if ! which wget > /dev/null 2>&1; then
+  if ! check_for_binary curl > /dev/null 2>&1; then
+    if ! check_for_binary wget > /dev/null 2>&1; then
       printf -- "Either wget or curl are required for this script\n"
       printf -- "Please install either 'wget' or 'curl' onto your system.\n"
 
@@ -208,7 +208,7 @@ decide_dl_client()
   # Should have passed before this function
   decide_dl_client__cmd=
 
-  if which curl > /dev/null 2>&1; then
+  if check_for_binary curl > /dev/null 2>&1; then
     decide_dl_client__cmd="curl -fsSL -A 'Mozilla/5.0'"
   else
     decide_dl_client__cmd="wget -qO- -U 'Mozilla/5.0'"
