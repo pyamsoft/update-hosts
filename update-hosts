@@ -1513,7 +1513,7 @@ main()
   needs_sudo=
   # If we are not root
   if [ "$(id -u)" -ne 0 ]; then
-    if [ -w "${dst_hosts}" ]; then
+    if touch "${dst_hosts}" > /dev/null 2>&1; then
       # If we can write to the destination, we don't need sudo
       needs_sudo=""
     else
