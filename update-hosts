@@ -1517,6 +1517,7 @@ main()
       # If we can write to the destination, we don't need sudo
       needs_sudo=""
     else
+      action_msg "sudo is needed to write to file: %s" "${dst_hosts}"
       grab_sudo || return 1
       needs_sudo="sudo"
     fi
