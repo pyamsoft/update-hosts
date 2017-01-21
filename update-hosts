@@ -1582,7 +1582,7 @@ export LC_ALL
 # Configuration:
 
 # Version
-VERSION="2.4.7"
+readonly VERSION="2.4.8"
 
 readonly SUDOLOCK="/tmp/update-hosts.sudolock"
 
@@ -1913,8 +1913,13 @@ readonly HOSTS_BLACKLIST="
 # only a minimal amount of sites
 readonly BASE_IPSET_SOURCES="
   # HTTP Sources
-  http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
-  http://cinsscore.com/list/ci-badguys.txt
+
+  # Has been giving 503 errors
+  # http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
+
+  # Is not accepting connection at the moment
+  # http://cinsscore.com/list/ci-badguys.txt
+
   http://blocklist.greensnow.co/greensnow.txt
   http://www.openbl.org/lists/base.txt
 
