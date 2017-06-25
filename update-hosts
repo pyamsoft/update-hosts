@@ -1921,7 +1921,9 @@ readonly BASE_IPSET_SOURCES="
   # http://cinsscore.com/list/ci-badguys.txt
 
   http://blocklist.greensnow.co/greensnow.txt
-  http://www.openbl.org/lists/base.txt
+
+  # Has been returning 404 since 06/25/2017
+  # http://www.openbl.org/lists/base.txt
 
   # HTTPS Sources
   https://lists.blocklist.de/lists/all.txt
