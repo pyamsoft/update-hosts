@@ -153,6 +153,7 @@ print_hosts_config()
   print_hosts_config__ip="$2"
 
   action_msg "Hosts Configuration:"
+  info_msg "Lock file: %s" "${SUDOLOCK}"
   info_msg "Hosts location: %s" "${print_hosts_config__file}"
   info_msg "Destination IP: %s" "${print_hosts_config__ip}"
 
@@ -1584,7 +1585,7 @@ export LC_ALL
 # Version
 readonly VERSION="2.4.9"
 
-readonly SUDOLOCK="/tmp/update-hosts.sudolock"
+readonly SUDOLOCK="$(mktemp)"
 
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
 #       can occur when using traceroute, netstat and the like.
