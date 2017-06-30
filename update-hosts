@@ -1219,8 +1219,8 @@ main_hosts()
 
   # Parse
   action_msg "Generating hosts file..."
-  apply_whitelist "${HOSTS_WHITELIST}" || cancel_sudoloop
   apply_blacklist "${HOSTS_BLACKLIST}" || cancel_sudoloop
+  apply_whitelist "${HOSTS_WHITELIST}" || cancel_sudoloop
   sort_entries || cancel_sudoloop
   remove_duplicates || cancel_sudoloop
   add_new_destination "${main_hosts__ip}" || cancel_sudoloop
@@ -1289,8 +1289,8 @@ main_ipsets()
 
   # Parse
   action_msg "Generating ipset..."
-  apply_whitelist "${IPSET_WHITELIST}" || cancel_sudoloop
   apply_blacklist "${IPSET_BLACKLIST}" || cancel_sudoloop
+  apply_whitelist "${IPSET_WHITELIST}" || cancel_sudoloop
   sort_entries || cancel_sudoloop
   remove_duplicates || cancel_sudoloop
 
@@ -1367,7 +1367,6 @@ main()
   check_for_binary wc || return 1
   check_for_binary printf || return 1
   check_for_binary chmod || return 1
-  check_for_binary mktemp || return 1
   check_for_binary cat || return 1
   check_for_binary awk || return 1
 
@@ -1585,6 +1584,7 @@ export LC_ALL
 # Version
 readonly VERSION="2.4.9"
 
+check_for_binary mktemp || exit 1
 readonly SUDOLOCK="$(mktemp)"
 
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
