@@ -1915,12 +1915,8 @@ readonly HOSTS_BLACKLIST="
 readonly BASE_IPSET_SOURCES="
   # HTTP Sources
 
-  # Has been giving 503 errors
-  # http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
-
-  # Is not accepting connection at the moment
-  # http://cinsscore.com/list/ci-badguys.txt
-
+  http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
+  http://cinsscore.com/list/ci-badguys.txt
   http://blocklist.greensnow.co/greensnow.txt
 
   # Has been returning 404 since 06/25/2017
