@@ -1626,6 +1626,7 @@ readonly BASE_HOSTS_SOURCES="
   https://adaway.org/hosts.txt
   https://www.malwaredomainlist.com/hostslist/hosts.txt
   https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
+  https://pgl.yoyo.org/adservers/admiral-domains.txt
   https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
   https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt
   https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
@@ -1955,6 +1956,9 @@ readonly IPSET_WHITELIST='
 # CIDR supported
 readonly IPSET_BLACKLIST='
   1.1.1.1
+
+  # Blacklists admiral
+  104.198.107.72
 '
 
 __temp_files="" # Leave blank
