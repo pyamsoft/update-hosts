@@ -1607,6 +1607,7 @@ fi
 
 readonly HOSTS_HEADER="
 127.0.0.1 ${machine_hostname}
+255.255.255.255 broadcasthost
 # Fixes a display anomaly in traceroute and netstat
 0.0.0.0 0.0.0.0
 "
