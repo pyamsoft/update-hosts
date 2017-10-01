@@ -2,6 +2,10 @@
 This is a fork of the original hosts-update repository by zant95 on GitHub.  
 You can find the original here: http://github.com/zant95/hosts-update
 
+The project was originally licensed under the MIT license. This original  
+license is included as the MIT_LICENSE file, and the original code base  
+is able to be viewed by combing through the git history.
+
 This script, designed for GNU/Linux, generates a hosts file based on multiple
 sources.
 
