@@ -1793,19 +1793,10 @@ HOSTS_WHITELIST="
   ${USER_WHITELIST}
 "
 
-# Jump scare websites
-# Only exact strings, no regex supported
-readonly JUMPSCARE_BLACKLIST='
-  # Jumpscare
-  agor.io
-  www.agor.io
-'
-
-# CSGO Ads
 # Only exact strings, no regex supported
 readonly ADVERTISEMENT_BLACKLIST='
-  # CSGO Advertisements on pinion.gg
 
+  # CSGO Advertisements on pinion.gg
   adback.pinion.gg
   api.pinion.gg
   bin.pinion.gg
@@ -1879,6 +1870,14 @@ readonly ADVERTISEMENT_BLACKLIST='
   showads33000.pubmatic.com
 '
 
+# Jump scare websites
+# Only exact strings, no regex supported
+readonly JUMPSCARE_BLACKLIST='
+  # Jumpscare
+  agor.io
+  www.agor.io
+'
+
 # Any websites that may be deemed unsafe for various reasons
 # Things like phishing, malvertising, malware and so forth
 readonly BAD_SITE_BLACKLIST='
@@ -1892,6 +1891,133 @@ readonly BAD_SITE_BLACKLIST='
   quickdomainfwd.com
 '
 
+# Block tracking from cliqz domains
+readonly CLIQZ_BLACKLIST='
+  0.0.0.0 cliqz.com
+  0.0.0.0 www.cliqz.com
+  0.0.0.0 abtests.cliqz.com
+  0.0.0.0 analytics.cliqz.com
+  0.0.0.0 anolysis-gid.cliqz.com
+  0.0.0.0 anti-tracking.cliqz.com
+  0.0.0.0 antiphishing.cliqz.com
+  0.0.0.0 api.cliqz.com
+  0.0.0.0 apisecure.cliqz.com
+  0.0.0.0 beta.cliqz.com
+  0.0.0.0 bookmarks.cliqz.com
+  0.0.0.0 cdn.cliqz.com
+  0.0.0.0 cdn2.cliqz.com
+  0.0.0.0 cdnlogos.cliqz.com
+  0.0.0.0 collector-proxy-network.cliqz.com
+  0.0.0.0 css.cliqz.com
+  0.0.0.0 downloads.cliqz.com
+  0.0.0.0 fbapp.cliqz.com
+  0.0.0.0 fec.cliqz.com
+  0.0.0.0 hpn-collector.cliqz.com
+  0.0.0.0 hpn-proxy1.cliqz.com
+  0.0.0.0 hpn-proxy2.cliqz.com
+  0.0.0.0 hpn-proxy3.cliqz.com
+  0.0.0.0 hpn-proxy4.cliqz.com
+  0.0.0.0 hpn-sign.cliqz.com
+  0.0.0.0 jp.cliqz.com
+  0.0.0.0 logging.cliqz.com
+  0.0.0.0 mozilla-ucrawl.cliqz.com
+  0.0.0.0 mozsocial.cliqz.com
+  0.0.0.0 newbeta.cliqz.com
+  0.0.0.0 newscat.cliqz.com
+  0.0.0.0 offers-api.cliqz.com
+  0.0.0.0 p2p-pusher.cliqz.com
+  0.0.0.0 p2p-signaling.cliqz.com
+  0.0.0.0 hpn-proxy-04479afc5a8a4cfeb9eb0002e2ca11ca.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-078c54b1e3764c718dcec6d4a64d94e7.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-079f5124a1a2493d86baaf87c1250c24.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-07cd5cb69a6145148b7ecb997e7574f5.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-09d8f184c4ce4ebcaf1e2f3e7db5b239.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-0ab512b3e2ba48e99f963081328c24ab.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-1504919a0f3a4faa87465943700bcf45.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-1ebea398ff764aa7a16f799f4ce8b91d.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-1f659f8c6c16429e9e9f4beb0fb55d07.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-1fd767742bf54421aa4b51a24742a835.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-23a2d333e41e430089ddb0f77105468d.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-255898401e404f529fede661a6952d4c.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-33227b8ab360475aa7971cc083a0f13d.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-3482e591a87c450494e029df5971d476.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-34c97e8be6aa4cf28c5307e5fa0aab4c.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-3acafa1727134597acf01e9c9a18ce2c.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-3dbbeba89f954a2aa02ce9c221977f98.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-43a8f797cc5b49c8ae7545f3b47b9482.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-4847827b825044bebd4d292c55b198e1.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-4e52b66c736f4f929e2e314b5c92ed18.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-50c1402f7f1547318e1a0b0d45009b8f.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-50c2113b202141aca224c4a4562a46d5.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-538c4d78959e45d7b5595a2d0e145592.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-58d187cbc5fe4d8a82cb5008eb8dcc13.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-5c06251d956b4144b3b6515b4c8c5784.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-624a2ea2830d4c108b4340982a060e41.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-63a4e84af688468c89b0a7f321bb35e3.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-67b86c66f82c42a18c9b51c39e7728a6.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-6e6485f59a484df49726293b04433065.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-755e535edb0c48638b8ccf1ff1e51c69.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-768057492ec94f1788d6af55c4604ebf.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-7cab5c943d4741fca56f4963dc5cfd61.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-8075680b6f2644f0b9c14892edc9c84b.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-811fc51dab354e669000b748cfc0d0ac.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-818d98827a8c4df7ab1e659dca292e6f.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-82337ab4ff77488e9268994ff664e622.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-8723b68878d14feb97fd668727e38b31.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-89ce5e3512f446fcb696f4fb185197b6.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-89d097ccb40c4cc3b4b7531c6ca4f55c.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-8ba59afabc00425b909d8ab87754a340.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-8d8078e4e8964ed1b3dc773190f3e0fc.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-8ea7d274fd374aeca4e7b39d5ca7a8f2.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-9f8b0573125a4cd9a2eb2d0d268da818.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-a0791193d0434404946c07f55a4e127b.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-a8ff01ca40034d99b908a3281b2b651f.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-abc6eb0d25564956a74d0e272afd1508.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-af65f148742846f1ad8950d7cae28ba0.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-b0d4e9b3979a4b5dbaea53b1717636d1.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-b5a53a9c53a24e66b97191659facca60.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-b5db41bbb8384178bc5fb2e0858ad417.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-b6698bf500154623996ccf15d90be917.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-b7085bab2d2749b6b6c2ba800c4de262.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-bbb585de503149ea9289968c76383314.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-c12cbbe0f775495ba6f8a84255e33086.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-cc630d54e70e43d588183c66c10a586c.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-ce0618aa70474e7b9b5685d927610f02.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-cec5142343a9455b90b6ea7d7b8c65d4.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-d143c4a0257e4017926be7ff6578eb8b.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-e02ac35ac5414e8b8cd08dc45c28f82c.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-e1759ecb1e5b4d7d8f34b2e739a68a69.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-e4d36bbb44864804862eaa988aa54df2.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-e53b01d7aea2469793bf9a1593034b7b.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-e562884a51894dfa9ef770ade8483fba.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-e7120049e5824a328c034b5f68cbee1a.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-ee5fa1a3a4f24f5d97bca6ad6bb06477.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-f19e7af854354326917bbaa81e912003.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-f237d1a7e9a74cbba375490be4777f8a.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-f587a23546ca40e98b264569c84cea32.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-f7d85d2a8bc84bbabcc95a80908b3ed8.proxy.cliqz.com
+  0.0.0.0 hpn-proxy-fbbb683ca17f4ef188a2b14236fb4add.proxy.cliqz.com
+  0.0.0.0 redirect.cliqz.com
+  0.0.0.0 reports.cliqz.com
+  0.0.0.0 repository.cliqz.com
+  0.0.0.0 safe-browsing.cliqz.com
+  0.0.0.0 safe-browsing-proxy-network.cliqz.com
+  0.0.0.0 safe-browsing-quorum.cliqz.com
+  0.0.0.0 secure.cliqz.com
+  0.0.0.0 static.cliqz.com
+  0.0.0.0 stats.cliqz.com
+  0.0.0.0 hpn.test.cliqz.com
+  0.0.0.0 site1.test.cliqz.com
+  0.0.0.0 site2.test.cliqz.com
+  0.0.0.0 site3.test.cliqz.com
+  0.0.0.0 site4.test.cliqz.com
+  0.0.0.0 site5.test.cliqz.com
+  0.0.0.0 tracker.cliqz.com
+  0.0.0.0 updatecheck.cliqz.com
+  0.0.0.0 w5cdn.cliqz.com
+  0.0.0.0 webbeta.cliqz.com
+'
+
 # User defined blacklist
 # Only exact strings, no regex supported
 readonly USER_BLACKLIST='
@@ -1903,6 +2029,7 @@ readonly HOSTS_BLACKLIST="
   ${JUMPSCARE_BLACKLIST}
   ${ADVERTISEMENT_BLACKLIST}
   ${BAD_SITE_BLACKLIST}
+  ${CLIQZ_BLACKLIST}
   ${USER_BLACKLIST}
 "
 
