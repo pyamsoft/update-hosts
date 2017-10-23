@@ -1627,6 +1627,9 @@ readonly BASE_HOSTS_SOURCES="
   https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt
   https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
   https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
+
+  # Blocks coin miners
+  https://raw.githubusercontent.com/ZeroDot1/CoinBlockerLists/master/hosts
 "
 
 # Additional hosts file servers
