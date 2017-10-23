@@ -1160,10 +1160,10 @@ cancel_sudoloop()
 }
 
 ##
-# Echoes out the current version held by the constant VERSION
+# Echoes out the current version held by the constant __VERSION
 print_version()
 {
-  printf -- "update-hosts[%s]\n" "${VERSION}"
+  printf -- "update-hosts[%s]\n" "${__VERSION}"
   echo
 
   return 0
@@ -1577,7 +1577,7 @@ export LC_ALL
 # Configuration:
 
 # Version
-readonly VERSION="2.5.2"
+readonly __VERSION="2.5.3"
 
 check_for_binary mktemp || exit 1
 readonly SUDOLOCK="$(mktemp)"
