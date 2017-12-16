@@ -1173,7 +1173,13 @@ cancel_sudoloop()
   cleanup
 
   # Exit point
-  exit 0
+
+  # Did we pass in an exit code or no?
+  if [ "$#" -lt 1 ] || [ -z "$1" ]; then
+    exit 1
+  else
+    exit "$1"
+  fi
 }
 
 ##
@@ -1227,38 +1233,38 @@ main_hosts()
   # Download
   action_msg "Downloading hosts_sources lists..."
   download_sources "$(decide_dl_client)" \
-    "${HOSTS_SOURCES}" "process_hosts_sources" || cancel_sudoloop
+    "${HOSTS_SOURCES}" "process_hosts_sources" || return 1
 
   # Parse
   action_msg "Generating hosts file..."
-  apply_blacklist "${HOSTS_BLACKLIST}" || cancel_sudoloop
-  apply_whitelist "${HOSTS_WHITELIST}" || cancel_sudoloop
-  sort_entries || cancel_sudoloop
-  remove_duplicates || cancel_sudoloop
-  add_new_destination "${main_hosts__ip}" || cancel_sudoloop
+  apply_blacklist "${HOSTS_BLACKLIST}" || return 1
+  apply_whitelist "${HOSTS_WHITELIST}" || return 1
+  sort_entries || return 1
+  remove_duplicates || return 1
+  add_new_destination "${main_hosts__ip}" || return 1
 
   # Install
 
   info_msg "Create new hosts file"
   hosts=
-  hosts="$(generate_new_hosts_file)" || cancel_sudoloop
+  hosts="$(generate_new_hosts_file)" || return 1
   main_hosts__file_backup="$(create_backup_name \
-    "${main_hosts__file}")" || cancel_sudoloop
+    "${main_hosts__file}")" || return 1
   backup_old_file "${main_hosts__sudo}" \
-    "${main_hosts__file}" "${main_hosts__file_backup}" || cancel_sudoloop
+    "${main_hosts__file}" "${main_hosts__file_backup}" || return 1
   install_new_hosts_file "${main_hosts__sudo}" \
-    "${hosts}" "${main_hosts__file}" || cancel_sudoloop
+    "${hosts}" "${main_hosts__file}" || return 1
   fix_file_permissons "${main_hosts__sudo}" \
-    "${main_hosts__file}" || cancel_sudoloop
+    "${main_hosts__file}" || return 1
   fix_file_permissons "${main_hosts__sudo}" \
-    "${main_hosts__file_backup}" || cancel_sudoloop
+    "${main_hosts__file_backup}" || return 1
   print_file_differences "${main_hosts__file}" \
-    "${main_hosts__file_backup}" || cancel_sudoloop
+    "${main_hosts__file_backup}" || return 1
 
   # Cleanup
   if [ "${main_hosts__remove_backup}" -eq 1 ]; then
     remove_all_backup_files "${main_hosts__sudo}" \
-      "${main_hosts__file}" || cancel_sudoloop
+      "${main_hosts__file}" || return 1
   fi
 
   unset hosts
@@ -1297,33 +1303,33 @@ main_ipsets()
   # Download
   action_msg "Downloading ipset_sources lists..."
   download_sources "$(decide_dl_client)" \
-    "${IPSET_SOURCES}" "process_ipset_sources" || cancel_sudoloop
+    "${IPSET_SOURCES}" "process_ipset_sources" || return 1
 
   # Parse
   action_msg "Generating ipset..."
-  apply_blacklist "${IPSET_BLACKLIST}" || cancel_sudoloop
-  apply_whitelist "${IPSET_WHITELIST}" || cancel_sudoloop
-  sort_entries || cancel_sudoloop
-  remove_duplicates || cancel_sudoloop
+  apply_blacklist "${IPSET_BLACKLIST}" || return 1
+  apply_whitelist "${IPSET_WHITELIST}" || return 1
+  sort_entries || return 1
+  remove_duplicates || return 1
 
   # Install
   main_ipsets__file_backup=$(create_backup_name \
-    "${main_ipsets__file}" ) || cancel_sudoloop
+    "${main_ipsets__file}" ) || return 1
   backup_old_file "${main_ipsets__sudo}" \
-    "${main_ipsets__file}" "${main_ipsets__file_backup}" || cancel_sudoloop
+    "${main_ipsets__file}" "${main_ipsets__file_backup}" || return 1
   install_ipset_blocklist "${main_ipsets__sudo}" \
-    "${main_ipsets__file}" "${main_ipsets__name}" || cancel_sudoloop
+    "${main_ipsets__file}" "${main_ipsets__name}" || return 1
   fix_file_permissons "${main_ipsets__sudo}" \
-    "${main_ipsets__file}" || cancel_sudoloop
+    "${main_ipsets__file}" || return 1
   fix_file_permissons "${main_ipsets__sudo}" \
-    "${main_ipsets__file_backup}" || cancel_sudoloop
+    "${main_ipsets__file_backup}" || return 1
   print_file_differences "${main_ipsets__file}" \
-    "${main_ipsets__file_backup}" || cancel_sudoloop
+    "${main_ipsets__file_backup}" || return 1
 
   # Cleanup
   if [ "${main_ipsets__remove_backup}" -eq 1 ]; then
     remove_all_backup_files "${main_ipsets__sudo}" \
-      "${main_ipsets__file}" || cancel_sudoloop
+      "${main_ipsets__file}" || return 1
   fi
 
   unset main_ipsets__sudo
@@ -1553,11 +1559,11 @@ main()
 
   # Parse hosts files
   main_hosts "${needs_sudo}" "${dst_hosts}" \
-    "${dst_ip}" "${remove_backups}" || cancel_sudoloop
+    "${dst_ip}" "${remove_backups}" || return 1
 
   if [ "${manage_ipsets}" -eq 0 ]; then
     # End here
-    cancel_sudoloop
+    return 0
   fi
 
   # Start fresh
@@ -1571,12 +1577,9 @@ main()
     needs_sudo="sudo"
   fi
 
-  check_for_binary ipset || cancel_sudoloop
+  check_for_binary ipset || return 1
   main_ipsets "${needs_sudo}" "${dst_ipset}" \
-    "${ipset_name}" "${remove_backups}" || cancel_sudoloop
-
-  # Finish
-  cancel_sudoloop
+    "${ipset_name}" "${remove_backups}" || return 1
 }
 
 # For more information about these particular options, see
@@ -2108,5 +2111,9 @@ __temp_files="" # Leave blank
 __pids="" # Leave blank
 __blocklist="" # Leave blank
 
-main "$@"
+main "$@" || {
+  cancel_sudoloop 1
+}
+
+cancel_sudoloop 0
 # vim: set syntax=sh tabstop=2 softtabstop=2 shiftwidth=2 shiftround expandtab:
