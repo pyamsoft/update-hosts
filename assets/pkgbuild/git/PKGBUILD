@@ -23,14 +23,13 @@ optdepends=(
   'wget: Optional download client'
   'iprange: Helper to optimize ipset configuration'
   'ipset: Parse ip address sets as an extra blocklist'
-  'sudo: Helper to run as a normal user'
 )
 # shellcheck disable=SC2034
 provides=('update-hosts')
 # shellcheck disable=SC2034
 conflicts=('update-hosts')
 # shellcheck disable=SC2034
-license=('MIT')
+license=('GPLv2')
 url="https://github.com/pyamsoft/update-hosts.git"
 
 ##
