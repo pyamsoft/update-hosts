@@ -1891,6 +1891,60 @@ readonly ADVERTISEMENT_BLACKLIST='
   ads-west-colo.adsymptotic.com
   geo3.ggpht.com
   showads33000.pubmatic.com
+
+  # More Spotify Ads
+  media-match.com
+  adclick.g.doublecklick.net
+  http://www.googleadservices.com
+  open.spotify.com
+  pagead2.googlesyndication.com
+  desktop.spotify.com
+  googleads.g.doubleclick.net
+  pubads.g.doubleclick.net
+  securepubads.g.doubleclick.net
+  audio2.spotify.com
+  http://audio2.spotify.com
+  http://www.audio2.spotify.com
+  http://www.omaze.com
+  omaze.com
+  bounceexchange.com
+  core.insightexpressai.com
+  content.bitsontherun.com
+  s0.2mdn.net
+  v.jwpcdn.com
+  d2gi7ultltnc2u.cloudfront.net
+  crashdump.spotify.com
+  adeventtracker.spotify.com
+  log.spotify.com
+  analytics.spotify.com
+  ads-fa.spotify.com
+  cs283.wpc.teliasoneracdn.net
+  audio-ec.spotify.com
+  cs126.wpc.teliasoneracdn.net
+  heads-ec.spotify.com
+  u.scdn.co
+  cs126.wpc.edgecastcdn.net
+  pagead46.l.doubleclick.net
+  pagead.l.doubleclick.net
+  video-ad-stats.googlesyndication.com
+  pagead-googlehosted.l.google.com
+  partnerad.l.doubleclick.net
+  prod.spotify.map.fastlylb.net
+  adserver.adtechus.com
+  na.gmtdmp.com
+  anycast.pixel.adsafeprotected.com
+  ads.pubmatic.com
+  idsync-ext.rlcdn.com
+  http://www.googletagservices.com
+  sto3.spotify.com
+  spclient.wg.spotify.com
+  d361oi6ppvq2ym.cloudfront.net
+  gads.pubmatic.com
+  ads-west-colo.adsymptotic.com
+  geo3.ggpht.com
+  showads33000.pubmatic.com
+  spclient.wg.spotify.com
+
 '
 
 # Jump scare websites
