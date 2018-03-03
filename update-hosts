@@ -222,9 +222,9 @@ decide_dl_client()
   decide_dl_client__cmd=
 
   if check_for_binary curl > /dev/null 2>&1; then
-    decide_dl_client__cmd="curl -fsSL -A 'Mozilla/5.0'"
+    decide_dl_client__cmd="curl -fsSL -A 'Mozilla/5.0' --connect-timeout 20"
   else
-    decide_dl_client__cmd="wget -qO- -U 'Mozilla/5.0'"
+    decide_dl_client__cmd="wget -qO- -U 'Mozilla/5.0' --timeout 20"
   fi
 
   # Echo before unsetting
@@ -1641,7 +1641,6 @@ readonly BASE_HOSTS_SOURCES="
   # HTTPS Sources
   https://adaway.org/hosts.txt
   https://hosts-file.net/ad_servers.txt
-  https://www.malwaredomainlist.com/hostslist/hosts.txt
   https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
   https://pgl.yoyo.org/adservers/admiral-domains.txt
   https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
