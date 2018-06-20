@@ -1597,7 +1597,7 @@ export LC_ALL
 # Configuration:
 
 # Version
-readonly __VERSION="2.5.5"
+readonly __VERSION="2.5.6"
 
 check_for_binary mktemp || exit 1
 readonly SUDOLOCK="$(mktemp)"
@@ -1650,9 +1650,9 @@ readonly BASE_HOSTS_SOURCES="
 
   # The CoinblockerList are simple lists that can help to prevent illegal mining in the browser or other applications.
   # CoinBlokerLists Homepage: https://zerodot1.gitlab.io/CoinBlockerListsWeb/index.html
-  https://zerodot1.gitlab.io/CoinBlockerLists/hosts 
+  https://zerodot1.gitlab.io/CoinBlockerLists/hosts
   # Additional lists:
-  # https://zerodot1.gitlab.io/CoinBlockerLists/hosts_browser 
+  # https://zerodot1.gitlab.io/CoinBlockerLists/hosts_browser
   # https://zerodot1.gitlab.io/CoinBlockerLists/hosts_optional
 "
 
