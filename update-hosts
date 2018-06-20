@@ -310,7 +310,7 @@ download_to_tempfile()
   download_to_tempfile__content="$(printf -- "%s" \
     "$(${download_to_tempfile__client} "${download_to_tempfile__url}")")"
   if [ -z "${download_to_tempfile__content}" ]; then
-    info_msg "  Failed to download from: %s" "${download_to_tempfile__url}"
+    error_msg "Failed to download from: %s" "${download_to_tempfile__url}"
     return 1
   fi
 
