@@ -1655,36 +1655,38 @@ readonly BASE_HOSTS_SOURCES='
 
 # Additional hosts file servers
 readonly additonal_hosts_sources='
-# Very aggressive blocking, sometimes false positive
-#   https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
-#   https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
+  # Very aggressive blocking, sometimes false positive
+  #
+  # https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
+  # https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
 
-# Additional Coin blocker lists:
-#   https://zerodot1.gitlab.io/CoinBlockerLists/hosts_browser
-#   https://zerodot1.gitlab.io/CoinBlockerLists/hosts_optional
+  # Additional Coin blocker lists:
+  #
+  # https://zerodot1.gitlab.io/CoinBlockerLists/hosts_browser
+  # https://zerodot1.gitlab.io/CoinBlockerLists/hosts_optional
 
-# Hosts-file.net server classifications
-# Provides more in-depth protection and host blocking at the cost of
-# breaking some sites
-#
-#   https://hosts-file.net/emd.txt
-#   https://hosts-file.net/exp.txt
-#   https://hosts-file.net/fsa.txt
-#   https://hosts-file.net/hjk.txt
-#   https://hosts-file.net/mmt.txt
-#   https://hosts-file.net/psh.txt
+  # Hosts-file.net server classifications
+  # Provides more in-depth protection and host blocking at the cost of
+  # breaking some sites
+  #
+  # https://hosts-file.net/emd.txt
+  # https://hosts-file.net/exp.txt
+  # https://hosts-file.net/fsa.txt
+  # https://hosts-file.net/hjk.txt
+  # https://hosts-file.net/mmt.txt
+  # https://hosts-file.net/psh.txt
 
-# These entries are very large, and may break certain sites
-# that rely on CDNs or third party hosts_sources
-# Instead of downloading the entire hosts file and additional parts
-# the split download above is recommended. The parts that you do not
-# desire can be ignored individually instead of an all or nothing approach.
-# The two hosts_sources below are generally not recommended nor needed. If you
-# wish to use them, be sure to comment out the above hosts-file.net entries
-# or you will largely be pulling duplicate hosts_sources.
-#
-#   http://hosts-file.net/download/hosts.txt
-#   http://hosts-file.net/hphosts-partial.txt
+  # These entries are very large, and may break certain sites
+  # that rely on CDNs or third party hosts_sources
+  # Instead of downloading the entire hosts file and additional parts
+  # the split download above is recommended. The parts that you do not
+  # desire can be ignored individually instead of an all or nothing approach.
+  # The two hosts_sources below are generally not recommended nor needed. If you
+  # wish to use them, be sure to comment out the above hosts-file.net entries
+  # or you will largely be pulling duplicate hosts_sources.
+  #
+  # http://hosts-file.net/download/hosts.txt
+  # http://hosts-file.net/hphosts-partial.txt
 '
 
 
@@ -1818,7 +1820,6 @@ HOSTS_WHITELIST="
 
 # Only exact strings, no regex supported
 readonly ADVERTISEMENT_BLACKLIST='
-
   # CSGO Advertisements on pinion.gg
   adback.pinion.gg
   api.pinion.gg
@@ -1944,7 +1945,6 @@ readonly ADVERTISEMENT_BLACKLIST='
   geo3.ggpht.com
   showads33000.pubmatic.com
   spclient.wg.spotify.com
-
 '
 
 # Jump scare websites
@@ -1969,7 +1969,7 @@ readonly BAD_SITE_BLACKLIST='
 '
 
 # Block tracking from cliqz domains
-readonly CLIQZ_BLACKLIST='
+readonly TRACKING_BLACKLIST='
   0.0.0.0 cliqz.com
   0.0.0.0 www.cliqz.com
   0.0.0.0 abtests.cliqz.com
@@ -2106,16 +2106,15 @@ readonly HOSTS_BLACKLIST="
   ${JUMPSCARE_BLACKLIST}
   ${ADVERTISEMENT_BLACKLIST}
   ${BAD_SITE_BLACKLIST}
-  ${CLIQZ_BLACKLIST}
+  ${TRACKING_BLACKLIST}
   ${USER_BLACKLIST}
 "
 
 # The base ipsets
 # Provides a basic amount of protection without breaking sites, or breaking
 # only a minimal amount of sites
-readonly BASE_IPSET_SOURCES="
+readonly BASE_IPSET_SOURCES='
   # HTTP Sources
-
   http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
   http://cinsscore.com/list/ci-badguys.txt
   http://blocklist.greensnow.co/greensnow.txt
@@ -2125,11 +2124,11 @@ readonly BASE_IPSET_SOURCES="
   https://www.spamhaus.org/drop/drop.lasso
   https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=1.1.1.1
   https://www.maxmind.com/en/proxy-detection-sample-list
-"
 
-# Other ipset sources
-#
-# http://danger.rulez.sk/projects/bruteforceblocker/blist.php
+  # Other ipset sources
+  #
+  # http://danger.rulez.sk/projects/bruteforceblocker/blist.php
+'
 
 # The sources that will be parsed into the ipset.
 # By default only the sources in the ${base_sources} list
