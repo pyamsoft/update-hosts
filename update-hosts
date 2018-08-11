@@ -1631,14 +1631,14 @@ unset machine_hostname
 # The base hosts_sources
 # Provides a basic amount of protection without breaking sites, or breaking
 # only a minimal amount of sites
-readonly BASE_HOSTS_SOURCES="
+readonly BASE_HOSTS_SOURCES='
   # HTTP Sources
   http://winhelp2002.mvps.org/hosts.txt
-  http://someonewhocares.org/hosts/hosts
   http://malwaredomains.lehigh.edu/files/justdomains
-  http://mirror1.malwaredomains.com/files/immortal_domains.txt
 
   # HTTPS Sources
+  https://someonewhocares.org/hosts/hosts
+  https://mirror1.malwaredomains.com/files/immortal_domains.txt
   https://adaway.org/hosts.txt
   https://hosts-file.net/ad_servers.txt
   https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
@@ -1651,29 +1651,28 @@ readonly BASE_HOSTS_SOURCES="
   # The CoinblockerList are simple lists that can help to prevent illegal mining in the browser or other applications.
   # CoinBlokerLists Homepage: https://zerodot1.gitlab.io/CoinBlockerListsWeb/index.html
   https://zerodot1.gitlab.io/CoinBlockerLists/hosts
-  # Additional lists:
-  # https://zerodot1.gitlab.io/CoinBlockerLists/hosts_browser
-  # https://zerodot1.gitlab.io/CoinBlockerLists/hosts_optional
-"
+'
 
 # Additional hosts file servers
-# readonly additonal_hosts_sources="
+readonly additonal_hosts_sources='
+# Very aggressive blocking, sometimes false positive
 #   https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
 #   https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
-# "
+
+# Additional Coin blocker lists:
+#   https://zerodot1.gitlab.io/CoinBlockerLists/hosts_browser
+#   https://zerodot1.gitlab.io/CoinBlockerLists/hosts_optional
 
 # Hosts-file.net server classifications
 # Provides more in-depth protection and host blocking at the cost of
 # breaking some sites
 #
-# readonly hosts_file_net_parts="
 #   https://hosts-file.net/emd.txt
 #   https://hosts-file.net/exp.txt
 #   https://hosts-file.net/fsa.txt
 #   https://hosts-file.net/hjk.txt
 #   https://hosts-file.net/mmt.txt
 #   https://hosts-file.net/psh.txt
-# "
 
 # These entries are very large, and may break certain sites
 # that rely on CDNs or third party hosts_sources
@@ -1684,10 +1683,10 @@ readonly BASE_HOSTS_SOURCES="
 # wish to use them, be sure to comment out the above hosts-file.net entries
 # or you will largely be pulling duplicate hosts_sources.
 #
-# readonly hosts_file_net_full="
 #   http://hosts-file.net/download/hosts.txt
 #   http://hosts-file.net/hphosts-partial.txt
-# "
+'
+
 
 
 # The hosts_sources that will be parsed into the hosts file.
@@ -1697,9 +1696,7 @@ readonly BASE_HOSTS_SOURCES="
 # Destinations and duplicate entries do not matter, as they will
 # be sanitized and duplicates will be stripped out.
 readonly HOSTS_SOURCES="
-
   ${BASE_HOSTS_SOURCES}
-
 "
 
 # Regex allowed
