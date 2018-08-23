@@ -1398,8 +1398,9 @@ main()
 
   # Source extra hosts from default user location
   # Trim whitespace off of hosts file
-  readonly user_hosts="#{HOME}/.update-hosts"
+  readonly user_hosts="${HOME}/.update-hosts"
   if [ -e "${user_hosts}" ] && [ -r "${user_hosts}" ]; then
+    info_msg "Source extra hosts from user default location: %s" "${user_hosts}"
     extra_headers="# Extra hosts from '${user_hosts}'
     $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${user_hosts}" | uniq)
 
