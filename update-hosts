@@ -1691,6 +1691,11 @@ readonly BASE_HOSTS_SOURCES='
   https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
   https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
 
+  # From Blokada
+  https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+  https://raw.githubusercontent.com/EnergizedProtection/block/master/basic/formats/hosts
+  https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Hosts/GoodbyeAds.txt
+
   # The CoinblockerList are simple lists that can help to prevent illegal mining in the browser or other applications.
   # CoinBlockerLists Homepage: https://zerodot1.gitlab.io/CoinBlockerListsWeb/index.html
   https://zerodot1.gitlab.io/CoinBlockerLists/hosts
