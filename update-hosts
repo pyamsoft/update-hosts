@@ -1513,16 +1513,26 @@ main()
             ;;
           source)
             # We must be able to source from a file that exists and is readable.
-            if [ -e "${optind_expanded}" ] && [ -r "${optind_expanded}" ]; then
-              info_msg "Sourcing extra hosts from: %s" "${optind_expanded}"
-              # Trim whitespace off of hosts file
-              extra_headers="# Extra hosts from '${optind_expanded}'
-              $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${optind_expanded}" | uniq)
+            case "${optind_expanded}" in
+              http*)
+                # Its a network source from somewhere, add it to the HOSTS_SOURCES
+                HOSTS_SOURCES="${optind_expanded}
+                ${HOSTS_SOURCES}"
+                ;;
+              *)
+                # Else its a file path I hope
+                if [ -e "${optind_expanded}" ] && [ -r "${optind_expanded}" ]; then
+                  info_msg "Sourcing extra hosts from: %s" "${optind_expanded}"
+                  # Trim whitespace off of hosts file
+                  extra_headers="# Extra hosts from '${optind_expanded}'
+                  $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${optind_expanded}" | uniq)
 
-              ${extra_headers}"
-            else
-              error_msg "Hosts source does not exist: %s" "${optind_expanded}"
-            fi
+                  ${extra_headers}"
+                else
+                  error_msg "Hosts source does not exist: %s" "${optind_expanded}"
+                fi
+                ;;
+            esac
         esac
       fi
 
@@ -1730,7 +1740,7 @@ readonly additonal_hosts_sources='
 # appending them onto lines following the base-hosts_sources line.
 # Destinations and duplicate entries do not matter, as they will
 # be sanitized and duplicates will be stripped out.
-readonly HOSTS_SOURCES="
+HOSTS_SOURCES="
   ${BASE_HOSTS_SOURCES}
 "
 
