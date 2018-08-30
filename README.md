@@ -30,26 +30,35 @@ The main differences being:
   list to fix websites which are broken by blocking certain hosts.
 - Handles a list of ipset sources as well for blocking IP addresses at the  
   iptables firewall level.
+- Pull hosts from extra user specified hosts files or network locations,  
+  merging all files together into one large hosts file
+- Output hosts or ipset files into user specified locations
+- Fetches all hosts and ipset sources in parallel instead of waiting one after  
+  the other
 
 ## Hosts Sources
 
-- http://winhelp2002.mvps.org/hosts.txt
-- http://someonewhocares.org/hosts/hosts
-- http://malwaredomains.lehigh.edu/files/justdomains
-- http://mirror1.malwaredomains.com/files/immortal_domains.txt
+- https://someonewhocares.org/hosts/hosts
+- https://mirror1.malwaredomains.com/files/immortal_domains.txt
 - https://adaway.org/hosts.txt
-- https://www.malwaredomainlist.com/hostslist/hosts.txt
+- https://hosts-file.net/ad_servers.txt
 - https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
+- https://pgl.yoyo.org/adservers/admiral-domains.txt
 - https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
 - https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt
 - https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
 - https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
+- https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+- https://raw.githubusercontent.com/EnergizedProtection/block/master/basic/formats/hosts
+- https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Hosts/GoodbyeAds.txt
+- https://zerodot1.gitlab.io/CoinBlockerLists/hosts
 
 ### Additional sources
 
 - https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
 - https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
-- https://hosts-file.net/ad_servers.txt
+- https://zerodot1.gitlab.io/CoinBlockerLists/hosts_browser
+- https://zerodot1.gitlab.io/CoinBlockerLists/hosts_optional
 - https://hosts-file.net/emd.txt
 - https://hosts-file.net/exp.txt
 - https://hosts-file.net/fsa.txt
@@ -61,15 +70,17 @@ The main differences being:
 
 ## Ipset Sources
 
-- http://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
 - http://cinsscore.com/list/ci-badguys.txt
-- http://blocklist.greensnow.co/greensnow.txt
-- http://www.openbl.org/lists/base.txt
+- https://www.projecthoneypot.org/list_of_ips.php?t=d&rss=1
+- https://blocklist.greensnow.co/greensnow.txt
 - https://lists.blocklist.de/lists/all.txt
-- https://www.stopforumspam.com/downloads/toxic_ip_cidr.txt
 - https://www.spamhaus.org/drop/drop.lasso
 - https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=1.1.1.1
 - https://www.maxmind.com/en/proxy-detection-sample-list
+
+### Additional sources
+
+- http://danger.rulez.sk/projects/bruteforceblocker/blist.php
 
 ## What is this for?
 
@@ -110,7 +121,7 @@ specific system.
 ## Options
 
 ```
-update-hosts[2.4.6]
+update-hosts[2.6.1]
 
 Options:
    -h | --help     Display help
@@ -118,18 +129,19 @@ Options:
    -r | --remove   Remove backups
    -i | --ipset    Also download ipset sources
    -u | --unbreak  Auto apply the unbreak whitelist
+   --source        Source a hosts file part
    --output-hosts  The file to output hosts to
    --output-ipset  The file to output ipsets to
    --ipset-name    The name of the ipset
    --dest-ip       The destination IP to use
-
 ```
 
 ## Disclaimer
 
-This script replaces the "/etc/hosts" file of your system. It will create a  
-backup of the existing hosts file before hand. This being said, please be sure  
-to be careful when modifying the hosts file.
+This script can replace the "/etc/hosts" file of your system. It will create a  
+backup of the existing hosts file before hand. This script can replace the  
+"/etc/ipset.conf" file of your system. It will create backups of the existing  
+files before hand. Please be careful when modifying these system files.
 
 ## Questions
 
