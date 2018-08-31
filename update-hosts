@@ -1693,8 +1693,6 @@ readonly BASE_HOSTS_SOURCES='
 
   # From Blokada
   https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
-  https://raw.githubusercontent.com/EnergizedProtection/block/master/basic/formats/hosts
-  https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Hosts/GoodbyeAds.txt
 
   # The CoinblockerList are simple lists that can help to prevent illegal mining in the browser or other applications.
   # CoinBlockerLists Homepage: https://zerodot1.gitlab.io/CoinBlockerListsWeb/index.html
@@ -1707,6 +1705,8 @@ readonly additonal_hosts_sources='
   #
   # https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
   # https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
+  # https://raw.githubusercontent.com/EnergizedProtection/block/master/basic/formats/hosts
+  # https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Hosts/GoodbyeAds.txt
 
   # Additional Coin blocker lists:
   #

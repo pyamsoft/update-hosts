@@ -49,13 +49,13 @@ The main differences being:
 - https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
 - https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
 - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
-- https://raw.githubusercontent.com/EnergizedProtection/block/master/basic/formats/hosts
-- https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Hosts/GoodbyeAds.txt
 - https://zerodot1.gitlab.io/CoinBlockerLists/hosts
 
 ### Additional sources
 
 - https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
+- https://raw.githubusercontent.com/EnergizedProtection/block/master/basic/formats/hosts
+- https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Hosts/GoodbyeAds.txt
 - https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
 - https://zerodot1.gitlab.io/CoinBlockerLists/hosts_browser
 - https://zerodot1.gitlab.io/CoinBlockerLists/hosts_optional
