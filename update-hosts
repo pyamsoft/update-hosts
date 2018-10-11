@@ -1696,7 +1696,7 @@ readonly BASE_HOSTS_SOURCES='
 
   # The CoinblockerList are simple lists that can help to prevent illegal mining in the browser or other applications.
   # CoinBlockerLists Homepage: https://zerodot1.gitlab.io/CoinBlockerListsWeb/index.html
-  https://zerodot1.gitlab.io/CoinBlockerLists/hosts
+  https://gitlab.com/ZeroDot1/CoinBlockerLists/raw/master/hosts
 '
 
 # Additional hosts file servers
