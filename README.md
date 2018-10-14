@@ -143,11 +143,6 @@ backup of the existing hosts file before hand. This script can replace the
 "/etc/ipset.conf" file of your system. It will create backups of the existing  
 files before hand. Please be careful when modifying these system files.
 
-## Questions
-
-Questions or issues should be either posted in the issue section of this  
-repository, or directed by email to pyamsoft @ pyam(dot)soft(at)gmail(dot)com
-
 ## Issues
 
 Check the issues page on GitHub for any notes about outstanding or existing  
@@ -163,7 +158,7 @@ GPLv2
 
   The GPLv2 License
 
-    Copyright (C) 2017  Peter Kenji Yamanaka
+    Copyright (C) 2018 Peter Kenji Yamanaka
     Copyright (c) 2015 Héctor Molinero Fernández
 
     This program is free software; you can redistribute it and/or modify
