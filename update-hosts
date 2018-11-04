@@ -23,7 +23,7 @@
 #  Héctor Molinero Fernández <hector@molinero.xyz>.
 #
 # Modified by:
-#  pyamsoft <pyam(dot)soft(at)gmail(dot)com>
+#  pyamsoft <developer(dot)pyamsoft(at)gmail(dot)com>
 
 # Will cause calls to
 #
@@ -1639,7 +1639,7 @@ export LC_ALL
 # Configuration:
 
 # Version
-readonly __VERSION="2.6.1"
+readonly __VERSION="2.6.2"
 
 check_for_binary mktemp || exit 1
 readonly SUDOLOCK="$(mktemp)"
