@@ -970,7 +970,8 @@ install_ipset_blocklist()
   # Save here just to get the create line
   ${install_ipset_blocklist__sudo} ipset save \
     "${install_ipset_blocklist__name}" \
-    -file "${install_ipset_blocklist__file}"
+    | ${install_ipset_blocklist__sudo} tee \
+      "${install_ipset_blocklist__file}" > /dev/null
 
   # Because we have a bunch of /32 addresses, we attempt to reduce the
   # size of the list by merging all the ones we can into different subnets
