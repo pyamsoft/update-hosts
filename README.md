@@ -49,6 +49,7 @@ The main differences being:
 - https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
 - https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
 - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+- https://raw.githubusercontent.com/EnergizedProtection/EnergizedBlu/master/energized/blu.txt
 - https://zerodot1.gitlab.io/CoinBlockerLists/hosts
 
 ### Additional sources
