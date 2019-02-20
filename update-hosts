@@ -1640,7 +1640,7 @@ export LC_ALL
 # Configuration:
 
 # Version
-readonly __VERSION="2.6.4"
+readonly __VERSION="2.6.5"
 
 check_for_binary mktemp || exit 1
 readonly SUDOLOCK="$(mktemp)"
@@ -1692,7 +1692,6 @@ readonly BASE_HOSTS_SOURCES='
   https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
   https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
   https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
-  https://raw.githubusercontent.com/EnergizedProtection/EnergizedBlu/master/energized/blu.txt
   https://gitlab.com/ZeroDot1/CoinBlockerLists/raw/master/hosts
 '
 
