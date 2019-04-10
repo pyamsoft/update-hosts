@@ -2137,6 +2137,9 @@ readonly TRACKING_BLACKLIST='
   updatecheck.cliqz.com
   w5cdn.cliqz.com
   webbeta.cliqz.com
+
+  # Block LogRocket from recording the screen during a website session
+  i.logrocket.com
 '
 
 # User defined blacklist
