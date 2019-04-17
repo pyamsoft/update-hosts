@@ -1640,7 +1640,7 @@ export LC_ALL
 # Configuration:
 
 # Version
-readonly __VERSION="2.6.5"
+readonly __VERSION="2.6.6"
 
 check_for_binary mktemp || exit 1
 readonly SUDOLOCK="$(mktemp)"
