@@ -1,9 +1,9 @@
 # update-hosts
 This is a fork of the original hosts-update repository by zant95 on GitHub.  
-You can find the original here: http://github.com/zant95/hosts-update
+You can find the original [here](http://github.com/zant95/hosts-update)
 
-The project was originally licensed under the MIT license. This original  
-license is included as the MIT_LICENSE file, and the original code base  
+The project was originally licensed under the MIT license. This original
+license is included as the MIT_LICENSE file, and the original code base
 is able to be viewed by combing through the git history.
 
 This script, designed for GNU/Linux, generates a hosts file based on multiple
@@ -11,29 +11,29 @@ sources.
 
 ## Why Fork
 
-This fork is mainly maintained for personal use by myself, pyamsoft.  
-I have pushed the changes to this fork incase anyone else desires to use  
-my modifications. Much of the actual parsing code will be the same as the  
-original, as I am not the strongest when it comes to regexes and string  
+This fork is mainly maintained for personal use by myself, pyamsoft.
+I have pushed the changes to this fork incase anyone else desires to use
+my modifications. Much of the actual parsing code will be the same as the
+original, as I am not the strongest when it comes to regexes and string
 parsing.
 
 The main differences being:
 
-- Predefined blacklist of the pinion.gg domain, which is a common source of  
+- Predefined blacklist of the pinion.gg domain, which is a common source of
   intrusive advertisements in Counter Strike: Global Offensive.
 - Creates a backup of the original hosts file before overwriting.
 - Only supports IPv4 addresses.
-- Supports parallel background downloads without reliance on programs other  
+- Supports parallel background downloads without reliance on programs other
   than the standard coreutils
 - Is named update-hosts instead of hosts-update
-- Provides an optional pre-defined whitelist which matches uBlock0 Unbreak  
+- Provides an optional pre-defined whitelist which matches uBlock0 Unbreak
   list to fix websites which are broken by blocking certain hosts.
-- Handles a list of ipset sources as well for blocking IP addresses at the  
+- Handles a list of ipset sources as well for blocking IP addresses at the
   iptables firewall level.
-- Pull hosts from extra user specified hosts files or network locations,  
+- Pull hosts from extra user specified hosts files or network locations,
   merging all files together into one large hosts file
 - Output hosts or ipset files into user specified locations
-- Fetches all hosts and ipset sources in parallel instead of waiting one after  
+- Fetches all hosts and ipset sources in parallel instead of waiting one after
   the other
 
 ## Hosts Sources
@@ -84,7 +84,7 @@ The main differences being:
 
 ## What is this for?
 
-To prevent your computer from connecting to domains who serve ads and malware.  
+To prevent your computer from connecting to domains who serve ads and malware.
 This will increase the security of your computer and save bandwidth.
 
 ## Obtaining a Copy
@@ -138,16 +138,16 @@ Options:
 
 ## Disclaimer
 
-This script can replace the "/etc/hosts" file of your system. It will create a  
-backup of the existing hosts file before hand. This script can replace the  
-"/etc/ipset.conf" file of your system. It will create backups of the existing  
+This script can replace the "/etc/hosts" file of your system. It will create a
+backup of the existing hosts file before hand. This script can replace the
+"/etc/ipset.conf" file of your system. It will create backups of the existing
 files before hand. Please be careful when modifying these system files.
 
 ## Issues
 
-Check the issues page on GitHub for any notes about outstanding or existing  
-issues. If you encounter a problem with update-hosts of which no such  
-issue already exists please feel free to help the developer by creating an  
+Check the issues page on GitHub for any notes about outstanding or existing
+issues. If you encounter a problem with update-hosts of which no such
+issue already exists please feel free to help the developer by creating an
 issue ticket.
 
 ## License
