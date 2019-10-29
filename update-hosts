@@ -1296,21 +1296,14 @@ main_hosts()
 ##
 # Main function which handles the downloading of ipset files
 #
-# $1 needs_sudo
-# $2 ipset file destination
-# $3 ipset name
-# $4 remove backups
+# $1 ipset file destination
+# $2 ipset name
+# $3 remove backups
 main_ipsets()
 {
-  main_ipsets__sudo="$1"
-  main_ipsets__file="$2"
-  main_ipsets__name="$3"
-  main_ipsets__remove_backup="$4"
-
-  if [ -z "${main_ipsets__sudo}" ] && [ "$(id -u)" -ne 0 ]; then
-    error_msg "ipset functionality requires root user privileges"
-    return 1
-  fi
+  main_ipsets__file="$1"
+  main_ipsets__name="$2"
+  main_ipsets__remove_backup="$3"
 
   # Begin
   printf -- "\\n\\n"
@@ -1332,6 +1325,22 @@ main_ipsets()
   # Install
   main_ipsets__file_backup=$(create_backup_name \
     "${main_ipsets__file}" ) || return 1
+
+  main_ipsets__sudo=
+  if touch "${main_ipsets__file}" > /dev/null 2>&1; then
+    # If we can write to the destination, we don't need sudo
+    main_ipsets__sudo=""
+  else
+    if sudo -n -v > /dev/null 2>&1; then
+      # If we can already use sudo, we don't need to prompt for it again
+      main_ipsets__sudo="sudo"
+    else
+      action_msg "sudo is needed to write to file: %s" "${main_ipsets__file}"
+      grab_sudo || return 1
+      main_ipsets__sudo="sudo"
+    fi
+  fi
+
   backup_old_file "${main_ipsets__sudo}" \
     "${main_ipsets__file}" "${main_ipsets__file_backup}" || return 1
   install_ipset_blocklist "${main_ipsets__sudo}" \
@@ -1611,17 +1620,8 @@ main()
   # Start fresh
   cleanup
 
-  # At this point, we do need sudo for ipset operations.
-  # Grab it only if we do not already have it
-  if [ -z "${needs_sudo}" ]; then
-    action_msg "sudo is needed for ipset operations..."
-    grab_sudo || return 1
-    needs_sudo="sudo"
-  fi
-
   check_for_binary ipset || return 1
-  main_ipsets "${needs_sudo}" "${dst_ipset}" \
-    "${ipset_name}" "${remove_backups}" || return 1
+  main_ipsets "${dst_ipset}" "${ipset_name}" "${remove_backups}" || return 1
 }
 
 # For more information about these particular options, see
