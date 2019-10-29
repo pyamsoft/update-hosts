@@ -1578,13 +1578,14 @@ main()
             case "${optind_expanded}" in
               http*)
                 # Its a network source from somewhere, add it to the HOSTS_SOURCES
+                info_msg "Sourcing extra hosts from command line argument: --source='%s'" "${optind_expanded}"
                 HOSTS_SOURCES="${optind_expanded}
                 ${HOSTS_SOURCES}"
                 ;;
               *)
                 # Else its a file path I hope
                 if [ -e "${optind_expanded}" ] && [ -r "${optind_expanded}" ]; then
-                  info_msg "Sourcing extra hosts from command line argument: %s" "${optind_expanded}"
+                  info_msg "Sourcing extra hosts from command line argument: --source='%s'" "${optind_expanded}"
                   # Trim whitespace off of hosts file
                   extra_headers="# Extra hosts from command line argument: '--source=\"${optind_expanded}\"'
                   $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${optind_expanded}" | uniq)
