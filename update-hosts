@@ -1227,7 +1227,7 @@ Options:
    -r | --remove           Remove backups
    -i | --ipset            Also download ipset sources
    -u | --unbreak          Auto apply the unbreak whitelist
-   --source                Source a hosts file part
+   --source [url|file]     Source a hosts file part
    --output-hosts [file]   The file to output hosts to
    --output-ipset [file]   The file to output ipsets to
    --ipset-name [name]     The name of the ipset
