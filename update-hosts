@@ -177,19 +177,35 @@ print_hosts_config()
 ##
 # Print out the ipset configuration
 #
-# $1 sudo or blank if not needed
-# $2 ipset file location
-# $3 ipset name
+# $1 ipset file location
+# $2 ipset name
 ##
 print_ipset_config()
 {
-  print_ipset_config__sudo="$1"
-  print_ipset_config__file="$2"
-  print_ipset_config__name="$3"
+  print_ipset_config__file="$1"
+  print_ipset_config__name="$2"
 
   action_msg "Ipset Configuration:"
   info_msg "Ipset location: %s" "${print_ipset_config__file}"
   info_msg "Ipset name: %s" "${print_ipset_config__name}"
+
+  unset print_ipset_config__file
+  unset print_ipset_config__name
+  return 0
+}
+
+##
+# Create the ipset configuration if it does not exist
+#
+# $1 ipset sudo
+# $2 ipset file location
+# $3 ipset name
+##
+prepare_ipset_config()
+{
+  print_ipset_config__sudo="$1"
+  print_ipset_config__file="$2"
+  print_ipset_config__name="$3"
 
   # The ipset must exist first for this script to work
   # check for existence here
@@ -203,9 +219,9 @@ print_ipset_config()
       hash:net maxelem $((128 * 1024))
   }
 
-  unset print_ipset_config__sudo
   unset print_ipset_config__file
   unset print_ipset_config__name
+  unset print_ipset_config__sudo
   return 0
 }
 
@@ -1128,8 +1144,9 @@ sudoloop()
 {
   touch "${SUDOLOCK}"
   while [ -e "${SUDOLOCK}" ]; do
-    sudo -n -v
-    sleep 2
+    # If we lose sudo during the loop, something is wrong
+    sudo -n -v || cancel_sudoloop
+    sleep 5
   done
 
   return 0
@@ -1223,16 +1240,18 @@ EOF
 ##
 # Main function which handles the downloading of hosts files
 #
-# $1 hosts file destination
-# $2 destination IP address
-# $3 remove backups
-# $4 extra headers
+# $1 grab sudo with sudoloop
+# $2 hosts file destination
+# $3 destination IP address
+# $4 remove backups
+# $5 extra headers
 main_hosts()
 {
-  main_hosts__file="$1"
-  main_hosts__ip="$2"
-  main_hosts__remove_backup="$3"
-  main_hosts__extra_headers="$4"
+  main_hosts__lock_sudo="$1"
+  main_hosts__file="$2"
+  main_hosts__ip="$3"
+  main_hosts__remove_backup="$4"
+  main_hosts__extra_headers="$5"
 
   # Configuration
   print_hosts_config "${main_hosts__file}" "${main_hosts__ip}"
@@ -1267,7 +1286,7 @@ main_hosts()
       main_hosts__sudo="sudo"
     else
       action_msg "sudo is needed to write to file: %s" "${main_hosts__file}"
-      grab_sudo || return 1
+      grab_sudo "${main_hosts__lock_sudo}" || return 1
       main_hosts__sudo="sudo"
     fi
   fi
@@ -1292,6 +1311,7 @@ main_hosts()
   unset main_hosts__hosts
   unset main_hosts__sudo
   unset main_hosts__file
+  unset main_hosts__lock_sudo
   unset main_hosts__file_backup
   unset main_hosts__ip
   unset main_hosts__remove_backup
@@ -1301,19 +1321,20 @@ main_hosts()
 ##
 # Main function which handles the downloading of ipset files
 #
-# $1 ipset file destination
-# $2 ipset name
-# $3 remove backups
+# $1 grab sudo with sudoloop
+# $2 ipset file destination
+# $3 ipset name
+# $4 remove backups
 main_ipsets()
 {
-  main_ipsets__file="$1"
-  main_ipsets__name="$2"
-  main_ipsets__remove_backup="$3"
+  main_ipsets__lock_sudo="$1"
+  main_ipsets__file="$2"
+  main_ipsets__name="$3"
+  main_ipsets__remove_backup="$4"
 
   # Begin
   printf -- "\\n\\n"
-  print_ipset_config "${main_ipsets__sudo}" \
-    "${main_ipsets__file}" "${main_ipsets__name}" || return 1
+  print_ipset_config "${main_ipsets__file}" "${main_ipsets__name}" || return 1
 
   # Download
   action_msg "Downloading ipset_sources lists..."
@@ -1341,11 +1362,13 @@ main_ipsets()
       main_ipsets__sudo="sudo"
     else
       action_msg "sudo is needed to write to file: %s" "${main_ipsets__file}"
-      grab_sudo || return 1
+      grab_sudo "${main_ipsets__lock_sudo}" || return 1
       main_ipsets__sudo="sudo"
     fi
   fi
 
+  prepare_ipset_config "${main_ipsets__sudo}" \
+    "${main_ipsets__file}" "${main_ipsets__name}" || return 1
   backup_old_file "${main_ipsets__sudo}" \
     "${main_ipsets__file}" "${main_ipsets__file_backup}" || return 1
   install_ipset_blocklist "${main_ipsets__sudo}" \
@@ -1366,6 +1389,7 @@ main_ipsets()
   unset main_ipsets__sudo
   unset main_ipsets__file
   unset main_ipsets__name
+  unset main_ipsets__lock_sudo
   unset main_ipsets__file_backup
   unset main_ipsets__remove_backup
   return 0
@@ -1374,15 +1398,23 @@ main_ipsets()
 ##
 # Prompts the user for sudo access so that we don't have to ask
 # again in case operations take a long time
+#
+# $1 lock sudo with sudoloop
 grab_sudo()
 {
+  grab_sudo__loop="$1"
+
   check_for_binary sudo || return 1
 
   # initialize sudo
   sudo -v || return 1
 
   # Start sudoloop
-  sudoloop &
+  if [ "${grab_sudo__loop}" -eq 1 ]; then
+    sudoloop &
+  fi
+
+  unset grab_sudo__loop
 
   return 0
 }
@@ -1395,6 +1427,7 @@ main()
   manage_ipsets=0
   apply_unbreak=0
   extra_headers=""
+  lock_sudoloop=0
 
   # Script begins here
   dst_hosts="/etc/hosts"
@@ -1614,7 +1647,7 @@ main()
   fi
 
   # Parse hosts files
-  main_hosts "${dst_hosts}" \
+  main_hosts "${lock_sudoloop}" "${dst_hosts}" \
     "${dst_ip}" "${remove_backups}" "${extra_headers}" || return 1
 
   if [ "${manage_ipsets}" -eq 0 ]; then
@@ -1626,7 +1659,8 @@ main()
   cleanup
 
   check_for_binary ipset || return 1
-  main_ipsets "${dst_ipset}" "${ipset_name}" "${remove_backups}" || return 1
+  main_ipsets "${lock_sudoloop}" "${dst_ipset}" \
+    "${ipset_name}" "${remove_backups}" || return 1
 }
 
 # For more information about these particular options, see
