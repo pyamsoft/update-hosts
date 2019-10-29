@@ -1222,16 +1222,18 @@ print_help()
   print_version
   printf -- "%s\\n" "$(cat << EOF
 Options:
-   -h | --help     Display help
-   -v | --version  Display version
-   -r | --remove   Remove backups
-   -i | --ipset    Also download ipset sources
-   -u | --unbreak  Auto apply the unbreak whitelist
-   --source        Source a hosts file part
-   --output-hosts  The file to output hosts to
-   --output-ipset  The file to output ipsets to
-   --ipset-name    The name of the ipset
-   --dest-ip       The destination IP to use
+   -h | --help             Display help
+   -v | --version          Display version
+   -r | --remove           Remove backups
+   -i | --ipset            Also download ipset sources
+   -u | --unbreak          Auto apply the unbreak whitelist
+   --source                Source a hosts file part
+   --output-hosts [file]   The file to output hosts to
+   --output-ipset [file]   The file to output ipsets to
+   --ipset-name [name]     The name of the ipset
+   --dest-ip [ip-address]  The destination IP to use
+   --sudoloop              Once sudo is claimed, keep hold of it
+                           through the entire script.
 EOF
 )"
   return 0
@@ -1498,6 +1500,9 @@ main()
               ipset)
                 manage_ipsets=1
                 ;;
+              sudoloop)
+                lock_sudoloop=1
+                ;;
               unbreak)
                 apply_unbreak=1
                 ;;
@@ -1579,9 +1584,9 @@ main()
               *)
                 # Else its a file path I hope
                 if [ -e "${optind_expanded}" ] && [ -r "${optind_expanded}" ]; then
-                  info_msg "Sourcing extra hosts from: %s" "${optind_expanded}"
+                  info_msg "Sourcing extra hosts from command line argument: %s" "${optind_expanded}"
                   # Trim whitespace off of hosts file
-                  extra_headers="# Extra hosts from '${optind_expanded}'
+                  extra_headers="# Extra hosts from command line argument: '--source=\"${optind_expanded}\"'
                   $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${optind_expanded}" | uniq)
 
                   ${extra_headers}"
