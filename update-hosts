@@ -1691,7 +1691,7 @@ readonly BASE_HOSTS_SOURCES='
 '
 
 # Additional hosts file servers
-readonly additonal_hosts_sources='
+readonly ADDITONAL_HOSTS_SOURCES='
   # Very aggressive blocking, sometimes false positive
   #
   # https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
@@ -1742,6 +1742,7 @@ readonly additonal_hosts_sources='
 # be sanitized and duplicates will be stripped out.
 HOSTS_SOURCES="
   ${BASE_HOSTS_SOURCES}
+  ${ADDITONAL_HOSTS_SOURCES}
 "
 
 # Regex allowed
