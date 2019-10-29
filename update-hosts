@@ -1262,9 +1262,14 @@ main_hosts()
     # If we can write to the destination, we don't need sudo
     main_hosts__sudo=""
   else
-    action_msg "sudo is needed to write to file: %s" "${main_hosts__file}"
-    grab_sudo || return 1
-    main_hosts__sudo="sudo"
+    if sudo -n -v > /dev/null 2>&1; then
+      # If we can already use sudo, we don't need to prompt for it again
+      main_hosts__sudo="sudo"
+    else
+      action_msg "sudo is needed to write to file: %s" "${main_hosts__file}"
+      grab_sudo || return 1
+      main_hosts__sudo="sudo"
+    fi
   fi
 
   backup_old_file "${main_hosts__sudo}" \
