@@ -1645,7 +1645,7 @@ main()
   readonly user_hosts="${HOME}/.update-hosts"
   if [ -e "${user_hosts}" ] && [ -r "${user_hosts}" ]; then
     info_msg "Source extra hosts from user default location: %s" "${user_hosts}"
-    extra_headers="# Extra hosts from '${user_hosts}'
+    extra_headers="# Extra hosts from user default file '${user_hosts}'
     $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${user_hosts}" | uniq)
 
     ${extra_headers}"
