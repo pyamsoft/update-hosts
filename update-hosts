@@ -1223,18 +1223,16 @@ EOF
 ##
 # Main function which handles the downloading of hosts files
 #
-# $1 needs_sudo
-# $2 hosts file destination
-# $3 destination IP address
-# $4 remove backups
-# $5 extra headers
+# $1 hosts file destination
+# $2 destination IP address
+# $3 remove backups
+# $4 extra headers
 main_hosts()
 {
-  main_hosts__sudo="$1"
-  main_hosts__file="$2"
-  main_hosts__ip="$3"
-  main_hosts__remove_backup="$4"
-  main_hosts__extra_headers="$5"
+  main_hosts__file="$1"
+  main_hosts__ip="$2"
+  main_hosts__remove_backup="$3"
+  main_hosts__extra_headers="$4"
 
   # Configuration
   print_hosts_config "${main_hosts__file}" "${main_hosts__ip}"
@@ -1255,13 +1253,24 @@ main_hosts()
   # Install
 
   info_msg "Create new hosts file"
-  hosts="$(generate_new_hosts_file "${main_hosts__extra_headers}")" || return 1
+  main_hosts__hosts="$(generate_new_hosts_file "${main_hosts__extra_headers}")" || return 1
   main_hosts__file_backup="$(create_backup_name \
     "${main_hosts__file}")" || return 1
+
+  main_hosts__sudo=
+  if touch "${main_hosts__file}" > /dev/null 2>&1; then
+    # If we can write to the destination, we don't need sudo
+    main_hosts__sudo=""
+  else
+    action_msg "sudo is needed to write to file: %s" "${main_hosts__file}"
+    grab_sudo || return 1
+    main_hosts__sudo="sudo"
+  fi
+
   backup_old_file "${main_hosts__sudo}" \
     "${main_hosts__file}" "${main_hosts__file_backup}" || return 1
   install_new_hosts_file "${main_hosts__sudo}" \
-    "${hosts}" "${main_hosts__file}" || return 1
+    "${main_hosts__hosts}" "${main_hosts__file}" || return 1
   fix_file_permissons "${main_hosts__sudo}" \
     "${main_hosts__file}" || return 1
   fix_file_permissons "${main_hosts__sudo}" \
@@ -1275,7 +1284,7 @@ main_hosts()
       "${main_hosts__file}" || return 1
   fi
 
-  unset hosts
+  unset main_hosts__hosts
   unset main_hosts__sudo
   unset main_hosts__file
   unset main_hosts__file_backup
@@ -1560,18 +1569,8 @@ main()
   # Trap return signals
   trap cancel_sudoloop INT TERM
 
-  needs_sudo=
   # If we are not root
-  if [ "$(id -u)" -ne 0 ]; then
-    if touch "${dst_hosts}" > /dev/null 2>&1; then
-      # If we can write to the destination, we don't need sudo
-      needs_sudo=""
-    else
-      action_msg "sudo is needed to write to file: %s" "${dst_hosts}"
-      grab_sudo || return 1
-      needs_sudo="sudo"
-    fi
-  else
+  if [ "$(id -u)" -eq 0 ]; then
     error_msg "You cannot run update-hosts as root. Please run as a normal user."
     return 1
   fi
@@ -1601,7 +1600,7 @@ main()
   fi
 
   # Parse hosts files
-  main_hosts "${needs_sudo}" "${dst_hosts}" \
+  main_hosts "${dst_hosts}" \
     "${dst_ip}" "${remove_backups}" "${extra_headers}" || return 1
 
   if [ "${manage_ipsets}" -eq 0 ]; then
