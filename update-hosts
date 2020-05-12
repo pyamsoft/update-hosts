@@ -1723,7 +1723,6 @@ readonly BASE_HOSTS_SOURCES='
   https://someonewhocares.org/hosts/hosts
   https://mirror1.malwaredomains.com/files/immortal_domains.txt
   https://adaway.org/hosts.txt
-  https://hosts-file.net/ad_servers.txt
   https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
   https://pgl.yoyo.org/adservers/admiral-domains.txt
   https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
@@ -1732,6 +1731,9 @@ readonly BASE_HOSTS_SOURCES='
   https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
   https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
   https://gitlab.com/ZeroDot1/CoinBlockerLists/raw/master/hosts
+
+  # I think the site has been taken down
+  # https://hosts-file.net/ad_servers.txt
 '
 
 # Additional hosts file servers
