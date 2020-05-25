@@ -1652,6 +1652,29 @@ main()
     ${extra_headers}"
   fi
 
+  # Source extra hosts whitelist from default user location
+  # Trim whitespace off of hosts file
+  readonly user_whitelist="${HOME}/.update-hosts.whitelist"
+  if [ -e "${user_whitelist}" ] && [ -r "${user_whitelist}" ]; then
+    info_msg "Source extra hosts whitelist from user default location: %s" "${user_whitelist}"
+    HOSTS_WHITELIST="
+    $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${user_whitelist}" | uniq)
+    ${HOSTS_WHITELIST}
+    "
+  fi
+  echo "WHITELIST: ${HOSTS_WHITELIST}"
+
+  # Source extra hosts blacklist from default user location
+  # Trim whitespace off of hosts file
+  readonly user_blacklist="${HOME}/.update-hosts.blacklist"
+  if [ -e "${user_blacklist}" ] && [ -r "${user_blacklist}" ]; then
+    info_msg "Source extra hosts blacklist from user default location: %s" "${user_blacklist}"
+    HOSTS_BLACKLIST="
+    $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${user_blacklist}" | uniq)
+    ${HOSTS_BLACKLIST}
+    "
+  fi
+
   # Parse hosts files
   main_hosts "${lock_sudoloop}" "${dst_hosts}" \
     "${dst_ip}" "${remove_backups}" "${extra_headers}" || return 1
@@ -1967,7 +1990,6 @@ readonly ADVERTISEMENT_BLACKLIST='
   bounceexchange.com
   pagead46.l.doubleclick.net
   pagead.l.doubleclick.net
-  googlehosted.l.googleusercontent.com
   video-ad-stats.googlesyndication.com
   pagead-googlehosted.l.google.com
   partnerad.l.doubleclick.net
