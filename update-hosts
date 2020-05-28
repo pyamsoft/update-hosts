@@ -1662,7 +1662,6 @@ main()
     ${HOSTS_WHITELIST}
     "
   fi
-  echo "WHITELIST: ${HOSTS_WHITELIST}"
 
   # Source extra hosts blacklist from default user location
   # Trim whitespace off of hosts file
