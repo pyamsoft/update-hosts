@@ -39,7 +39,7 @@ url="https://github.com/pyamsoft/update-hosts.git"
 # shellcheck disable=SC2034
 sha256sums=('SKIP')
 # shellcheck disable=SC2034
-source=("${_gitname}::git+${url}#branch=master")
+source=("${_gitname}::git+${url}#branch=main")
 
 ###############################################################################
 
