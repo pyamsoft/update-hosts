@@ -2215,7 +2215,7 @@ readonly USER_BLACKLIST='
 
 # hosts_blacklist DOMAINS
 # Only exact strings, no regex supported
-readonly HOSTS_BLACKLIST="
+HOSTS_BLACKLIST="
   ${JUMPSCARE_BLACKLIST}
   ${ADVERTISEMENT_BLACKLIST}
   ${BAD_SITE_BLACKLIST}
