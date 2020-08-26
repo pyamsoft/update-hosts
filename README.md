@@ -41,7 +41,6 @@ The main differences being:
 - https://someonewhocares.org/hosts/hosts
 - https://mirror1.malwaredomains.com/files/immortal_domains.txt
 - https://adaway.org/hosts.txt
-- https://hosts-file.net/ad_servers.txt
 - https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
 - https://pgl.yoyo.org/adservers/admiral-domains.txt
 - https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
@@ -49,14 +48,16 @@ The main differences being:
 - https://s3.amazonaws.com/lists.disconnect.me/simple_malware.txt
 - https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
 - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
-- https://zerodot1.gitlab.io/CoinBlockerLists/hosts
+- https://gitlab.com/ZeroDot1/CoinBlockerLists/raw/master/hosts
+- https://blokada.org/blocklists/ddgtrackerradar/standard/hosts.txt
+- http://winhelp2002.mvps.org/hosts.txt
 
 ### Additional sources
 
 - https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt
+- https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
 - https://raw.githubusercontent.com/EnergizedProtection/block/master/basic/formats/hosts
 - https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Hosts/GoodbyeAds.txt
-- https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
 - https://zerodot1.gitlab.io/CoinBlockerLists/hosts_browser
 - https://zerodot1.gitlab.io/CoinBlockerLists/hosts_optional
 - https://hosts-file.net/emd.txt
@@ -67,6 +68,7 @@ The main differences being:
 - https://hosts-file.net/psh.txt
 - http://hosts-file.net/download/hosts.txt
 - http://hosts-file.net/hphosts-partial.txt
+- http://malwaredomains.lehigh.edu/files/justdomains
 
 ## Ipset Sources
 

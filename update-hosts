@@ -1753,6 +1753,8 @@ readonly BASE_HOSTS_SOURCES='
   https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
   https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
   https://gitlab.com/ZeroDot1/CoinBlockerLists/raw/master/hosts
+  https://blokada.org/blocklists/ddgtrackerradar/standard/hosts.txt
+  http://winhelp2002.mvps.org/hosts.txt
 
   # I think the site has been taken down
   # https://hosts-file.net/ad_servers.txt
@@ -1796,7 +1798,6 @@ readonly ADDITONAL_HOSTS_SOURCES='
   # http://hosts-file.net/hphosts-partial.txt
 
   # HTTP Sources
-  # http://winhelp2002.mvps.org/hosts.txt
   # http://malwaredomains.lehigh.edu/files/justdomains
 '
 
