@@ -18,8 +18,10 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 [Unit]
-Description=Update hosts file
+Description=update-hosts automatic hosts file update
 
 [Service]
 Type=oneshot
-ExecStart=update-hosts
+TimeoutSec=300
+ExecStartPre=/bin/sh -c 'until ping -c 1 raw.githubusercontent.com; do sleep 10; done'
+ExecStart=/bin/sh -c 'update-hosts'

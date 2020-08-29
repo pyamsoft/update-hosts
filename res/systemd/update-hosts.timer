@@ -18,13 +18,15 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 [Unit]
-; Description=Update hosts file daily
-Description=DO NOT USE. The timer service is currently buggy and causes the hosts file to be overwritten to empty.
+Description=update-hosts daily timer
+After=network.target network-online.target
+Requires=network-online.target
 
 [Timer]
 OnCalendar=daily
-AccuracySec=1h
+RandomizedDelaySec=3600
 Persistent=true
+Unit=update-hosts.service
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=timers.target

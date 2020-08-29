@@ -19,16 +19,25 @@
 NAME?=update-hosts
 PREFIX?=/usr/local
 MAKEFLAGS:= $(MAKEFLAGS) --no-print-directory
+SYSTEMD_PATH=/usr/lib/systemd/system
 
 SCRIPT_INSTALL_SRC="update-hosts"
 DOC_INSTALL_SRC="README.md"
 LICENSE_INSTALL_SRC="LICENSE"
+SYSTEMD_SERVICE_NAME="update-hosts.service"
+SYSTEMD_TIMER_NAME="update-hosts.timer"
+SYSTEMD_INSTALL_SRC="res/systemd"
 
 SCRIPT_INSTALL_TARGET="$(DESTDIR)/$(PREFIX)/bin/$(NAME)"
 DOC_INSTALL_TARGET="$(DESTDIR)/$(PREFIX)/share/doc/$(NAME)/README.md"
 LICENSE_INSTALL_TARGET="$(DESTDIR)/$(PREFIX)/share/doc/$(NAME)/LICENSE"
+SYSTEMD_INSTALL_TARGET="$(DESTDIR)/$(SYSTEMD_PATH)"
 
-.PHONY: all install uninstall install-script install-doc install-license uninstall-script uninstall-doc uninstall-license
+.PHONY: all \
+	install \
+		install-script install-doc install-license install-systemd \
+	uninstall \
+		uninstall-script uninstall-doc uninstall-license uninstall-systemd
 
 all:
 	@echo "Targets"
@@ -50,11 +59,19 @@ install-license:
 	@mkdir -p "$(shell dirname $(LICENSE_INSTALL_TARGET))"
 	@install -Dm 644 "$(LICENSE_INSTALL_SRC)" "$(LICENSE_INSTALL_TARGET)"
 
+install-systemd:
+	@echo "  INSTALL  $(SYSTEMD_INSTALL_TARGET)/$(SYSTEMD_SERVICE_NAME)"
+	@echo "  INSTALL  $(SYSTEMD_INSTALL_TARGET)/$(SYSTEMD_TIMER_NAME)"
+	@mkdir -p "$(shell dirname $(SYSTEMD_INSTALL_TARGET))"
+	@install -Dm 644 "$(SYSTEMD_INSTALL_SRC)/$(SYSTEMD_SERVICE_NAME)" "$(SYSTEMD_INSTALL_TARGET)"
+	@install -Dm 644 "$(SYSTEMD_INSTALL_SRC)/$(SYSTEMD_TIMER_NAME)" "$(SYSTEMD_INSTALL_TARGET)"
+
 install:
 	@echo "Installing..."
 	@$(MAKE) install-script
 	@$(MAKE) install-doc
 	@$(MAKE) install-license
+	@$(MAKE) install-systemd
 
 uninstall-script:
 	@echo "  UNINSTALL  $(SCRIPT_INSTALL_TARGET)"
@@ -71,8 +88,16 @@ uninstall-license:
 	@rm -f "$(LICENSE_INSTALL_TARGET)"
 	@rmdir --ignore-fail-on-non-empty "$(shell dirname $(LICENSE_INSTALL_TARGET))"
 
+uninstall-systemd:
+	@echo "  UNINSTALL  $(SYSTEMD_INSTALL_TARGET)/$(SYSTEMD_SERVICE_NAME)"
+	@echo "  UNINSTALL  $(SYSTEMD_INSTALL_TARGET)/$(SYSTEMD_TIMER_NAME)"
+	@rm -f "$(SYSTEMD_INSTALL_TARGET)/$(SYSTEMD_SERVICE_NAME)"
+	@rm -f "$(SYSTEMD_INSTALL_TARGET)/$(SYSTEMD_TIMER_NAME)"
+	@rmdir --ignore-fail-on-non-empty "$(shell dirname $(SYSTEMD_INSTALL_TARGET))"
+
 uninstall:
 	@echo "Uninstalling..."
 	@$(MAKE) uninstall-script
 	@$(MAKE) uninstall-doc
 	@$(MAKE) uninstall-license
+	@$(MAKE) uninstall-systemd
