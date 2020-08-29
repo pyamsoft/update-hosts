@@ -28,32 +28,51 @@ SCRIPT_INSTALL_TARGET="$(DESTDIR)/$(PREFIX)/bin/$(NAME)"
 DOC_INSTALL_TARGET="$(DESTDIR)/$(PREFIX)/share/doc/$(NAME)/README.md"
 LICENSE_INSTALL_TARGET="$(DESTDIR)/$(PREFIX)/share/doc/$(NAME)/LICENSE"
 
-.PHONY: all install uninstall
+.PHONY: all install uninstall install-script install-doc install-license uninstall-script uninstall-doc uninstall-license
 
 all:
 	@echo "Targets"
 	@echo " install uninstall"
 	@echo $(TARGET)
 
-install:
-	@echo "Installing..."
+install-script:
 	@echo "  INSTALL  $(SCRIPT_INSTALL_TARGET)"
 	@mkdir -p "$(shell dirname $(SCRIPT_INSTALL_TARGET))"
 	@install -Dm 755 "$(SCRIPT_INSTALL_SRC)" "$(SCRIPT_INSTALL_TARGET)"
+
+install-doc:
 	@echo "  INSTALL  $(DOC_INSTALL_TARGET)"
 	@mkdir -p "$(shell dirname $(DOC_INSTALL_TARGET))"
 	@install -Dm 644 "$(DOC_INSTALL_SRC)" "$(DOC_INSTALL_TARGET)"
+
+install-license:
 	@echo "  INSTALL  $(LICENSE_INSTALL_TARGET)"
 	@mkdir -p "$(shell dirname $(LICENSE_INSTALL_TARGET))"
 	@install -Dm 644 "$(LICENSE_INSTALL_SRC)" "$(LICENSE_INSTALL_TARGET)"
 
-uninstall:
-	@echo "Uninstalling..."
+install:
+	@echo "Installing..."
+	@$(MAKE) install-script
+	@$(MAKE) install-doc
+	@$(MAKE) install-license
+
+uninstall-script:
 	@echo "  UNINSTALL  $(SCRIPT_INSTALL_TARGET)"
 	@rm -f "$(SCRIPT_INSTALL_TARGET)"
+	@rmdir --ignore-fail-on-non-empty "$(shell dirname $(SCRIPT_INSTALL_TARGET))"
+
+uninstall-doc:
 	@echo "  UNINSTALL  $(DOC_INSTALL_TARGET)"
 	@rm -f "$(DOC_INSTALL_TARGET)"
 	@rmdir --ignore-fail-on-non-empty "$(shell dirname $(DOC_INSTALL_TARGET))"
+
+uninstall-license:
 	@echo "  UNINSTALL  $(LICENSE_INSTALL_TARGET)"
 	@rm -f "$(LICENSE_INSTALL_TARGET)"
 	@rmdir --ignore-fail-on-non-empty "$(shell dirname $(LICENSE_INSTALL_TARGET))"
+
+uninstall:
+	@echo "Uninstalling..."
+	@$(MAKE) uninstall-script
+	@$(MAKE) uninstall-doc
+	@$(MAKE) uninstall-license
