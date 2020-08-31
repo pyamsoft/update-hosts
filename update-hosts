@@ -1638,37 +1638,40 @@ main()
     "
   fi
 
-  # Source extra hosts from default user location
-  # Trim whitespace off of hosts file
-  readonly user_hosts="${HOME}/.update-hosts"
-  if [ -e "${user_hosts}" ] && [ -r "${user_hosts}" ]; then
-    info_msg "Source extra hosts from user default location: %s" "${user_hosts}"
-    extra_headers="# Extra hosts from user default file '${user_hosts}'
-    $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${user_hosts}" | uniq)
+  # Only source from home if running normally
+  if [ "${using_systemd}" -eq 0 ]; then
+    # Source extra hosts from default user location
+    # Trim whitespace off of hosts file
+    readonly user_hosts="${HOME}/.update-hosts"
+    if [ -e "${user_hosts}" ] && [ -r "${user_hosts}" ]; then
+      info_msg "Source extra hosts from user default location: %s" "${user_hosts}"
+      extra_headers="# Extra hosts from user default file '${user_hosts}'
+      $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${user_hosts}" | uniq)
 
-    ${extra_headers}"
-  fi
+      ${extra_headers}"
+    fi
 
-  # Source extra hosts whitelist from default user location
-  # Trim whitespace off of hosts file
-  readonly user_whitelist="${HOME}/.update-hosts.whitelist"
-  if [ -e "${user_whitelist}" ] && [ -r "${user_whitelist}" ]; then
-    info_msg "Source extra hosts whitelist from user default location: %s" "${user_whitelist}"
-    HOSTS_WHITELIST="
-    $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${user_whitelist}" | uniq)
-    ${HOSTS_WHITELIST}
-    "
-  fi
+    # Source extra hosts whitelist from default user location
+    # Trim whitespace off of hosts file
+    readonly user_whitelist="${HOME}/.update-hosts.whitelist"
+    if [ -e "${user_whitelist}" ] && [ -r "${user_whitelist}" ]; then
+      info_msg "Source extra hosts whitelist from user default location: %s" "${user_whitelist}"
+      HOSTS_WHITELIST="
+      $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${user_whitelist}" | uniq)
+      ${HOSTS_WHITELIST}
+      "
+    fi
 
-  # Source extra hosts blacklist from default user location
-  # Trim whitespace off of hosts file
-  readonly user_blacklist="${HOME}/.update-hosts.blacklist"
-  if [ -e "${user_blacklist}" ] && [ -r "${user_blacklist}" ]; then
-    info_msg "Source extra hosts blacklist from user default location: %s" "${user_blacklist}"
-    HOSTS_BLACKLIST="
-    $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${user_blacklist}" | uniq)
-    ${HOSTS_BLACKLIST}
-    "
+    # Source extra hosts blacklist from default user location
+    # Trim whitespace off of hosts file
+    readonly user_blacklist="${HOME}/.update-hosts.blacklist"
+    if [ -e "${user_blacklist}" ] && [ -r "${user_blacklist}" ]; then
+      info_msg "Source extra hosts blacklist from user default location: %s" "${user_blacklist}"
+      HOSTS_BLACKLIST="
+      $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${user_blacklist}" | uniq)
+      ${HOSTS_BLACKLIST}
+      "
+    fi
   fi
 
   # Parse hosts files
