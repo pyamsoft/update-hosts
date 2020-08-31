@@ -24,4 +24,4 @@ Description=update-hosts automatic hosts file update
 Type=oneshot
 TimeoutSec=300
 ExecStartPre=/bin/sh -c 'until ping -c 1 raw.githubusercontent.com; do sleep 10; done'
-ExecStart=/bin/sh -c 'update-hosts'
+ExecStart=/bin/sh -c 'update-hosts --systemd'

@@ -1234,6 +1234,8 @@ Options:
    --dest-ip [ip-address]  The destination IP to use
    --sudoloop              Once sudo is claimed, keep hold of it
                            through the entire script.
+
+   --systemd               Used by systemd service file
 EOF
 )"
   return 0
@@ -1430,6 +1432,7 @@ main()
   apply_unbreak=0
   extra_headers=""
   lock_sudoloop=0
+  using_systemd=0
 
   # Script begins here
   dst_hosts="/etc/hosts"
@@ -1456,18 +1459,6 @@ main()
   check_for_binary awk || return 1
 
   # Handle options
-  # Options
-  #   -h | --help     Display help
-  #   -v | --version  Display version
-  #   -r | --remove   Remove backups
-  #   -i | --ipset    Also download ipset sources
-  #   -u | --unbreak  Auto apply the Unbreak whitelist
-  #   --source        Source a hosts file part
-  #   --output-hosts  The file to output hosts to
-  #   --output-ipset  The file to output ipsets to
-  #   --ipset-name    The name of the ipset
-  #   --dest-ip       The destination IP to use
-  #
   # While risky to call eval, this is one way to
   # emulate the bash indirect_expansion ability
   if [ $# -gt 0 ]; then
@@ -1505,6 +1496,9 @@ main()
                 ;;
               unbreak)
                 apply_unbreak=1
+                ;;
+              systemd)
+                using_systemd=1
                 ;;
               output-hosts|output-ipset|ipset-name|dest-ip|source)
                 long_option="${OPTARG}"
@@ -1624,8 +1618,11 @@ main()
 
   # If we are not root
   if [ "$(id -u)" -eq 0 ]; then
-    error_msg "You cannot run update-hosts as root. Please run as a normal user."
-    return 1
+    # If we are systemd thats okay I guess.
+    if [ "${using_systemd}" -eq 0 ]; then
+      error_msg "You cannot run update-hosts as root. Please run as a normal user."
+      return 1
+    fi
   fi
 
 
