@@ -49,8 +49,11 @@ action_msg()
   action_msg__message="$1"
   shift
 
-  printf -- "%b + %b${action_msg__message}%b\\n" "\\033[1;33m" "\\033[1;32m" \
-    "$@" "\\033[0m"
+  printf -- "%b + %b${action_msg__message}%b\\n" \
+    '\033[1;33m' \
+    '\033[1;32m' \
+    "$@" \
+    '\033[0m'
 
   unset action_msg__message
   return 0
@@ -68,8 +71,11 @@ error_msg()
   error_msg__message="$1"
   shift
 
-  printf -- "%b + %b${error_msg__message}%b\\n" "\\033[1;33m" "\\033[1;31m" \
-    "$@" "\\033[0m"
+  printf -- "%b + %b${error_msg__message}%b\\n" \
+    '\033[1;33m' \
+    '\033[1;31m' \
+    "$@" \
+    '\033[0m'
 
   unset error_msg__message
   return 0
@@ -88,9 +94,152 @@ info_msg()
   shift
 
   # shellcheck disable=SC2059
-  printf -- "   - ${info_msg__message}\\n" "$@"
+  printf -- "   - ${info_msg__message}%b\\n" \
+    "$@" \
+    '\033[0m'
 
   unset info_msg__message
+  return 0
+}
+
+##
+# Display a source snippet
+#
+# $1 Index
+# $2 Source
+# $@ Message
+##
+source_msg()
+{
+  if [ "$#" -le 2 ]; then
+    return 1
+  fi
+
+  source_msg__index="$1"
+  source_msg__source="$2"
+  source_msg__message="$3"
+  shift
+  shift
+  shift
+
+  # shellcheck disable=SC2059
+  printf -- "   %b${source_msg__source}%b  ${source_msg__message}%b\\n" \
+    "\\033[1;$(color_for_index "${source_msg__index}")m" \
+    '\033[0m' \
+    "$@" \
+    '\033[0m'
+
+  unset source_msg__index
+  unset source_msg__source
+  unset source_msg__message
+  return 0
+}
+
+##
+# Display a source error snippet
+#
+# $1 Index
+# $2 Source
+# $@ Message
+##
+source_err_msg()
+{
+  if [ "$#" -le 2 ]; then
+    return 1
+  fi
+
+  source_err_msg__index="$1"
+  source_err_msg__source="$2"
+  source_err_msg__message="$3"
+  shift
+  shift
+  shift
+
+  # shellcheck disable=SC2059
+  printf -- "   %b${source_err_msg__source}%b  %b${source_err_msg__message}%b\\n" \
+    "\\033[1;$(color_for_index "${source_err_msg__index}")m" \
+    '\033[1;37m' \
+    '\033[1;31m' \
+    "$@" \
+    '\033[0m'
+
+  unset source_err_msg__index
+  unset source_err_msg__source
+  unset source_err_msg__message
+  return 0
+}
+
+##
+# Get a unique color given an index
+#
+# $1 index
+##
+color_for_index()
+{
+  color_for_index__count="$1"
+
+  color_for_index__i=0
+  color_for_index__is_underlined=0
+  color_for_index__is_bg=0
+
+  # Start at 29 because fg is always incremented by 1
+  color_for_index__fg=29
+
+  while [ "${color_for_index__i}" -lt "${color_for_index__count}" ]; do
+    color_for_index__i=$((color_for_index__i + 1))
+    color_for_index__fg=$((color_for_index__fg + 1))
+
+    # If we land on red bump again
+    if [ "${color_for_index__fg}" -eq 31 ]; then
+      color_for_index__fg=$((color_for_index__fg + 1))
+    fi
+
+    # If we overflow go back to beginning
+    if [ "${color_for_index__fg}" -gt 37 ]; then
+      color_for_index__fg=30
+
+      # Enable underline if needed
+      if [ "${color_for_index__is_underlined}" -ne 0 ]; then
+
+        # We may enable the background and turn off underline
+        # But if this happens yet again, we will do background with underline
+        if [ "${color_for_index__is_bg}" -eq 0 ]; then
+          color_for_index__is_underlined=0
+          color_for_index__is_bg=1
+        fi
+      else
+        color_for_index__is_underlined=1
+      fi
+    fi
+  done
+
+  color_for_index__underline=''
+  if [ "${color_for_index__is_underlined}" -ne 0 ]; then
+    color_for_index__underline=';4'
+  fi
+
+  color_for_index__bg=''
+  if [ "${color_for_index__is_bg}" -ne 0 ]; then
+    color_for_index__bg=';40'
+  fi
+
+  # Color
+  printf -- "%s%s%s" \
+    "${color_for_index__fg}" \
+    "${color_for_index__underline}" \
+    "${color_for_index__bg}"
+
+  unset color_for_index__i
+  unset color_for_index__count
+
+  unset color_for_index__is_underlined
+  unset color_for_index__underline
+
+  unset color_for_index__is_bg
+  unset color_for_index__bg
+
+  unset color_for_index__fg
+
   return 0
 }
 
@@ -253,23 +402,28 @@ decide_dl_client()
 ##
 # Process each temporary Ipset source file
 #
-# $1 temporary file location
-# $2 source url
+# $1 Index
+# $2 temporary file location
+# $3 source url
 ##
 process_ipset_sources()
 {
-  process_ipset_sources__file="$1"
-  process_ipset_sources__url="$2"
+  process_ipset_sources__index="$1"
+  process_ipset_sources__file="$2"
+  process_ipset_sources__url="$3"
 
-  change_eol "${process_ipset_sources__file}" \
-    "${process_ipset_sources__url}"
-  remove_comments "${process_ipset_sources__file}" \
-    "${process_ipset_sources__url}"
-  trim_whitespace "${process_ipset_sources__file}" \
-    "${process_ipset_sources__url}"
-  select_ip_lines "${process_ipset_sources__file}" \
-    "${process_ipset_sources__url}"
+  change_eol "${process_ipset_sources__index}" \
+    "${process_ipset_sources__file}" "${process_ipset_sources__url}"
+  remove_comments "${process_ipset_sources__index}" \
+    "${process_ipset_sources__file}" "${process_ipset_sources__url}"
+  trim_whitespace "${process_ipset_sources__index}" \
+    "${process_ipset_sources__file}" "${process_ipset_sources__url}"
+  select_ip_lines "${process_ipset_sources__index}" \
+    "${process_ipset_sources__file}" "${process_ipset_sources__url}"
+  normalize_to_lowercase "${process_ipset_sources__index}" \
+    "${process_ipset_sources__file}" "${process_ipset_sources__url}"
 
+  unset process_ipset_sources__index
   unset process_ipset_sources__file
   unset process_ipset_sources__url
   return 0
@@ -278,29 +432,32 @@ process_ipset_sources()
 ##
 # Process each temporary hosts source file
 #
-# $1 temporary file location
-# $2 source url
+# $1 Index
+# $2 temporary file location
+# $3 source url
 ##
 process_hosts_sources()
 {
-  process_hosts_sources__file="$1"
-  process_hosts_sources__url="$2"
+  process_hosts_sources__index="$1"
+  process_hosts_sources__file="$2"
+  process_hosts_sources__url="$3"
 
-  change_eol "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
-  remove_comments "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
-  trim_whitespace "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
-  select_host_lines "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
-  remove_untrusted_domain "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
-  normalize_to_lowercase "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
-  remove_local_entries "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
+  change_eol "${process_hosts_sources__index}" \
+    "${process_hosts_sources__file}" "${process_hosts_sources__url}"
+  remove_comments "${process_hosts_sources__index}" \
+    "${process_hosts_sources__file}" "${process_hosts_sources__url}"
+  trim_whitespace "${process_hosts_sources__index}" \
+    "${process_hosts_sources__file}" "${process_hosts_sources__url}"
+  select_host_lines "${process_hosts_sources__index}" \
+    "${process_hosts_sources__file}" "${process_hosts_sources__url}"
+  remove_untrusted_domain "${process_hosts_sources__index}" \
+    "${process_hosts_sources__file}" "${process_hosts_sources__url}"
+  normalize_to_lowercase "${process_hosts_sources__index}" \
+    "${process_hosts_sources__file}" "${process_hosts_sources__url}"
+  remove_local_entries "${process_hosts_sources__index}" \
+    "${process_hosts_sources__file}" "${process_hosts_sources__url}"
 
+  unset process_hosts_sources__index
   unset process_hosts_sources__file
   unset process_hosts_sources__url
   return 0
@@ -309,24 +466,28 @@ process_hosts_sources()
 ##
 # Parse the hosts file together from the various sources
 #
-# $1 The HTTP client to use
-# $2 The URL of the source
-# $3 The temporary file location
-# $4 The command to run after downloading, begins with process_*
+# $1 Index
+# $2 The HTTP client to use
+# $3 The URL of the source
+# $4 The temporary file location
+# $5 The command to run after downloading, begins with process_*
 ##
 download_to_tempfile()
 {
-  download_to_tempfile__client="$1"
-  download_to_tempfile__url="$2"
-  download_to_tempfile__file="$3"
-  download_to_tempfile__process_hook="$4"
+  download_to_tempfile__index="$1"
+  download_to_tempfile__client="$2"
+  download_to_tempfile__url="$3"
+  download_to_tempfile__file="$4"
+  download_to_tempfile__process_hook="$5"
   download_to_tempfile__content=
 
-  info_msg "Downloading from %s" "${download_to_tempfile__url}"
+  source_msg "${download_to_tempfile__index}" "${download_to_tempfile__url}" \
+    "Downloading..."
   download_to_tempfile__content="$(printf -- "%s" \
     "$(${download_to_tempfile__client} "${download_to_tempfile__url}")")"
   if [ -z "${download_to_tempfile__content}" ]; then
-    error_msg "Failed to download from: %s" "${download_to_tempfile__url}"
+    source_err_msg "${download_to_tempfile__index}" "${download_to_tempfile__url}" \
+      "Failed to download."
     return 1
   fi
 
@@ -336,7 +497,9 @@ download_to_tempfile()
 
   # Run after download processing hook
   "${download_to_tempfile__process_hook}" \
-    "${download_to_tempfile__file}" "${download_to_tempfile__url}"
+    "${download_to_tempfile__index}" \
+    "${download_to_tempfile__file}" \
+    "${download_to_tempfile__url}"
 
   unset download_to_tempfile__client
   unset download_to_tempfile__process_hook
@@ -365,6 +528,8 @@ download_sources()
   download_sources__old_ifs="${IFS}"
   IFS="
 "
+
+  download_sources__i=0
   for download_sources__url in ${download_sources__sources}; do
     # Set the IFS back to normal
     IFS="${download_sources__old_ifs}"
@@ -385,8 +550,10 @@ download_sources()
           # Add the tempfile to list of temporary files
           __temp_files="${download_sources__tempfile} "${__temp_files}
 
-          download_to_tempfile "${download_sources__client}" \
-            "${download_sources__url}" "${download_sources__tempfile}" \
+          download_to_tempfile "${download_sources__i}" \
+            "${download_sources__client}" \
+            "${download_sources__url}" \
+            "${download_sources__tempfile}" \
             "${download_sources__process_hook}" &
 
           # Add the pid to list of pids
@@ -401,6 +568,7 @@ download_sources()
     # Set the IFS back to weird
     IFS="
 "
+    download_sources__i=$((download_sources__i + 1))
   done
 
   # Set the IFS back to normal
@@ -446,20 +614,25 @@ download_sources()
 ##
 # Change EOL from DOS to Unix format
 #
-# $1 file location
-# $2 source url
+# $1 Index
+# $2 file location
+# $3 source url
 ##
 change_eol()
 {
-  change_eol__file="$1"
-  change_eol__url="$2"
-  info_msg "Change EOL to Unix format: %s (%s)" "${change_eol__url}" \
-    "${change_eol__file}"
+  change_eol__index="$1"
+  change_eol__file="$2"
+  change_eol__url="$3"
+
+  source_msg "${change_eol__index}" "${change_eol__url}" \
+    "Change EOL to Unix format: %s" "${change_eol__file}"
+
   # Use tr instead of GNU sed extension
   change_eol__contents="$(tr -d '\r' < "${change_eol__file}")"
   printf -- "%s\\n" "${change_eol__contents}" > "${change_eol__file}"
 
   unset change_eol__contents
+  unset change_eol__index
   unset change_eol__file
   unset change_eol__url
   return 0
@@ -468,14 +641,18 @@ change_eol()
 ##
 # Remove comments from files
 #
-# $1 file location
-# $2 source url
+# $1 Index
+# $2 file location
+# $3 source url
 ##
 remove_comments()
 {
-  remove_comments__file="$1"
-  remove_comments__url="$2"
-  info_msg "Remove any comments from file: %s (%s)" "${remove_comments__url}" \
+  remove_comments__index="$1"
+  remove_comments__file="$2"
+  remove_comments__url="$3"
+
+  source_msg "${remove_comments__index}" "${remove_comments__url}" \
+    "Remove any comments from file: %s" \
     "${remove_comments__file}"
 
   # Removes comments from files
@@ -483,6 +660,7 @@ remove_comments()
   printf -- "%s\\n" "${remove_comments__contents}" > "${remove_comments__file}"
 
   unset remove_comments__contents
+  unset remove_comments__index
   unset remove_comments__file
   unset remove_comments__url
   return 0
@@ -491,15 +669,18 @@ remove_comments()
 ##
 # Remove whitespace from files
 #
-# $1 file location
-# $2 source url
+# $1 Index
+# $2 file location
+# $3 source url
 ##
 trim_whitespace()
 {
-  trim_whitespace__file="$1"
-  trim_whitespace__url="$2"
-  info_msg "Trim whitespace from lines in: %s (%s)" "${trim_whitespace__url}" \
-    "${trim_whitespace__file}"
+  trim_whitespace__index="$1"
+  trim_whitespace__file="$2"
+  trim_whitespace__url="$3"
+
+  source_msg "${trim_whitespace__index}" "${trim_whitespace__url}" \
+    "Trim whitespace from lines in: %s" "${trim_whitespace__file}"
 
   # Trim whitespace from lines
   trim_whitespace__contents="$(sed 's/[[:blank:]]*$//g; s/^[[:blank:]]*//g' \
@@ -511,6 +692,7 @@ trim_whitespace()
   printf -- "%s\\n" "${trim_whitespace__contents}" > "${trim_whitespace__file}"
 
   unset trim_whitespace__contents
+  unset trim_whitespace__index
   unset trim_whitespace__file
   unset trim_whitespace__url
   return 0
@@ -519,13 +701,15 @@ trim_whitespace()
 ##
 # Only select lines which contain a host, do not select comments/other
 #
-# $1 file location
-# $2 source url
+# $1 Index
+# $2 file location
+# $3 source url
 ##
 select_host_lines()
 {
-  select_host_lines__file="$1"
-  select_host_lines__url="$2"
+  select_host_lines__index="$1"
+  select_host_lines__file="$2"
+  select_host_lines__url="$3"
 
 
   # KLUDGE
@@ -533,8 +717,8 @@ select_host_lines()
   # sed -n -i -r "/(^(${ip_regex})|^)${domain_regex}/p" "$1"
   #
   # This is an ugly workaround
-  info_msg "Select only hosts lines: %s (%s)" "${select_host_lines__url}" \
-    "${select_host_lines__file}"
+  source_msg "${select_host_lines__index}" "${select_host_lines__url}" \
+    "Select only hosts lines: %s" "${select_host_lines__file}"
 
   # Technically this does not check that the actual digits are valid IP addresses
   # but that is alright because the IP addresses themselves will be replaced
@@ -550,6 +734,7 @@ select_host_lines()
   printf -- "%s" "${select_host_lines__content}" > "${select_host_lines__file}"
 
   unset select_host_lines__file
+  unset select_host_lines__index
   unset select_host_lines__url
   unset select_host_lines__content
   return 0
@@ -558,15 +743,18 @@ select_host_lines()
 ##
 # Only select lines which contain an ip, do not select comments/other
 #
-# $1 file location
-# $2 source url
+# $1 Index
+# $2 file location
+# $3 source url
 ##
 select_ip_lines()
 {
-  select_ip_lines__file="$1"
-  select_ip_lines__url="$2"
+  select_ip_lines__index="$1"
+  select_ip_lines__file="$2"
+  select_ip_lines__url="$3"
 
-  info_msg "Select only IP lines: %s (%s)" "${select_ip_lines__url}" "${select_ip_lines__file}"
+  source_msg "${select_ip_lines__index}" "${select_ip_lines__url}" \
+    "Select only IP lines: %s" "${select_ip_lines__file}"
 
   # Use awk to emulate grep -oE
   # we pass the regex in as a regex constant so that it is not evaulated wrongly by the shell
@@ -580,6 +768,7 @@ select_ip_lines()
   printf -- "%s" "${select_ip_lines__content}" > "${select_ip_lines__file}"
 
   unset select_ip_lines__content
+  unset select_ip_lines__index
   unset select_ip_lines__file
   unset select_ip_lines__url
   return 0
@@ -588,15 +777,18 @@ select_ip_lines()
 ##
 # Remove any predefined destinations, as they may be untrustworthy
 #
-# $1 file
-# $2 url
+# $1 Index
+# $2 file
+# $3 url
 ##
 remove_untrusted_domain()
 {
-  remove_untrusted_domain__file="$1"
-  remove_untrusted_domain__url="$2"
-  info_msg "Remove old destination: %s (%s)" "${remove_untrusted_domain__url}" \
-    "${remove_untrusted_domain__file}"
+  remove_untrusted_domain__index="$1"
+  remove_untrusted_domain__file="$2"
+  remove_untrusted_domain__url="$3"
+
+  source_msg "${remove_untrusted_domain__index}" "${remove_untrusted_domain__url}" \
+    "Remove old destination: %s" "${remove_untrusted_domain__file}"
 
   # Remove any domain that may be included in the downloaded file
   remove_untrusted_domain__content="$(sed 's/^.\{1,\}[[:blank:]]\{1,\}//g' \
@@ -605,6 +797,7 @@ remove_untrusted_domain()
     > "${remove_untrusted_domain__file}"
 
   unset remove_untrusted_domain__content
+  unset remove_untrusted_domain__index
   unset remove_untrusted_domain__file
   unset remove_untrusted_domain__url
   return 0
@@ -613,15 +806,18 @@ remove_untrusted_domain()
 ##
 # Normalize all entries to lowercase strings
 #
-# $1 file
-# $2 url
+# $1 Index
+# $2 file
+# $3 url
 ##
 normalize_to_lowercase()
 {
-  normalize_to_lowercase__file="$1"
-  normalize_to_lowercase__url="$2"
-  info_msg "Transform all entries to lowercase: %s (%s)" \
-    "${normalize_to_lowercase__url}" "${normalize_to_lowercase__file}"
+  normalize_to_lowercase__index="$1"
+  normalize_to_lowercase__file="$2"
+  normalize_to_lowercase__url="$3"
+
+  source_msg "${normalize_to_lowercase__index}" "${normalize_to_lowercase__url}" \
+    "Transform all entries to lowercase: %s" "${normalize_to_lowercase__file}"
 
   normalize_to_lowercase__content="$(tr '[:upper:]' '[:lower:]' \
     < "${normalize_to_lowercase__file}")"
@@ -629,6 +825,7 @@ normalize_to_lowercase()
     > "${normalize_to_lowercase__file}"
 
   unset normalize_to_lowercase__file
+  unset normalize_to_lowercase__index
   unset normalize_to_lowercase__url
   unset normalize_to_lowercase__content
   return 0
@@ -638,16 +835,18 @@ normalize_to_lowercase()
 # Remove any entries containing the localhost, as it will be added by
 # the hosts_header later on
 #
-# $1 file
-# $2 url
+# $1 Index
+# $2 file
+# $3 url
 ##
 remove_local_entries()
 {
-  remove_local_entries__file="$1"
-  remove_local_entries__url="$2"
+  remove_local_entries__index="$1"
+  remove_local_entries__file="$2"
+  remove_local_entries__url="$3"
 
-  info_msg "Remove local entries: %s (%s)" "${remove_local_entries__url}" \
-    "${remove_local_entries__file}"
+  source_msg "${remove_local_entries__index}" "${remove_local_entries__url}" \
+    "Remove local entries: %s" "${remove_local_entries__file}"
 
   # Remove any lines which include things like localhost, or localhost.localdomain
   readonly LOCAL_DOMAIN_REGEX='/\.\localdomain[[:blank:]]*$/d; /\.\local[[:blank:]]*$/d'
@@ -658,6 +857,7 @@ remove_local_entries()
     > "${remove_local_entries__file}"
 
   unset remove_local_entries__content
+  unset remove_local_entries__index
   unset remove_local_entries__file
   unset remove_local_entries__url
   return 0
