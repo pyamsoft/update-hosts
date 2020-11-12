@@ -251,8 +251,8 @@ check_for_download_ability()
 {
   if ! check_for_binary curl > /dev/null 2>&1; then
     if ! check_for_binary wget > /dev/null 2>&1; then
-      printf -- "Either wget or curl are required for this script\\n"
-      printf -- "Please install either 'wget' or 'curl' onto your system.\\n"
+      printf -- 'Either wget or curl are required for this script\n'
+      printf -- 'Please install either "wget" or "curl" onto your system.\n'
 
       return 1
     fi
@@ -492,7 +492,7 @@ download_to_tempfile()
   fi
 
   # Guarantee an empty file
-  printf -- "%s\\n" "${download_to_tempfile__content}" \
+  printf -- '%s\n' "${download_to_tempfile__content}" \
     > "${download_to_tempfile__file}"
 
   # Run after download processing hook
@@ -590,10 +590,10 @@ download_sources()
     download_sources__tempfile_content="$(cat "$f")"
     if [ -n "${download_sources__tempfile_content}" ]; then
       if [ -z "${__blocklist}" ]; then
-        __blocklist="$(printf -- "%s\\n" \
+        __blocklist="$(printf -- '%s\n' \
           "${download_sources__tempfile_content}")"
       else
-        __blocklist="$(printf -- "%s\\n%s\\n" \
+        __blocklist="$(printf -- '%s\n%s\n' \
           "${__blocklist}" "${download_sources__tempfile_content}")"
       fi
     fi
@@ -629,7 +629,7 @@ change_eol()
 
   # Use tr instead of GNU sed extension
   change_eol__contents="$(tr -d '\r' < "${change_eol__file}")"
-  printf -- "%s\\n" "${change_eol__contents}" > "${change_eol__file}"
+  printf -- '%s\n' "${change_eol__contents}" > "${change_eol__file}"
 
   unset change_eol__contents
   unset change_eol__index
@@ -657,7 +657,7 @@ remove_comments()
 
   # Removes comments from files
   remove_comments__contents="$(sed 's/#.*$//g' < "${remove_comments__file}")"
-  printf -- "%s\\n" "${remove_comments__contents}" > "${remove_comments__file}"
+  printf -- '%s\n' "${remove_comments__contents}" > "${remove_comments__file}"
 
   unset remove_comments__contents
   unset remove_comments__index
@@ -689,7 +689,7 @@ trim_whitespace()
   # Remove empty lines
   trim_whitespace__contents="$(printf -- "%s" "${trim_whitespace__contents}" \
     | sed '/^$/d')"
-  printf -- "%s\\n" "${trim_whitespace__contents}" > "${trim_whitespace__file}"
+  printf -- '%s\n' "${trim_whitespace__contents}" > "${trim_whitespace__file}"
 
   unset trim_whitespace__contents
   unset trim_whitespace__index
@@ -896,7 +896,7 @@ apply_whitelist()
           continue
           ;;
         *)
-          __blocklist="$(printf -- "%s\\n" "${__blocklist}" \
+          __blocklist="$(printf -- '%s\n' "${__blocklist}" \
             | sed "/${apply_whitelist__domain}/d")"
           unset apply_whitelist__domain
           ;;
@@ -951,7 +951,7 @@ apply_blacklist()
           if [ -z "${apply_blacklist__domains}" ]; then
             apply_blacklist__domains="${apply_blacklist__domain}"
           else
-            apply_blacklist__domains="$(printf -- "%s\\n%s\\n" \
+            apply_blacklist__domains="$(printf -- '%s\n%s\n' \
               "${apply_blacklist__domains}" \
               "${apply_blacklist__domain}")"
           fi
@@ -968,9 +968,9 @@ apply_blacklist()
   IFS="${apply_blacklist__old_ifs}"
 
   if [ -z "${__blocklist}" ]; then
-    __blocklist="$(printf -- "%s\\n" "${apply_blacklist__domains}")"
+    __blocklist="$(printf -- '%s\n' "${apply_blacklist__domains}")"
   else
-    __blocklist="$(printf -- "%s\\n%s\\n" \
+    __blocklist="$(printf -- '%s\n%s\n' \
       "${__blocklist}" "${apply_blacklist__domains}")"
   fi
 
@@ -985,7 +985,7 @@ apply_blacklist()
 remove_duplicates()
 {
   info_msg "Remove duplicate entries"
-  __blocklist="$(printf -- "%s\\n" "${__blocklist}" | uniq)"
+  __blocklist="$(printf -- '%s\n' "${__blocklist}" | uniq)"
 
   return 0
 }
@@ -996,7 +996,7 @@ remove_duplicates()
 sort_entries()
 {
   info_msg "Sort entries"
-  __blocklist="$(printf -- "%s\\n" "${__blocklist}" | sort)"
+  __blocklist="$(printf -- '%s\n' "${__blocklist}" | sort)"
 
   return 0
 }
@@ -1011,7 +1011,7 @@ add_new_destination()
   add_new_destination__ip="$1"
 
   info_msg "Add new destination"
-  __blocklist="$(printf -- "%s\\n" "${__blocklist}" \
+  __blocklist="$(printf -- '%s\n' "${__blocklist}" \
     | sed "s/^/${add_new_destination__ip} /g")"
 
   unset add_new_destination__ip
@@ -1031,7 +1031,7 @@ generate_new_hosts_file()
   $1"
 
   generate_new_hosts_file__header="$(printf -- \
-    "# <hosts_header>%s# </hosts_header>\\n" \
+    '# <hosts_header>%s# </hosts_header>\n' \
     "$(printf -- '%s' "${generate_new_hosts_file__header}" | uniq)" \
     | sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;')"
 
@@ -1077,12 +1077,12 @@ ${generate_new_hosts_file__sources}"
   generate_new_hosts_file__sources="# File is generated from the following sources:
 ${generate_new_hosts_file__sources}"
 
-  generate_new_hosts_file__header="$(printf -- "# %s\\n%s\\n%s\\n" \
+  generate_new_hosts_file__header="$(printf -- '# %s\n%s\n%s\n' \
     "$(date)" \
     "${generate_new_hosts_file__sources}" \
     "${generate_new_hosts_file__header}")"
 
-  printf -- "%s\\n# <blocklist>\\n%s\\n# </blocklist>" \
+  printf -- '%s\n# <blocklist>\n%s\n# </blocklist>' \
     "${generate_new_hosts_file__header}" \
     "${__blocklist}"
 
@@ -1142,7 +1142,7 @@ install_new_hosts_file()
 
   info_msg "Installing new hosts file %s..." \
     "${install_new_hosts_file__destination}"
-  printf -- "%s\\n" "${install_new_hosts_file__hosts}" \
+  printf -- '%s\n' "${install_new_hosts_file__hosts}" \
     | ${install_new_hosts_file__sudo} tee \
     "${install_new_hosts_file__destination}" > /dev/null \
     || {
@@ -1207,8 +1207,8 @@ install_ipset_blocklist()
   }
 
   info_msg "Add new IPs to the block list"
-  __blocklist=$(printf -- "%s\\n" "${__blocklist}" | sed 's/^/add blocklist /')
-  printf -- "%s\\n" "${__blocklist}" \
+  __blocklist=$(printf -- '%s\n' "${__blocklist}" | sed 's/^/add blocklist /')
+  printf -- '%s\n' "${__blocklist}" \
     | ${install_ipset_blocklist__sudo} tee \
     -a "${install_ipset_blocklist__file}" > /dev/null \
     || {
@@ -1297,7 +1297,7 @@ print_file_differences()
 
   # Echo out the result
   print_file_differences__diff=$((print_file_differences__new_n - print_file_differences__old_n))
-  printf -- "%b + %b%s %bentries added! (%b + %b%s %b)\\n" \
+  printf -- '%b + %b%s %bentries added! (%b + %b%s %b)\n' \
     "\\033[1;33m" "\\033[1;32m" "${print_file_differences__new_n}" \
     "\\033[0m" "\\033[1;32m" "\\033[1;34m" "${print_file_differences__diff}" \
     "\\033[0m"
@@ -1409,7 +1409,7 @@ cancel_sudoloop()
 # Echoes out the current version held by the constant __VERSION
 print_version()
 {
-  printf -- "update-hosts[%s]\\n" "${__VERSION}"
+  printf -- 'update-hosts[%s]\n' "${__VERSION}"
   echo
 
   return 0
@@ -1420,7 +1420,7 @@ print_version()
 print_help()
 {
   print_version
-  printf -- "%s\\n" "$(cat << EOF
+  printf -- '%s\n' "$(cat << EOF
 Options:
    -h | --help             Display help
    -v | --version          Display version
@@ -1537,7 +1537,7 @@ main_ipsets()
   main_ipsets__remove_backup="$4"
 
   # Begin
-  printf -- "\\n\\n"
+  printf -- '\n\n'
   print_ipset_config "${main_ipsets__file}" "${main_ipsets__name}" || return 1
 
   # Download
@@ -1553,6 +1553,7 @@ main_ipsets()
   remove_duplicates || return 1
 
   # Install
+  apply_blacklist "${HOSTS_BLACKLIST}" || return 1
   main_ipsets__file_backup=$(create_backup_name \
     "${main_ipsets__file}" ) || return 1
 
