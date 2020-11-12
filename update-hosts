@@ -1467,8 +1467,8 @@ main_hosts()
 
   # Parse
   action_msg "Generating hosts file..."
-  apply_blacklist "${HOSTS_BLACKLIST}" || return 1
   apply_whitelist "${HOSTS_WHITELIST}" || return 1
+  apply_blacklist "${HOSTS_BLACKLIST}" || return 1
   sort_entries || return 1
   remove_duplicates || return 1
   add_new_destination "${main_hosts__ip}" || return 1
@@ -1547,8 +1547,8 @@ main_ipsets()
 
   # Parse
   action_msg "Generating ipset..."
-  apply_blacklist "${IPSET_BLACKLIST}" || return 1
   apply_whitelist "${IPSET_WHITELIST}" || return 1
+  apply_blacklist "${IPSET_BLACKLIST}" || return 1
   sort_entries || return 1
   remove_duplicates || return 1
 
