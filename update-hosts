@@ -1002,6 +1002,23 @@ sort_entries()
 }
 
 ##
+# Add the configured address, by default the zero address
+#
+# $1 desitination IP address
+##
+add_new_dnsmasq()
+{
+  add_new_dnsmasq__ip="$1"
+
+  info_msg "Add new dnsmasq address"
+  __blocklist="$(printf -- '%s\n' "${__blocklist}" \
+    | sed 's/^/address=\//g' | sed "s/$/\/${add_new_dnsmasq__ip}/g")"
+
+  unset add_new_dnsmasq__ip
+  return 0
+}
+
+##
 # Add the configured destination, by default the zero address
 #
 # $1 desitination IP address
