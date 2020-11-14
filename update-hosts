@@ -456,6 +456,8 @@ process_hosts_sources()
     "${process_hosts_sources__file}" "${process_hosts_sources__url}"
   remove_local_entries "${process_hosts_sources__index}" \
     "${process_hosts_sources__file}" "${process_hosts_sources__url}"
+  remove_invalid_entries "${process_hosts_sources__index}" \
+    "${process_hosts_sources__file}" "${process_hosts_sources__url}"
 
   unset process_hosts_sources__index
   unset process_hosts_sources__file
@@ -860,6 +862,42 @@ remove_local_entries()
   unset remove_local_entries__index
   unset remove_local_entries__file
   unset remove_local_entries__url
+  return 0
+}
+
+##
+# Remove any entries containing invalid hosts entries
+# Invalid hosts are anything with
+
+# **-.**
+# **.-**
+# **--**
+#
+# $1 Index
+# $2 file
+# $3 url
+##
+remove_invalid_entries()
+{
+  remove_invalid_entries__index="$1"
+  remove_invalid_entries__file="$2"
+  remove_invalid_entries__url="$3"
+
+  source_msg "${remove_invalid_entries__index}" "${remove_invalid_entries__url}" \
+    "Remove invalid entries: %s" "${remove_invalid_entries__file}"
+
+  # Remove any lines which include things like -. or .- or --
+  readonly INVALID_DOMAIN_REGEX='/.*\.\-.*/d; /.*\-\..*/d; /.*\-\-.*/d;'
+
+  remove_invalid_entries__content="$(sed "${INVALID_DOMAIN_REGEX}" \
+    < "${remove_invalid_entries__file}")"
+  printf -- "%s" "${remove_invalid_entries__content}" \
+    > "${remove_invalid_entries__file}"
+
+  unset remove_invalid_entries__content
+  unset remove_invalid_entries__index
+  unset remove_invalid_entries__file
+  unset remove_invalid_entries__url
   return 0
 }
 
