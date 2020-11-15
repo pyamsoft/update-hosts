@@ -28,13 +28,12 @@ The main differences being:
 - Is named update-hosts instead of hosts-update
 - Provides an optional pre-defined whitelist which matches uBlock0 Unbreak
   list to fix websites which are broken by blocking certain hosts.
-- Handles a list of ipset sources as well for blocking IP addresses at the
-  iptables firewall level.
 - Pull hosts from extra user specified hosts files or network locations,
   merging all files together into one large hosts file
-- Output hosts or ipset files into user specified locations
-- Fetches all hosts and ipset sources in parallel instead of waiting one after
-  the other
+
+- Can output a blocklist in an ipset format
+- Can output a blocklist in an dnsmasq format
+  
 
 ## Hosts Sources
 
@@ -123,19 +122,35 @@ specific system.
 ## Options
 
 ```
-update-hosts[2.6.1]
+$ ./update-hosts -h
+update-hosts[2.8.0]
 
 Options:
-   -h | --help     Display help
-   -v | --version  Display version
-   -r | --remove   Remove backups
-   -i | --ipset    Also download ipset sources
-   -u | --unbreak  Auto apply the unbreak whitelist
-   --source        Source a hosts file part
-   --output-hosts  The file to output hosts to
-   --output-ipset  The file to output ipsets to
-   --ipset-name    The name of the ipset
-   --dest-ip       The destination IP to use
+   -h | --help             Display help
+   -v | --version          Display version
+   -r | --remove           Remove backups
+   -i | --ipset            Also download ipset sources
+   -u | --unbreak          Auto apply the unbreak whitelist
+   -d | --dnsmasq          Output hosts blocklist as dnsmasq configuration
+   --dest-ip [ip-address]  The destination IP to use (0.0.0.0)
+
+   [OUTPUT]
+   --output-hosts [file]   The file to output hosts to (/etc/hosts)
+   --output-ipset [file]   The file to output ipsets to (/etc/ipset.conf)
+   --output-dnsmasq [file] The file to output dnsmasq to (/etc/dnsmasq.d/blocklist.conf)
+   --no-hosts              Do not generate a hosts file (only generate a dnsmasq and/or ipset file)
+
+   [HOSTS]
+   --source [url|file]     Source a hosts file part
+
+   [IPSET]
+   --ipset-name [name]     The name of the ipset (blocklist)
+
+   --sudoloop              Once sudo is claimed, keep hold of it
+                           through the entire script.
+
+   [INTERNAL]
+   --systemd               Used by systemd service file
 ```
 
 ## Disclaimer
