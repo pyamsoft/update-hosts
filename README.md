@@ -155,10 +155,16 @@ Options:
 
 ## Disclaimer
 
-This script can replace the "/etc/hosts" file of your system. It will create a
-backup of the existing hosts file before hand. This script can replace the
-"/etc/ipset.conf" file of your system. It will create backups of the existing
-files before hand. Please be careful when modifying these system files.
+This script can replace the `/etc/hosts` file of your system.
+It will create a backup of the existing hosts file before hand. 
+
+This script can replace the `/etc/ipset.conf` file of your system.
+It will create backups of the existing file before hand. 
+
+This script can replace the `/etc/dnsmasq.d/blocklist.conf` file of your system.
+It will create backups of the existing file before hand. 
+
+Please be careful when modifying these system files.
 
 ## Issues
 
