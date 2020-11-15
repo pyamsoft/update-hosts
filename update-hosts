@@ -1519,6 +1519,7 @@ Options:
    --output-hosts [file]   The file to output hosts to (/etc/hosts)
    --output-ipset [file]   The file to output ipsets to (/etc/ipset.conf)
    --output-dnsmasq [file] The file to output dnsmasq to (/etc/dnsmasq.d/blocklist.conf)
+   --no-hosts              Do not generate a hosts file (only generate a dnsmasq and/or ipset file)
 
    [HOSTS]
    --source [url|file]     Source a hosts file part
@@ -1545,7 +1546,8 @@ EOF
 # $4 output as dnsmasq
 # $5 dnsmasq file path
 # $6 remove backups
-# $7 extra headers
+# $7 ignore hosts file generation
+# $8 extra headers
 main_hosts()
 {
   main_hosts__lock_sudo="$1"
@@ -1554,7 +1556,8 @@ main_hosts()
   main_hosts__output_dnsmasq="$4"
   main_hosts__dnsmasq_file="$5"
   main_hosts__remove_backup="$6"
-  main_hosts__extra_headers="$7"
+  main_hosts__ignore="$7"
+  main_hosts__extra_headers="$8"
 
   # Configuration
   print_hosts_config "${main_hosts__file}" "${main_hosts__ip}"
@@ -1565,6 +1568,7 @@ main_hosts()
     "${HOSTS_SOURCES}" "process_hosts_sources" || return 1
 
   # Parse
+  printf -- '\n'
   action_msg "Generating blocklist..."
   apply_whitelist "${HOSTS_WHITELIST}" || return 1
   apply_blacklist "${HOSTS_BLACKLIST}" || return 1
@@ -1574,44 +1578,47 @@ main_hosts()
   # Copy the blocklist here in case we need to re-use it
   main_hosts__blocklist="${__blocklist}"
 
-  add_new_destination "${main_hosts__ip}" || return 1
+  if [ "${main_hosts__ignore}" -ne 1 ]; then
 
-  # Install
-  info_msg "Create new hosts file"
-  main_hosts__hosts="$(generate_new_file "${main_hosts__extra_headers}" 1)" || return 1
-  main_hosts__file_backup="$(create_backup_name \
-    "${main_hosts__file}")" || return 1
+    add_new_destination "${main_hosts__ip}" || return 1
 
-  main_hosts__sudo=
-  if touch "${main_hosts__file}" > /dev/null 2>&1; then
-    # If we can write to the destination, we don't need sudo
-    main_hosts__sudo=""
-  else
-    if sudo -n -v > /dev/null 2>&1; then
-      # If we can already use sudo, we don't need to prompt for it again
-      main_hosts__sudo="sudo"
+    # Install
+    info_msg "Create new hosts file"
+    main_hosts__hosts="$(generate_new_file "${main_hosts__extra_headers}" 1)" || return 1
+    main_hosts__file_backup="$(create_backup_name \
+      "${main_hosts__file}")" || return 1
+
+    main_hosts__sudo=
+    if touch "${main_hosts__file}" > /dev/null 2>&1; then
+      # If we can write to the destination, we don't need sudo
+      main_hosts__sudo=""
     else
-      action_msg "sudo is needed to write to file: %s" "${main_hosts__file}"
-      grab_sudo "${main_hosts__lock_sudo}" || return 1
-      main_hosts__sudo="sudo"
+      if sudo -n -v > /dev/null 2>&1; then
+        # If we can already use sudo, we don't need to prompt for it again
+        main_hosts__sudo="sudo"
+      else
+        action_msg "sudo is needed to write to file: %s" "${main_hosts__file}"
+        grab_sudo "${main_hosts__lock_sudo}" || return 1
+        main_hosts__sudo="sudo"
+      fi
     fi
-  fi
 
-  backup_old_file "${main_hosts__sudo}" \
-    "${main_hosts__file}" "${main_hosts__file_backup}" || return 1
-  install_new_file "${main_hosts__sudo}" \
-    "${main_hosts__hosts}" "${main_hosts__file}" || return 1
-  fix_file_permissons "${main_hosts__sudo}" \
-    "${main_hosts__file}" || return 1
-  fix_file_permissons "${main_hosts__sudo}" \
-    "${main_hosts__file_backup}" || return 1
-  print_file_differences "${main_hosts__file}" \
-    "${main_hosts__file_backup}" || return 1
-
-  # Cleanup
-  if [ "${main_hosts__remove_backup}" -eq 1 ]; then
-    remove_all_backup_files "${main_hosts__sudo}" \
+    backup_old_file "${main_hosts__sudo}" \
+      "${main_hosts__file}" "${main_hosts__file_backup}" || return 1
+    install_new_file "${main_hosts__sudo}" \
+      "${main_hosts__hosts}" "${main_hosts__file}" || return 1
+    fix_file_permissons "${main_hosts__sudo}" \
       "${main_hosts__file}" || return 1
+    fix_file_permissons "${main_hosts__sudo}" \
+      "${main_hosts__file_backup}" || return 1
+    print_file_differences "${main_hosts__file}" \
+      "${main_hosts__file_backup}" || return 1
+
+    # Cleanup
+    if [ "${main_hosts__remove_backup}" -eq 1 ]; then
+      remove_all_backup_files "${main_hosts__sudo}" \
+        "${main_hosts__file}" || return 1
+    fi
   fi
 
   if [ "${main_hosts__output_dnsmasq}" -eq 1 ]; then
@@ -1697,6 +1704,7 @@ main_ipsets()
     "${IPSET_SOURCES}" "process_ipset_sources" || return 1
 
   # Parse
+  printf -- '\n'
   action_msg "Generating blocklist..."
   apply_whitelist "${IPSET_WHITELIST}" || return 1
   apply_blacklist "${IPSET_BLACKLIST}" || return 1
@@ -1791,6 +1799,7 @@ main()
   lock_sudoloop=0
   using_systemd=0
   output_dnsmasq=0
+  no_hosts=0
 
   # Script begins here
   dst_hosts="/etc/hosts"
@@ -1849,6 +1858,9 @@ main()
                 ;;
               ipset)
                 manage_ipsets=1
+                ;;
+              no-hosts)
+                no_hosts=1
                 ;;
               sudoloop)
                 lock_sudoloop=1
@@ -2045,7 +2057,7 @@ main()
   # Parse hosts files
   main_hosts "${lock_sudoloop}" "${dst_hosts}" \
     "${dst_ip}" "${output_dnsmasq}" "${dst_dnsmasq}" \
-    "${remove_backups}" "${extra_headers}" || return 1
+    "${remove_backups}" "${no_hosts}" "${extra_headers}" || return 1
 
   if [ "${manage_ipsets}" -eq 0 ]; then
     # End here
