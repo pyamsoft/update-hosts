@@ -317,9 +317,31 @@ print_hosts_config()
   info_msg "Lock file: %s" "${SUDOLOCK}"
   info_msg "Hosts location: %s" "${print_hosts_config__file}"
   info_msg "Destination IP: %s" "${print_hosts_config__ip}"
+  printf -- '\n'
 
   unset print_hosts_config__file
   unset print_hosts_config__ip
+  return 0
+}
+
+##
+# Print out the dnsmasq configuration
+#
+# $1 dnsmasq file location
+# $2 dnsmasq destination IP
+##
+print_dnsmasq_config()
+{
+  print_dnsmasq_config__file="$1"
+  print_dnsmasq_config__ip="$2"
+
+  action_msg "Dnsmasq Configuration:"
+  info_msg "Dnsmasq location: %s" "${print_dnsmasq_config__file}"
+  info_msg "Destination IP: %s" "${print_dnsmasq_config__ip}"
+  printf -- '\n'
+
+  unset print_dnsmasq_config__file
+  unset print_dnsmasq_config__ip
   return 0
 }
 
@@ -337,6 +359,7 @@ print_ipset_config()
   action_msg "Ipset Configuration:"
   info_msg "Ipset location: %s" "${print_ipset_config__file}"
   info_msg "Ipset name: %s" "${print_ipset_config__name}"
+  printf -- '\n'
 
   unset print_ipset_config__file
   unset print_ipset_config__name
@@ -347,30 +370,27 @@ print_ipset_config()
 # Create the ipset configuration if it does not exist
 #
 # $1 ipset sudo
-# $2 ipset file location
-# $3 ipset name
+# $2 ipset name
 ##
 prepare_ipset_config()
 {
-  print_ipset_config__sudo="$1"
-  print_ipset_config__file="$2"
-  print_ipset_config__name="$3"
+  prepare_ipset_config__sudo="$1"
+  prepare_ipset_config__name="$2"
 
   # The ipset must exist first for this script to work
   # check for existence here
-  ${print_ipset_config__sudo} ipset \
-    list "${print_ipset_config__name}" > /dev/null 2>&1 || {
+  ${prepare_ipset_config__sudo} ipset \
+    list "${prepare_ipset_config__name}" > /dev/null 2>&1 || {
     action_msg "Ipset %s does not exist, creating it" \
-      "${print_ipset_config__name}"
+      "${prepare_ipset_config__name}"
 
     # Make the ipset
-    ${print_ipset_config__sudo} ipset create "${print_ipset_config__name}" \
+    ${prepare_ipset_config__sudo} ipset create "${prepare_ipset_config__name}" \
       hash:net maxelem $((128 * 1024))
   }
 
-  unset print_ipset_config__file
-  unset print_ipset_config__name
-  unset print_ipset_config__sudo
+  unset prepare_ipset_config__name
+  unset prepare_ipset_config__sudo
   return 0
 }
 
@@ -1545,7 +1565,7 @@ main_hosts()
     "${HOSTS_SOURCES}" "process_hosts_sources" || return 1
 
   # Parse
-  action_msg "Generating hosts file..."
+  action_msg "Generating blocklist..."
   apply_whitelist "${HOSTS_WHITELIST}" || return 1
   apply_blacklist "${HOSTS_BLACKLIST}" || return 1
   sort_entries || return 1
@@ -1557,7 +1577,6 @@ main_hosts()
   add_new_destination "${main_hosts__ip}" || return 1
 
   # Install
-
   info_msg "Create new hosts file"
   main_hosts__hosts="$(generate_new_file "${main_hosts__extra_headers}" 1)" || return 1
   main_hosts__file_backup="$(create_backup_name \
@@ -1596,12 +1615,30 @@ main_hosts()
   fi
 
   if [ "${main_hosts__output_dnsmasq}" -eq 1 ]; then
-    action_msg 'Output as dnsmasq blocklist file: %s\n' "${main_hosts__dnsmasq_file}"
-
     # Restore the blocklist before destination address formatting
     __blocklist="${main_hosts__blocklist}"
 
+    printf -- '\n\n'
+    print_dnsmasq_config "${main_hosts__dnsmasq_file}" "${main_hosts__ip}" || return 1
     add_new_dnsmasq "${main_hosts__ip}" || return 1
+
+    # Re-establish sudo
+    main_hosts__sudo=
+    if touch "${main_hosts__dnsmasq_file}" > /dev/null 2>&1; then
+      # If we can write to the destination, we don't need sudo
+      main_hosts__sudo=""
+    else
+      if sudo -n -v > /dev/null 2>&1; then
+        # If we can already use sudo, we don't need to prompt for it again
+        main_hosts__sudo="sudo"
+      else
+        action_msg "sudo is needed to write to file: %s" "${main_hosts__dnsmasq_file}"
+        grab_sudo "${main_hosts__lock_sudo}" || return 1
+        main_hosts__sudo="sudo"
+      fi
+    fi
+
+    info_msg "Create new dnsmasq file"
     main_hosts__dnsmasq="$(generate_new_file "" 0)" || return 1
     main_hosts__dnsmasq_file_backup="$(create_backup_name "${main_hosts__dnsmasq_file}")" || return 1
 
@@ -1615,6 +1652,12 @@ main_hosts()
       "${main_hosts__dnsmasq_file_backup}" || return 1
     print_file_differences "${main_hosts__dnsmasq_file}" \
       "${main_hosts__dnsmasq_file_backup}" || return 1
+
+    # Cleanup
+    if [ "${main_hosts__remove_backup}" -eq 1 ]; then
+      remove_all_backup_files "${main_hosts__sudo}" \
+        "${main_hosts__dnsmasq_file}" || return 1
+    fi
   fi
 
   # Unset the blocklist now that we are done.
@@ -1654,7 +1697,7 @@ main_ipsets()
     "${IPSET_SOURCES}" "process_ipset_sources" || return 1
 
   # Parse
-  action_msg "Generating ipset..."
+  action_msg "Generating blocklist..."
   apply_whitelist "${IPSET_WHITELIST}" || return 1
   apply_blacklist "${IPSET_BLACKLIST}" || return 1
   sort_entries || return 1
@@ -1679,9 +1722,10 @@ main_ipsets()
     fi
   fi
 
+  action_msg "Create new ipset file"
+
   # Creating an ipset always requires sudo
-  prepare_ipset_config "sudo" \
-    "${main_ipsets__file}" "${main_ipsets__name}" || return 1
+  prepare_ipset_config "sudo" "${main_ipsets__name}" || return 1
 
   backup_old_file "${main_ipsets__sudo}" \
     "${main_ipsets__file}" "${main_ipsets__file_backup}" || return 1
