@@ -1685,8 +1685,11 @@ main_ipsets()
 
   backup_old_file "${main_ipsets__sudo}" \
     "${main_ipsets__file}" "${main_ipsets__file_backup}" || return 1
-  install_ipset_blocklist "${main_ipsets__sudo}" \
+
+  # Managing an ipset always requires sudo
+  install_ipset_blocklist "sudo" \
     "${main_ipsets__file}" "${main_ipsets__name}" || return 1
+    
   fix_file_permissons "${main_ipsets__sudo}" \
     "${main_ipsets__file}" || return 1
   fix_file_permissons "${main_ipsets__sudo}" \
