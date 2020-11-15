@@ -1617,7 +1617,6 @@ main_ipsets()
   remove_duplicates || return 1
 
   # Install
-  apply_blacklist "${HOSTS_BLACKLIST}" || return 1
   main_ipsets__file_backup=$(create_backup_name \
     "${main_ipsets__file}" ) || return 1
 
@@ -1636,8 +1635,10 @@ main_ipsets()
     fi
   fi
 
-  prepare_ipset_config "${main_ipsets__sudo}" \
+  # Creating an ipset always requires sudo
+  prepare_ipset_config "sudo" \
     "${main_ipsets__file}" "${main_ipsets__name}" || return 1
+
   backup_old_file "${main_ipsets__sudo}" \
     "${main_ipsets__file}" "${main_ipsets__file_backup}" || return 1
   install_ipset_blocklist "${main_ipsets__sudo}" \
