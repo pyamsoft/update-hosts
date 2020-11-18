@@ -32,7 +32,7 @@ The main differences being:
   merging all files together into one large hosts file
 
 - Can output a blocklist in an ipset format
-- Can output a blocklist in an dnsmasq format
+- Can output a blocklist in a dnsmasq format
   
 
 ## Hosts Sources
@@ -101,9 +101,9 @@ git checkout master
 
 1. Download the raw file from the github.com URL:  
 ```
-wget -qO- https://raw.githubusercontent.com/pyamsoft/update-hosts/master/update-hosts  
+wget -qO- https://raw.githubusercontent.com/pyamsoft/update-hosts/main/update-hosts  
 or  
-curl -sL https://raw.githubusercontent.com/pyamsoft/update-hosts/master/update-hosts
+curl -sL https://raw.githubusercontent.com/pyamsoft/update-hosts/main/update-hosts
 ```
 
 **Note:** be sure to regularly update the hosts file for new additions or

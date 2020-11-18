@@ -1227,6 +1227,19 @@ install_new_file()
 
   info_msg "Installing new file %s..." \
     "${install_new_file__destination}"
+
+  # Make any leading directories
+  install_new_file__dir="$(dirname "${install_new_file__destination}")"
+  mkdir -p "${install_new_file__dir}" || {
+    error_msg "Failed to prepare directory %s" "${install_new_file__dir}"
+
+    unset install_new_file__dir
+    unset install_new_file__sudo
+    unset install_new_file__hosts
+    unset install_new_file__destination
+    return 1
+  }
+
   printf -- '%s\n' "${install_new_file__hosts}" \
     | ${install_new_file__sudo} tee \
     "${install_new_file__destination}" > /dev/null \
@@ -1234,12 +1247,14 @@ install_new_file()
     error_msg "Failed to output to file %s" \
       "${install_new_file__destination}"
 
+    unset install_new_file__dir
     unset install_new_file__sudo
     unset install_new_file__hosts
     unset install_new_file__destination
     return 1
   }
 
+    unset install_new_file__dir
   unset install_new_file__sudo
   unset install_new_file__hosts
   unset install_new_file__destination
@@ -1825,6 +1840,7 @@ main()
   check_for_binary chmod || return 1
   check_for_binary cat || return 1
   check_for_binary awk || return 1
+  check_for_binary mkdir || return 1
 
   # Handle options
   # While risky to call eval, this is one way to
@@ -2090,6 +2106,7 @@ export LC_ALL
 readonly __VERSION="2.8.0"
 
 check_for_binary mktemp || exit 1
+
 readonly SUDOLOCK="$(mktemp)"
 
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
