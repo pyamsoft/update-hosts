@@ -23,6 +23,7 @@ optdepends=(
   'wget: Optional download client'
   'iprange: Helper to optimize ipset configuration'
   'ipset: Parse ip address sets as an extra blocklist'
+  'dnsmasq: Parse hosts as an extra dnsmasq blocklist'
 )
 # shellcheck disable=SC2034
 provides=('update-hosts')
