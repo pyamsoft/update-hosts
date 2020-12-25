@@ -25,6 +25,15 @@
 # Modified by:
 #  pyamsoft <developer(dot)pyamsoft(at)gmail(dot)com>
 
+# Environment
+# Export the LC as the default C so that we do not run into locale based quirks
+LC_ALL=C
+export LC_ALL
+
+readonly APP_NAME="update-hosts"
+readonly VERSION="3.0.0"
+readonly SUDOLOCK="$(mktemp)"
+
 # Will cause calls to
 #
 # $ sh update-hosts
@@ -277,6 +286,17 @@ check_for_binary() {
 }
 
 ##
+# Print out the app configuration
+##
+print_config() {
+  printf -- '\n'
+  action_msg "%s Configuration:" "${APP_NAME}"
+  info_msg "Lock file: %s" "${SUDOLOCK}"
+  printf -- '\n'
+  return 0
+}
+
+##
 # Print out the hosts configuration
 #
 # $1 hosts file location
@@ -468,8 +488,12 @@ download_to_tempfile() {
   download_to_tempfile__content=
 
   source_msg "${download_to_tempfile__index}" "${download_to_tempfile__url}" "Downloading..."
-  download_to_tempfile__content="$(printf -- "%s" "$(${download_to_tempfile__client} \
-    "${download_to_tempfile__url}")")"
+
+  # Silence error output and echo our own error later
+  download_to_tempfile__content="$(printf -- "%s" "$(
+    ${download_to_tempfile__client} "${download_to_tempfile__url}" 2>/dev/null
+  )")"
+
   if [ -z "${download_to_tempfile__content}" ]; then
     source_err_msg "${download_to_tempfile__index}" "${download_to_tempfile__url}" \
       "Failed to download."
@@ -600,9 +624,6 @@ change_eol() {
   change_eol__file="$2"
   change_eol__url="$3"
 
-  source_msg "${change_eol__index}" "${change_eol__url}" "Change EOL to Unix format: %s" \
-    "${change_eol__file}"
-
   # Use tr instead of GNU sed extension
   change_eol__contents="$(tr -d '\r' <"${change_eol__file}")"
   printf -- '%s\n' "${change_eol__contents}" >"${change_eol__file}"
@@ -626,9 +647,6 @@ remove_comments() {
   remove_comments__file="$2"
   remove_comments__url="$3"
 
-  source_msg "${remove_comments__index}" "${remove_comments__url}" \
-    "Remove any comments from file: %s" "${remove_comments__file}"
-
   # Removes comments from files
   remove_comments__contents="$(sed 's/#.*$//g' <"${remove_comments__file}")"
   printf -- '%s\n' "${remove_comments__contents}" >"${remove_comments__file}"
@@ -651,9 +669,6 @@ trim_whitespace() {
   trim_whitespace__index="$1"
   trim_whitespace__file="$2"
   trim_whitespace__url="$3"
-
-  source_msg "${trim_whitespace__index}" "${trim_whitespace__url}" \
-    "Trim whitespace from lines in: %s" "${trim_whitespace__file}"
 
   # Trim whitespace from lines
   trim_whitespace__contents="$(sed 's/[[:blank:]]*$//g; s/^[[:blank:]]*//g' \
@@ -681,14 +696,6 @@ select_host_lines() {
   select_host_lines__index="$1"
   select_host_lines__file="$2"
   select_host_lines__url="$3"
-
-  # KLUDGE
-  # This leaves trailing comments in lines, making it not as effective
-  # sed -n -i -r "/(^(${ip_regex})|^)${domain_regex}/p" "$1"
-  #
-  # This is an ugly workaround
-  source_msg "${select_host_lines__index}" "${select_host_lines__url}" \
-    "Select only hosts lines: %s" "${select_host_lines__file}"
 
   # Technically this does not check that the actual digits are valid IP addresses
   # but that is alright because the IP addresses themselves will be replaced
@@ -722,9 +729,6 @@ select_ip_lines() {
   select_ip_lines__file="$2"
   select_ip_lines__url="$3"
 
-  source_msg "${select_ip_lines__index}" "${select_ip_lines__url}" "Select only IP lines: %s" \
-    "${select_ip_lines__file}"
-
   # Use awk to emulate grep -oE
   # we pass the regex in as a regex constant so that it is not evaulated wrongly by the shell
   # This regex is long because checks for valid IP addresses only
@@ -754,9 +758,6 @@ remove_untrusted_domain() {
   remove_untrusted_domain__file="$2"
   remove_untrusted_domain__url="$3"
 
-  source_msg "${remove_untrusted_domain__index}" "${remove_untrusted_domain__url}" \
-    "Remove old destination: %s" "${remove_untrusted_domain__file}"
-
   # Remove any domain that may be included in the downloaded file
   remove_untrusted_domain__content="$(sed 's/^.\{1,\}[[:blank:]]\{1,\}//g' \
     <"${remove_untrusted_domain__file}")"
@@ -781,9 +782,6 @@ normalize_to_lowercase() {
   normalize_to_lowercase__file="$2"
   normalize_to_lowercase__url="$3"
 
-  source_msg "${normalize_to_lowercase__index}" "${normalize_to_lowercase__url}" \
-    "Transform all entries to lowercase: %s" "${normalize_to_lowercase__file}"
-
   normalize_to_lowercase__content="$(tr '[:upper:]' '[:lower:]' \
     <"${normalize_to_lowercase__file}")"
   printf -- "%s" "${normalize_to_lowercase__content}" >"${normalize_to_lowercase__file}"
@@ -807,9 +805,6 @@ remove_local_entries() {
   remove_local_entries__index="$1"
   remove_local_entries__file="$2"
   remove_local_entries__url="$3"
-
-  source_msg "${remove_local_entries__index}" "${remove_local_entries__url}" \
-    "Remove local entries: %s" "${remove_local_entries__file}"
 
   # Remove any lines which include things like localhost, or localhost.localdomain
   readonly LOCAL_DOMAIN_REGEX='/\.\localdomain[[:blank:]]*$/d; /\.\local[[:blank:]]*$/d'
@@ -841,9 +836,6 @@ remove_invalid_entries() {
   remove_invalid_entries__file="$2"
   remove_invalid_entries__url="$3"
 
-  source_msg "${remove_invalid_entries__index}" "${remove_invalid_entries__url}" \
-    "Remove invalid entries: %s" "${remove_invalid_entries__file}"
-
   # Remove any lines which include things like -. or .- or --
   readonly INVALID_DOMAIN_REGEX='/.*\.\-.*/d; /.*\-\..*/d; /.*\-\-.*/d;'
 
@@ -866,7 +858,6 @@ remove_invalid_entries() {
 apply_whitelist() {
   apply_whitelist__whitelist="$1"
 
-  info_msg "Apply whitelist entries"
   if [ -z "${__blocklist}" ]; then
     error_msg "Block list is empty"
     return 1
@@ -916,7 +907,6 @@ apply_whitelist() {
 apply_blacklist() {
   apply_blacklist__blacklist="$1"
 
-  info_msg "Apply blacklist entries"
   # Cache the hosts_blacklist domains so that the entire block list
   # does not have to be echoed each time.
   # Domains initialized as first hosts_blacklist entry
@@ -973,7 +963,6 @@ apply_blacklist() {
 # Remove duplicate entries
 ##
 remove_duplicates() {
-  info_msg "Remove duplicate entries"
   __blocklist="$(printf -- '%s\n' "${__blocklist}" | uniq)"
 
   return 0
@@ -983,7 +972,6 @@ remove_duplicates() {
 # Sort the entries by string numerical value
 ##
 sort_entries() {
-  info_msg "Sort entries"
   __blocklist="$(printf -- '%s\n' "${__blocklist}" | sort)"
 
   return 0
@@ -997,7 +985,6 @@ sort_entries() {
 add_new_dnsmasq() {
   add_new_dnsmasq__ip="$1"
 
-  info_msg "Add new dnsmasq address"
   __blocklist="$(printf -- '%s\n' "${__blocklist}" | sed 's/^/address=\//g' |
     sed "s/$/\/${add_new_dnsmasq__ip}/g")"
 
@@ -1013,7 +1000,6 @@ add_new_dnsmasq() {
 add_new_destination() {
   add_new_destination__ip="$1"
 
-  info_msg "Add new destination"
   __blocklist="$(printf -- '%s\n' "${__blocklist}" | sed "s/^/${add_new_destination__ip} /g")"
 
   unset add_new_destination__ip
@@ -1084,8 +1070,8 @@ ${generate_new_file__sources}"
   generate_new_file__sources="# File is generated from the following sources:
 ${generate_new_file__sources}"
 
-  generate_new_file__header="$(printf -- '# Generated by update-hosts [%s]\n# %s\n\n%s\n%s\n' \
-    "${__VERSION}" "$(date)" "${generate_new_file__sources}" "${generate_new_file__header}")"
+  generate_new_file__header="$(printf -- '# Generated by %s [%s]\n# %s\n\n%s\n%s\n' \
+    "${APP_NAME}" "${VERSION}" "$(date)" "${generate_new_file__sources}" "${generate_new_file__header}")"
 
   printf -- '%s\n\n# Main Blocklist\n%s\n' "${generate_new_file__header}" "${__blocklist}"
 
@@ -1108,7 +1094,7 @@ backup_old_file() {
   backup_old_file__file="$2"
   backup_old_file__backup="$3"
 
-  if [ -f "${backup_old_file__file}" ]; then
+  if [ -e "${backup_old_file__file}" ]; then
     info_msg "Creating backup of original file %s ..." "${backup_old_file__file}"
     ${backup_old_file__sudo} cp "${backup_old_file__file}" "${backup_old_file__backup}" || {
       error_msg "Failed to copy to file %s" "${backup_old_file__backup}"
@@ -1184,12 +1170,9 @@ install_ipset_blocklist() {
   install_ipset_blocklist__file="$2"
   install_ipset_blocklist__name="$3"
 
-  action_msg "Install the ipset blocklist"
-  info_msg "Clear existing block list"
   printf -- "" | ${install_ipset_blocklist__sudo} tee "${install_ipset_blocklist__file}" >/dev/null
   ${install_ipset_blocklist__sudo} ipset flush "${install_ipset_blocklist__name}"
 
-  info_msg "Create new blocklist"
   # Save here just to get the create line
   ${install_ipset_blocklist__sudo} ipset save "${install_ipset_blocklist__name}" |
     ${install_ipset_blocklist__sudo} tee "${install_ipset_blocklist__file}" >/dev/null
@@ -1211,7 +1194,6 @@ install_ipset_blocklist() {
     unset new_count
   }
 
-  info_msg "Add new IPs to the block list"
   __blocklist=$(printf -- '%s\n' "${__blocklist}" | sed 's/^/add blocklist /')
   printf -- '%s\n' "${__blocklist}" | ${install_ipset_blocklist__sudo} tee -a \
     "${install_ipset_blocklist__file}" >/dev/null || {
@@ -1223,7 +1205,7 @@ install_ipset_blocklist() {
     return 1
   }
 
-  info_msg "Commit new ipset"
+  action_msg "Install the ipset blocklist"
   ${install_ipset_blocklist__sudo} ipset restore -exist -file "${install_ipset_blocklist__file}"
 
   unset install_ipset_blocklist__sudo
@@ -1243,7 +1225,6 @@ fix_file_permissons() {
   fix_file_permissons__file="$2"
 
   if [ -f "${fix_file_permissons__file}" ]; then
-    info_msg "Fixing permissions for file %s..." "${fix_file_permissons__file}"
     ${fix_file_permissons__sudo} chmod 644 "${fix_file_permissons__file}" || {
       error_msg "Failed to chmod %s to 644" "${fix_file_permissons__file}"
 
@@ -1392,9 +1373,9 @@ cancel_sudoloop() {
 }
 
 ##
-# Echoes out the current version held by the constant __VERSION
+# Echoes out the current version held by the constant VERSION
 print_version() {
-  printf -- 'update-hosts[%s]\n' "${__VERSION}"
+  printf -- '%s[%s]\n' "${APP_NAME}" "${VERSION}"
   echo
 
   return 0
@@ -1406,32 +1387,26 @@ print_help() {
   print_version
   printf -- '%s\n' "$(
     cat <<EOF
+
+[Commands]
+  hosts                     Output blocklist in hostsfile format
+  dnsmasq                   Output blocklist in dnsmasq configuration
+  ipset                     Also download ipset sources
+  help                      Display help
+  version                   Display version
+
 Options:
-   -h | --help             Display help
-   -v | --version          Display version
-   -r | --remove           Remove backups
-   -i | --ipset            Also download ipset sources
-   -u | --unbreak          Auto apply the unbreak whitelist
-   -d | --dnsmasq          Output hosts blocklist as dnsmasq configuration
-   --dest-ip [ip-address]  The destination IP to use (0.0.0.0)
+  -r | --remove             Remove backups
+  --output-hosts [file]     The file to output hosts to (/etc/hosts)
+  --output-ipset [file]     The file to output ipset to (/etc/ipset.conf)
+  --output-dnsmasq [file]   The file to output dnsmasq to (/etc/dnsmasq.d/blocklist.conf)
+  --source [url|file]       Source a hosts file part
+  --ipset-name [name]       The name of the ipset (blocklist)
+  --sudoloop                Once sudo is claimed, keep hold of it
+                            through the entire script.
 
-   [OUTPUT]
-   --output-hosts [file]   The file to output hosts to (/etc/hosts)
-   --output-ipset [file]   The file to output ipsets to (/etc/ipset.conf)
-   --output-dnsmasq [file] The file to output dnsmasq to (/etc/dnsmasq.d/blocklist.conf)
-   --no-hosts              Do not generate a hosts file (only generate a dnsmasq and/or ipset file)
-
-   [HOSTS]
-   --source [url|file]     Source a hosts file part
-
-   [IPSET]
-   --ipset-name [name]     The name of the ipset (blocklist)
-
-   --sudoloop              Once sudo is claimed, keep hold of it
-                           through the entire script.
-
-   [INTERNAL]
-   --systemd               Used by systemd service file
+[INTERNAL]
+  --systemd                 Used by systemd service file
 EOF
   )"
   return 0
@@ -1441,130 +1416,121 @@ EOF
 # Main function which handles the downloading of hosts files
 #
 # $1 grab sudo with sudoloop
-# $2 hosts file destination
-# $3 destination IP address
-# $4 output as dnsmasq
-# $5 dnsmasq file path
-# $6 remove backups
-# $7 ignore hosts file generation
+# $2 output as hosts
+# $3 output as dnsmasq
+# $4 destination IP address
+# $5 hosts file destination
+# $6 dnsmasq file path
+# $7 remove backups
 # $8 extra headers
-main_hosts() {
-  main_hosts__lock_sudo="$1"
-  main_hosts__file="$2"
-  main_hosts__ip="$3"
-  main_hosts__output_dnsmasq="$4"
-  main_hosts__dnsmasq_file="$5"
-  main_hosts__remove_backup="$6"
-  main_hosts__ignore="$7"
-  main_hosts__extra_headers="$8"
-
-  # Configuration
-  print_hosts_config "${main_hosts__file}" "${main_hosts__ip}"
+main_blocklist() {
+  main_blocklist__lock_sudo="$1"
+  main_blocklist__output_hosts="$2"
+  main_blocklist__output_dnsmasq="$3"
+  main_blocklist__ip="$4"
+  main_blocklist__file="$5"
+  main_blocklist__dnsmasq_file="$6"
+  main_blocklist__remove_backup="$7"
+  main_blocklist__extra_headers="$8"
 
   # Download
-  action_msg "Downloading hosts_sources lists..."
   download_sources "$(decide_dl_client)" "${HOSTS_SOURCES}" "process_hosts_sources" || return 1
 
   # Parse
   printf -- '\n'
-  action_msg "Generating blocklist..."
   apply_whitelist "${HOSTS_WHITELIST}" || return 1
   apply_blacklist "${HOSTS_BLACKLIST}" || return 1
   sort_entries || return 1
   remove_duplicates || return 1
 
   # Copy the blocklist here in case we need to re-use it
-  main_hosts__blocklist="${__blocklist}"
+  main_blocklist__blocklist="${__blocklist}"
 
-  if [ "${main_hosts__ignore}" -ne 1 ]; then
-
-    add_new_destination "${main_hosts__ip}" || return 1
+  if [ "${main_blocklist__output_hosts}" -eq 1 ]; then
+    add_new_destination "${main_blocklist__ip}" || return 1
 
     # Install
     info_msg "Create new hosts file"
-    main_hosts__hosts="$(generate_new_file "${main_hosts__extra_headers}" 1)" || return 1
-    main_hosts__file_backup="$(create_backup_name "${main_hosts__file}")" || return 1
+    main_blocklist__hosts="$(generate_new_file "${main_blocklist__extra_headers}" 1)" || return 1
+    main_blocklist__file_backup="$(create_backup_name "${main_blocklist__file}")" || return 1
 
-    main_hosts__sudo=
-    if touch "${main_hosts__file}" >/dev/null 2>&1; then
+    main_blocklist__sudo=
+    if touch "${main_blocklist__file}" >/dev/null 2>&1; then
       # If we can write to the destination, we don't need sudo
-      main_hosts__sudo=""
+      main_blocklist__sudo=""
     else
       if sudo -n -v >/dev/null 2>&1; then
         # If we can already use sudo, we don't need to prompt for it again
-        main_hosts__sudo="sudo"
+        main_blocklist__sudo="sudo"
       else
-        action_msg "sudo is needed to write to file: %s" "${main_hosts__file}"
-        grab_sudo "${main_hosts__lock_sudo}" || return 1
-        main_hosts__sudo="sudo"
+        action_msg "sudo is needed to write to file: %s" "${main_blocklist__file}"
+        grab_sudo "${main_blocklist__lock_sudo}" || return 1
+        main_blocklist__sudo="sudo"
       fi
     fi
 
-    backup_old_file "${main_hosts__sudo}" "${main_hosts__file}" "${main_hosts__file_backup}" ||
+    backup_old_file "${main_blocklist__sudo}" "${main_blocklist__file}" "${main_blocklist__file_backup}" ||
       return 1
-    install_new_file "${main_hosts__sudo}" "${main_hosts__hosts}" "${main_hosts__file}" || return 1
-    fix_file_permissons "${main_hosts__sudo}" "${main_hosts__file}" || return 1
-    fix_file_permissons "${main_hosts__sudo}" "${main_hosts__file_backup}" || return 1
-    print_file_differences "${main_hosts__file}" "${main_hosts__file_backup}" || return 1
+    install_new_file "${main_blocklist__sudo}" "${main_blocklist__hosts}" "${main_blocklist__file}" || return 1
+    fix_file_permissons "${main_blocklist__sudo}" "${main_blocklist__file}" || return 1
+    fix_file_permissons "${main_blocklist__sudo}" "${main_blocklist__file_backup}" || return 1
+    print_file_differences "${main_blocklist__file}" "${main_blocklist__file_backup}" || return 1
 
     # Cleanup
-    if [ "${main_hosts__remove_backup}" -eq 1 ]; then
-      remove_all_backup_files "${main_hosts__sudo}" "${main_hosts__file}" || return 1
+    if [ "${main_blocklist__remove_backup}" -eq 1 ]; then
+      remove_all_backup_files "${main_blocklist__sudo}" "${main_blocklist__file}" || return 1
     fi
   fi
 
-  if [ "${main_hosts__output_dnsmasq}" -eq 1 ]; then
+  if [ "${main_blocklist__output_dnsmasq}" -eq 1 ]; then
     # Restore the blocklist before destination address formatting
-    __blocklist="${main_hosts__blocklist}"
-
-    printf -- '\n\n'
-    print_dnsmasq_config "${main_hosts__dnsmasq_file}" "${main_hosts__ip}" || return 1
-    add_new_dnsmasq "${main_hosts__ip}" || return 1
+    __blocklist="${main_blocklist__blocklist}"
+    add_new_dnsmasq "${main_blocklist__ip}" || return 1
 
     # Re-establish sudo
-    main_hosts__sudo=
-    if touch "${main_hosts__dnsmasq_file}" >/dev/null 2>&1; then
+    main_blocklist__sudo=
+    if touch "${main_blocklist__dnsmasq_file}" >/dev/null 2>&1; then
       # If we can write to the destination, we don't need sudo
-      main_hosts__sudo=""
+      main_blocklist__sudo=""
     else
       if sudo -n -v >/dev/null 2>&1; then
         # If we can already use sudo, we don't need to prompt for it again
-        main_hosts__sudo="sudo"
+        main_blocklist__sudo="sudo"
       else
-        action_msg "sudo is needed to write to file: %s" "${main_hosts__dnsmasq_file}"
-        grab_sudo "${main_hosts__lock_sudo}" || return 1
-        main_hosts__sudo="sudo"
+        action_msg "sudo is needed to write to file: %s" "${main_blocklist__dnsmasq_file}"
+        grab_sudo "${main_blocklist__lock_sudo}" || return 1
+        main_blocklist__sudo="sudo"
       fi
     fi
 
     info_msg "Create new dnsmasq file"
-    main_hosts__dnsmasq="$(generate_new_file "" 0)" || return 1
-    main_hosts__dnsmasq_file_backup="$(create_backup_name "${main_hosts__dnsmasq_file}")" || return 1
+    main_blocklist__dnsmasq="$(generate_new_file "" 0)" || return 1
+    main_blocklist__dnsmasq_file_backup="$(create_backup_name "${main_blocklist__dnsmasq_file}")" || return 1
 
-    backup_old_file "${main_hosts__sudo}" "${main_hosts__dnsmasq_file}" \
-      "${main_hosts__dnsmasq_file_backup}" || return 1
-    install_new_file "${main_hosts__sudo}" "${main_hosts__dnsmasq}" "${main_hosts__dnsmasq_file}" ||
+    backup_old_file "${main_blocklist__sudo}" "${main_blocklist__dnsmasq_file}" \
+      "${main_blocklist__dnsmasq_file_backup}" || return 1
+    install_new_file "${main_blocklist__sudo}" "${main_blocklist__dnsmasq}" "${main_blocklist__dnsmasq_file}" ||
       return 1
-    fix_file_permissons "${main_hosts__sudo}" "${main_hosts__dnsmasq_file}" || return 1
-    fix_file_permissons "${main_hosts__sudo}" "${main_hosts__dnsmasq_file_backup}" || return 1
-    print_file_differences "${main_hosts__dnsmasq_file}" "${main_hosts__dnsmasq_file_backup}" || return 1
+    fix_file_permissons "${main_blocklist__sudo}" "${main_blocklist__dnsmasq_file}" || return 1
+    fix_file_permissons "${main_blocklist__sudo}" "${main_blocklist__dnsmasq_file_backup}" || return 1
+    print_file_differences "${main_blocklist__dnsmasq_file}" "${main_blocklist__dnsmasq_file_backup}" || return 1
 
     # Cleanup
-    if [ "${main_hosts__remove_backup}" -eq 1 ]; then
-      remove_all_backup_files "${main_hosts__sudo}" "${main_hosts__dnsmasq_file}" || return 1
+    if [ "${main_blocklist__remove_backup}" -eq 1 ]; then
+      remove_all_backup_files "${main_blocklist__sudo}" "${main_blocklist__dnsmasq_file}" || return 1
     fi
   fi
 
   # Unset the blocklist now that we are done.
   unset __blocklist
 
-  unset main_hosts__hosts
-  unset main_hosts__sudo
-  unset main_hosts__file
-  unset main_hosts__lock_sudo
-  unset main_hosts__file_backup
-  unset main_hosts__ip
-  unset main_hosts__remove_backup
+  unset main_blocklist__hosts
+  unset main_blocklist__sudo
+  unset main_blocklist__file
+  unset main_blocklist__lock_sudo
+  unset main_blocklist__file_backup
+  unset main_blocklist__ip
+  unset main_blocklist__remove_backup
   return 0
 }
 
@@ -1575,71 +1541,65 @@ main_hosts() {
 # $2 ipset file destination
 # $3 ipset name
 # $4 remove backups
-main_ipsets() {
-  main_ipsets__lock_sudo="$1"
-  main_ipsets__file="$2"
-  main_ipsets__name="$3"
-  main_ipsets__remove_backup="$4"
-
-  # Begin
-  printf -- '\n\n'
-  print_ipset_config "${main_ipsets__file}" "${main_ipsets__name}" || return 1
+main_ipset() {
+  main_ipset__lock_sudo="$1"
+  main_ipset__file="$2"
+  main_ipset__name="$3"
+  main_ipset__remove_backup="$4"
 
   # Download
-  action_msg "Downloading ipset_sources lists..."
   download_sources "$(decide_dl_client)" "${IPSET_SOURCES}" "process_ipset_sources" || return 1
 
   # Parse
   printf -- '\n'
-  action_msg "Generating blocklist..."
   apply_whitelist "${IPSET_WHITELIST}" || return 1
   apply_blacklist "${IPSET_BLACKLIST}" || return 1
   sort_entries || return 1
   remove_duplicates || return 1
 
   # Install
-  main_ipsets__file_backup=$(create_backup_name "${main_ipsets__file}") || return 1
+  main_ipset__file_backup=$(create_backup_name "${main_ipset__file}") || return 1
 
-  main_ipsets__sudo=
-  if touch "${main_ipsets__file}" >/dev/null 2>&1; then
+  main_ipset__sudo=
+  if touch "${main_ipset__file}" >/dev/null 2>&1; then
     # If we can write to the destination, we don't need sudo
-    main_ipsets__sudo=""
+    main_ipset__sudo=""
   else
     if sudo -n -v >/dev/null 2>&1; then
       # If we can already use sudo, we don't need to prompt for it again
-      main_ipsets__sudo="sudo"
+      main_ipset__sudo="sudo"
     else
-      action_msg "sudo is needed to write to file: %s" "${main_ipsets__file}"
-      grab_sudo "${main_ipsets__lock_sudo}" || return 1
-      main_ipsets__sudo="sudo"
+      action_msg "sudo is needed to write to file: %s" "${main_ipset__file}"
+      grab_sudo "${main_ipset__lock_sudo}" || return 1
+      main_ipset__sudo="sudo"
     fi
   fi
 
   action_msg "Create new ipset file"
 
   # Creating an ipset always requires sudo
-  prepare_ipset_config "sudo" "${main_ipsets__name}" || return 1
+  prepare_ipset_config "sudo" "${main_ipset__name}" || return 1
 
-  backup_old_file "${main_ipsets__sudo}" "${main_ipsets__file}" "${main_ipsets__file_backup}" ||
+  backup_old_file "${main_ipset__sudo}" "${main_ipset__file}" "${main_ipset__file_backup}" ||
     return 1
 
   # Managing an ipset always requires sudo
-  install_ipset_blocklist "sudo" "${main_ipsets__file}" "${main_ipsets__name}" || return 1
-  fix_file_permissons "${main_ipsets__sudo}" "${main_ipsets__file}" || return 1
-  fix_file_permissons "${main_ipsets__sudo}" "${main_ipsets__file_backup}" || return 1
-  print_file_differences "${main_ipsets__file}" "${main_ipsets__file_backup}" || return 1
+  install_ipset_blocklist "sudo" "${main_ipset__file}" "${main_ipset__name}" || return 1
+  fix_file_permissons "${main_ipset__sudo}" "${main_ipset__file}" || return 1
+  fix_file_permissons "${main_ipset__sudo}" "${main_ipset__file_backup}" || return 1
+  print_file_differences "${main_ipset__file}" "${main_ipset__file_backup}" || return 1
 
   # Cleanup
-  if [ "${main_ipsets__remove_backup}" -eq 1 ]; then
-    remove_all_backup_files "${main_ipsets__sudo}" "${main_ipsets__file}" || return 1
+  if [ "${main_ipset__remove_backup}" -eq 1 ]; then
+    remove_all_backup_files "${main_ipset__sudo}" "${main_ipset__file}" || return 1
   fi
 
-  unset main_ipsets__sudo
-  unset main_ipsets__file
-  unset main_ipsets__name
-  unset main_ipsets__lock_sudo
-  unset main_ipsets__file_backup
-  unset main_ipsets__remove_backup
+  unset main_ipset__sudo
+  unset main_ipset__file
+  unset main_ipset__name
+  unset main_ipset__lock_sudo
+  unset main_ipset__file_backup
+  unset main_ipset__remove_backup
   return 0
 }
 
@@ -1667,16 +1627,15 @@ grab_sudo() {
 }
 
 main() {
-
   # Options
   remove_backups=0
-  manage_ipsets=0
-  apply_unbreak=0
   extra_headers=""
   lock_sudoloop=0
   using_systemd=0
+
+  output_hosts=0
+  output_ipset=0
   output_dnsmasq=0
-  no_hosts=0
 
   # Script begins here
   dst_hosts="/etc/hosts"
@@ -1707,170 +1666,98 @@ main() {
   # Handle options
   # While risky to call eval, this is one way to
   # emulate the bash indirect_expansion ability
-  if [ $# -gt 0 ]; then
-    long_option=""
-    optind_expanded=
-    eval optind_expanded="\$${OPTIND}"
-    while [ -n "${optind_expanded}" ]; do
-      while getopts ":hvrdiu-:" option; do
-        # Set only on long option with arg
-        if [ -n "${long_option}" ]; then
-          error_msg "Long option --%s expects argument" "${long_option}"
-          return 1
-        fi
-
-        long_option=""
-        case "${option}" in
-        -)
-          case "${OPTARG}" in
-          help)
-            print_help
-            return 0
-            ;;
-          version)
-            print_version
-            return 0
-            ;;
-          remove)
-            remove_backups=1
-            ;;
-          ipset)
-            manage_ipsets=1
-            ;;
-          no-hosts)
-            no_hosts=1
-            ;;
-          sudoloop)
-            lock_sudoloop=1
-            ;;
-          dnsmasq)
-            output_dnsmasq=1
-            ;;
-          unbreak)
-            apply_unbreak=1
-            ;;
-          systemd)
-            using_systemd=1
-            ;;
-          output-hosts | output-ipset | output-dnsmasq | ipset-name | dest-ip | source)
-            long_option="${OPTARG}"
-            ;;
-          *)
-            # We must provide our own error message in this case
-            error_msg "Illegal option --%s" "${OPTARG}"
-            print_help
-            return 1
-            ;;
-          esac
-          ;;
-        h)
-          print_help
-          return 0
-          ;;
-        v)
-          print_version
-          return 0
-          ;;
-        r)
-          remove_backups=1
-          ;;
-        i)
-          manage_ipsets=1
-          ;;
-        u)
-          apply_unbreak=1
-          ;;
-        d)
-          output_dnsmasq=1
-          ;;
-        *)
-          error_msg "Illegal option -%s" "${OPTARG}"
-          print_help
-          return 1
-          ;;
-        esac
-      done
-
-      # Re-establish the current OPTIND target
-      if [ $# -ge ${OPTIND} ]; then
-        eval optind_expanded="\$${OPTIND}"
-      else
-        optind_expanded=""
-      fi
-
-      # Long option has argument
-      if [ -z "${optind_expanded}" ]; then
-        if [ -n "${long_option}" ]; then
-          error_msg "Long option --%s expects argument" "${long_option}"
-          return 1
-        else
-          break
-        fi
-      else
-        # This is a plain arg and should be handled by one of
-        # the options which takes an argument
-        case "${long_option}" in
-        output-hosts)
-          dst_hosts="${optind_expanded}"
-          ;;
-        output-ipset)
-          dst_ipset="${optind_expanded}"
-          ;;
-        output-dnsmasq)
-          dst_dnsmasq="${optind_expanded}"
-          ;;
-        dest-ip)
-          dst_ip="${optind_expanded}"
-          ;;
-        ipset-name)
-          ipset_name="${optind_expanded}"
-          ;;
-        source)
-          # We must be able to source from a file that exists and is readable.
-          case "${optind_expanded}" in
-          http*)
-            # Its a network source from somewhere, add it to the HOSTS_SOURCES
-            info_msg "Sourcing extra hosts from command line argument: --source='%s'" "${optind_expanded}"
-            HOSTS_SOURCES="${optind_expanded}
+  while [ -n "$1" ]; do
+    case "$1" in
+    hosts)
+      output_hosts=1
+      shift
+      ;;
+    dnsmasq)
+      output_dnsmasq=1
+      shift
+      ;;
+    ipset)
+      output_ipset=1
+      shift
+      ;;
+    help)
+      print_help
+      return 0
+      ;;
+    version)
+      print_version
+      return 0
+      ;;
+    --output-hosts)
+      shift
+      dst_hosts="$$1"
+      shift
+      ;;
+    --output-ipset)
+      shift
+      dst_ipset="$1"
+      shift
+      ;;
+    --output-dnsmasq)
+      shift
+      dst_dnsmasq="$1"
+      shift
+      ;;
+    --dest-ip)
+      shift
+      dst_ip="$1"
+      shift
+      ;;
+    --ipset-name)
+      shift
+      ipset_name="$1"
+      shift
+      ;;
+    --sudoloop)
+      shift
+      lock_sudoloop=1
+      ;;
+    --systemd)
+      shift
+      using_systemd=1
+      ;;
+    -r | --remove)
+      shift
+      remove_backups=1
+      ;;
+    --source)
+      shift
+      # We must be able to source from a file that exists and is readable.
+      case "$1" in
+      http*)
+        # Its a network source from somewhere, add it to the HOSTS_SOURCES
+        info_msg "Sourcing extra hosts from command line argument: --source='%s'" "$1"
+        HOSTS_SOURCES="$1
                 ${HOSTS_SOURCES}"
-            ;;
-          *)
-            # Else its a file path I hope
-            if [ -e "${optind_expanded}" ] && [ -r "${optind_expanded}" ]; then
-              info_msg "Sourcing extra hosts from command line argument: --source='%s'" "${optind_expanded}"
-              # Trim whitespace off of hosts file
-              extra_headers="# Extra hosts from command line argument: '--source=\"${optind_expanded}\"'
-                  $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "${optind_expanded}" | uniq)
+        ;;
+      *)
+        # Else its a file path I hope
+        if [ -e "$1" ] && [ -r "$1" ]; then
+          info_msg "Sourcing extra hosts from command line argument: --source='%s'" "$1"
+          # Trim whitespace off of hosts file
+          extra_headers="# Extra hosts from command line argument: '--source=\"$1\"'
+                  $(sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//;' "$1" | uniq)
 
                   ${extra_headers}"
-            else
-              error_msg "Hosts source does not exist: %s" "${optind_expanded}"
-            fi
-            ;;
-          esac
-          ;;
-        esac
-      fi
-
-      # Set back to null
-      long_option=
-
-      option_shift_count="${OPTIND}"
-      while [ "$#" -lt "${option_shift_count}" ]; do
-        option_shift_count=$((option_shift_count - 1))
-      done
-
-      # Need this here incase the loop doesn't run
-      if [ "$#" -ge "${option_shift_count}" ]; then
-        # Shift the options
-        shift ${option_shift_count}
-        OPTIND=1
-      fi
-
-      # Unset
-      unset option_shift_count
-    done
-  fi
+        else
+          error_msg "Hosts source does not exist: %s" "$1"
+        fi
+        ;;
+      esac
+      shift
+      ;;
+    *)
+      error_msg "Unknown command %s" "$1"
+      print_help
+      return 1
+      ;;
+    esac
+  done
 
   # Trap return signals
   trap cancel_sudoloop INT TERM
@@ -1879,28 +1766,22 @@ main() {
   if [ "$(id -u)" -eq 0 ]; then
     # If we are systemd thats okay I guess.
     if [ "${using_systemd}" -eq 0 ]; then
-      error_msg "You cannot run update-hosts as root. Please run as a normal user."
+      error_msg "You cannot run %s as root. Please run as a normal user." "${APP_NAME}"
       return 1
     fi
   fi
 
-  # Main process
-  if [ "${apply_unbreak}" -eq 1 ]; then
-    # Dynamically apply the unreak whitelist
-    action_msg "You are applying the Unbreak whitelist!"
-    info_msg "While this may fix many broken websites, it may also pose"
-    info_msg "a potential privacy or security risk. Use at your own discretion"
-    HOSTS_WHITELIST="
-    ${UNBREAK_WHITELIST}
-    ${HOSTS_WHITELIST}
-    "
+  # Exit early if no command
+  if [ "${output_hosts}" -eq 0 ] && [ "${output_dnsmasq}" -eq 0 ] && [ "${output_ipset}" -eq 0 ]; then
+    error_msg "You must generate the blocklist for either 'hosts' 'ipset' or 'dnsmasq'"
+    return 1
   fi
 
   # Only source from home if running normally
   if [ "${using_systemd}" -eq 0 ]; then
     # Source extra hosts from default user location
     # Trim whitespace off of hosts file
-    readonly user_hosts="${HOME}/.update-hosts"
+    readonly user_hosts="${HOME}/.${APP_NAME}"
     if [ -e "${user_hosts}" ] && [ -r "${user_hosts}" ]; then
       info_msg "Source extra hosts from user default location: %s" "${user_hosts}"
       extra_headers="# Extra hosts from user default file '${user_hosts}'
@@ -1911,7 +1792,7 @@ main() {
 
     # Source extra hosts whitelist from default user location
     # Trim whitespace off of hosts file
-    readonly user_whitelist="${HOME}/.update-hosts.whitelist"
+    readonly user_whitelist="${HOME}/.${APP_NAME}.whitelist"
     if [ -e "${user_whitelist}" ] && [ -r "${user_whitelist}" ]; then
       info_msg "Source extra hosts whitelist from user default location: %s" "${user_whitelist}"
       HOSTS_WHITELIST="
@@ -1922,7 +1803,7 @@ main() {
 
     # Source extra hosts blacklist from default user location
     # Trim whitespace off of hosts file
-    readonly user_blacklist="${HOME}/.update-hosts.blacklist"
+    readonly user_blacklist="${HOME}/.${APP_NAME}.blacklist"
     if [ -e "${user_blacklist}" ] && [ -r "${user_blacklist}" ]; then
       info_msg "Source extra hosts blacklist from user default location: %s" "${user_blacklist}"
       HOSTS_BLACKLIST="
@@ -1932,42 +1813,37 @@ main() {
     fi
   fi
 
-  # Parse hosts files
-  main_hosts "${lock_sudoloop}" "${dst_hosts}" "${dst_ip}" "${output_dnsmasq}" "${dst_dnsmasq}" \
-    "${remove_backups}" "${no_hosts}" "${extra_headers}" || return 1
-
-  if [ "${manage_ipsets}" -eq 0 ]; then
-    # End here
-    return 0
+  print_config || return 1
+  if [ "${output_hosts}" -ne 0 ]; then
+    print_hosts_config "${dst_hosts}" "${dst_ip}" || return 1
+  fi
+  if [ "${output_dnsmasq}" -ne 0 ]; then
+    print_dnsmasq_config "${dst_dnsmasq}" "${dst_ip}" || return 1
+  fi
+  if [ "${output_ipset}" -ne 0 ]; then
+    print_ipset_config "${dst_ipset}" "${ipset_name}" || return 1
   fi
 
-  # Start fresh
-  cleanup
+  if [ "${output_hosts}" -ne 0 ] || [ "${output_dnsmasq}" -ne 0 ]; then
+    # Parse hosts files
+    main_blocklist "${lock_sudoloop}" \
+      "${output_hosts}" "${output_dnsmasq}" \
+      "${dst_ip}" "${dst_hosts}" "${dst_dnsmasq}" \
+      "${remove_backups}" "${extra_headers}" || return 1
+  fi
 
-  check_for_binary ipset || return 1
-  main_ipsets "${lock_sudoloop}" "${dst_ipset}" "${ipset_name}" "${remove_backups}" || return 1
+  if [ "${output_ipset}" -ne 0 ]; then
+    # Start fresh
+    cleanup || return 1
+
+    check_for_binary ipset || return 1
+    main_ipset "${lock_sudoloop}" "${dst_ipset}" "${ipset_name}" "${remove_backups}" || return 1
+  fi
+
+  return 0
 }
 
-# For more information about these particular options, see
-#    https://stackoverflow.com/questions/13468481/when-to-use-set-e
-set -u
-
-# dash does not understand pipefail
-#
-# set -o pipefail
-
-# Export the LC as the default C so that we do not run into locale based quirks
-LC_ALL=C
-export LC_ALL
-
-# Configuration:
-
-# Version
-readonly __VERSION="2.8.0"
-
 check_for_binary mktemp || exit 1
-
-readonly SUDOLOCK="$(mktemp)"
 
 # NOTE: Adding the alias of the 0 domain to itself fixes a display issue that
 #       can occur when using traceroute, netstat and the like.
@@ -2072,119 +1948,17 @@ HOSTS_SOURCES="
   ${ADDITONAL_HOSTS_SOURCES}
 "
 
-# Regex allowed
-#  '\.com$'   -> all domains that end with '.com'
-#  '^example' -> all domains that start with 'example'
-#  '^sub.\example\.org$' -> literal domain 'sub.exmaple.org'
-
-# Due to the binary yes or no nature of hosts file, all of the domains that
-# relate in some way to the uBlock0 Unbreak list will be added here.
-# This is to allow uBlock0 to block the specific parts of the domains, while
-# not breaking other sites that actually rely on them
-# Though not a great solution, this seems to be the only way to get around
-# some sites breaking when blocking certain hosts
-#
-# Because we cannot guarantee that the domains shipped in the whitelist
-# are the full domain names, we do not qualify them with '^'
-#
-# Update 2016/10/15
-readonly UNBREAK_WHITELIST='
-  google-analytics\.com$
-  analytics\.google\.com$
-  adf\.ly$
-  widget-cdn\.rpxnow\.com$
-  tags\.tiqcdn\.com$
-  statcounter\.com$
-  cdn-static\.liverail\.com$
-  vox-static\.liverail\.com$
-  s0\.2mdn\.net$
-  cdn-i\.dmdentertainment\.com$
-  cdn\.vurb\.com$
-  target\.122\.2o7\.net$
-  adm\.fwmrm\.net$
-  mopub\.com$
-  safelinking\.net$
-  outbrain\.com$
-  inc\.com$
-  flurry\.com$
-  c\.speedtest\.net$
-  boldchat\.com$
-  mixpanel\.com$
-  charlie\.strim.io$
-  ovh\.strim.io$
-  dn\.turner\.com$
-  yui\.yahooapis\.com$
-  top\.mail\.ru$
-  css\.washingtonpost\.com$
-  pcekspert\.com$
-  clickbank\.com$
-  yandex\.ru$
-  yastatic\.net$
-  carbonads\.net$
-  imasdk\.googleapis\.com$
-  2o7\.net$
-  quantcast\.com$
-  css5\.gaanacdn\.com$
-  keen\.github\.io$
-  cdn\.phoenix\.intergi\.com$
-  kissmetrics\.com$
-  viewpoint\.com$
-  woopra\.com$
-  monetate\.net$
-  googleads\.g\.doubleclick\.net$
-  img\.echohosting\.cafe24\.com$
-  googletagmanager\.com$
-  partner\.googleadservices\.com$
-  pagefair\.com$
-  ssl\.cdn-redfin\.com$
-  www\.southwest\.com$
-  marketwatch\.com$
-  cloudfront\.net$
-  nationalreview\.com$
-  liveperson\.net$
-  taboola\.com$
-  ticketmaster\.122\.2o7\.net$
-  phoronix\.com$
-  files\.explosm\.net$
-  cdn\.segment\.com$
-  sorted\.org$
-  analytics\.edgekey\.net$
-  tfag\.de$
-  ^nav\.files\.bbci\.co\.uk$
-  gamespot\.com$
-  umbro\.com$
-  shop\.puppetlabs\.com$
-  flightradar24\.com$
-  premium\.soundcloud\.com$
-  stats\.bbc\.co\.uk$
-  snoobi\.com$
-  esellerate\.net$
-  dw\.cbsi\.com$
-  data\.netscope\.marktest\.pt$
-  gapt.\hit\.gemius\.pl$
-  naiadsystems\.com$
-  static\.adf\.ly$
-  emarketer\.com$
-  tapad\.com$
-  staticxx\.facebook\.com$
-  sp\.computershopper\.com$
-  localytics\.com$
-  p\.jwpcdn\.com$
-  media2\.intoday\.in$
-  styletagassets\.com$
-  outlook\.live\.com$
-  uim\.tifbs\.net$
-'
-
 # User defined whitelist
 readonly USER_WHITELIST='
 '
 
+# Regex allowed
+#  '\.com$'   -> all domains that end with '.com'
+#  '^example' -> all domains that start with 'example'
+#  '^sub.\example\.org$' -> literal domain 'sub.exmaple.org'
+#
 # Add any of your own custom whitelist modifications to the USER_WHITELIST
 # variable
-#
-# As of version 2.2.0, unbreak list is not added by default
-# ${UNBREAK_WHITELIST}
 HOSTS_WHITELIST="
   ${USER_WHITELIST}
 "
@@ -2482,7 +2256,7 @@ HOSTS_BLACKLIST="
   ${USER_BLACKLIST}
 "
 
-# The base ipsets
+# The base ipset
 # Provides a basic amount of protection without breaking sites, or breaking
 # only a minimal amount of sites
 readonly BASE_IPSET_SOURCES='
