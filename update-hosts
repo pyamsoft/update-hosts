@@ -1524,7 +1524,6 @@ print_help() {
   print_version
   printf -- '%s\n' "$(
     cat <<EOF
-
 [Commands]
   hosts                     Output blocklist in hostsfile format
   dnsmasq                   Output blocklist in dnsmasq configuration
@@ -1911,6 +1910,7 @@ main() {
   # Exit early if no command
   if [ "${output_hosts}" -eq 0 ] && [ "${output_dnsmasq}" -eq 0 ] && [ "${output_ipset}" -eq 0 ]; then
     error_msg "You must generate the blocklist for either 'hosts' 'ipset' or 'dnsmasq'"
+    print_help || return 1
     return 1
   fi
 

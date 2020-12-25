@@ -122,35 +122,28 @@ specific system.
 ## Options
 
 ```
-$ ./update-hosts -h
-update-hosts[2.8.0]
+$ ./update-hosts
+update-hosts[3.0.0]
+
+[Commands]
+  hosts                     Output blocklist in hostsfile format
+  dnsmasq                   Output blocklist in dnsmasq configuration
+  ipset                     Also download ipset sources
+  help                      Display help
+  version                   Display version
 
 Options:
-   -h | --help             Display help
-   -v | --version          Display version
-   -r | --remove           Remove backups
-   -i | --ipset            Also download ipset sources
-   -u | --unbreak          Auto apply the unbreak whitelist
-   -d | --dnsmasq          Output hosts blocklist as dnsmasq configuration
-   --dest-ip [ip-address]  The destination IP to use (0.0.0.0)
+  -r | --remove             Remove backups
+  --output-hosts [file]     The file to output hosts to (/etc/hosts)
+  --output-ipset [file]     The file to output ipset to (/etc/ipset.conf)
+  --output-dnsmasq [file]   The file to output dnsmasq to (/etc/dnsmasq.d/blocklist.conf)
+  --source [url|file]       Source a hosts file part
+  --ipset-name [name]       The name of the ipset (blocklist)
+  --sudoloop                Once sudo is claimed, keep hold of it
+                            through the entire script.
 
-   [OUTPUT]
-   --output-hosts [file]   The file to output hosts to (/etc/hosts)
-   --output-ipset [file]   The file to output ipsets to (/etc/ipset.conf)
-   --output-dnsmasq [file] The file to output dnsmasq to (/etc/dnsmasq.d/blocklist.conf)
-   --no-hosts              Do not generate a hosts file (only generate a dnsmasq and/or ipset file)
-
-   [HOSTS]
-   --source [url|file]     Source a hosts file part
-
-   [IPSET]
-   --ipset-name [name]     The name of the ipset (blocklist)
-
-   --sudoloop              Once sudo is claimed, keep hold of it
-                           through the entire script.
-
-   [INTERNAL]
-   --systemd               Used by systemd service file
+[INTERNAL]
+  --systemd                 Used by systemd service file
 ```
 
 ## Disclaimer
