@@ -1827,7 +1827,7 @@ main() {
       ;;
     --output-hosts)
       shift
-      dst_hosts="$$1"
+      dst_hosts="$1"
       shift
       ;;
     --output-ipset)
