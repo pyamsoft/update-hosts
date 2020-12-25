@@ -33,6 +33,8 @@ export LC_ALL
 readonly APP_NAME="update-hosts"
 readonly VERSION="3.0.0"
 readonly SUDOLOCK="$(mktemp)"
+readonly LOCKFILE="$(mktemp)"
+readonly LOCK_OWNER="${LOCKFILE}.lock"
 
 # Will cause calls to
 #
@@ -154,6 +156,65 @@ source_err_msg() {
   unset source_err_msg__index
   unset source_err_msg__source
   unset source_err_msg__message
+  return 0
+}
+
+##
+# Claim a lock or wait for it to release
+#
+claim_lock() {
+  while ! ln "${LOCKFILE}" "${LOCK_OWNER}" >/dev/null 2>&1; do
+    sleep 0.1s
+  done
+
+  __owns_lock=1
+}
+
+##
+# Release the lock file
+#
+release_lock() {
+  if [ "${__owns_lock}" -eq 1 ]; then
+    while [ -e "${LOCK_OWNER}" ]; do
+      rm -f "${LOCK_OWNER}"
+      __owns_lock=0
+    done
+  fi
+}
+
+##
+# Move cursor lines upwards and set to beginning of line
+#
+# $1 lines upwards
+#
+move_cursor_upwards() {
+  move_cursor_upwards__lines="$1"
+  if [ -z "${move_cursor_upwards__lines}" ] || [ "${move_cursor_upwards__lines}" -le 0 ]; then
+    return 1
+  fi
+
+  # shellcheck disable=SC2059
+  printf -- "\\033[${move_cursor_upwards__lines}A\r"
+
+  unset move_cursor_upwards__lines
+  return 0
+}
+
+##
+# Move cursor lines downwards and set to beginning of line
+#
+# $1 lines downwards
+#
+move_cursor_downwards() {
+  move_cursor_downwards__lines="$1"
+  if [ -z "${move_cursor_downwards__lines}" ] || [ "${move_cursor_downwards__lines}" -le 0 ]; then
+    return 1
+  fi
+
+  # shellcheck disable=SC2059
+  printf -- "\\033[${move_cursor_downwards__lines}B\r"
+
+  unset move_cursor_downwards__lines
   return 0
 }
 
@@ -474,17 +535,19 @@ process_hosts_sources() {
 # Parse the hosts file together from the various sources
 #
 # $1 Index
-# $2 The HTTP client to use
-# $3 The URL of the source
-# $4 The temporary file location
-# $5 The command to run after downloading, begins with process_*
+# $2 Max count
+# $3 The HTTP client to use
+# $4 The URL of the source
+# $5 The temporary file location
+# $6 The command to run after downloading, begins with process_*
 ##
 download_to_tempfile() {
   download_to_tempfile__index="$1"
-  download_to_tempfile__client="$2"
-  download_to_tempfile__url="$3"
-  download_to_tempfile__file="$4"
-  download_to_tempfile__process_hook="$5"
+  download_to_tempfile__max="$2"
+  download_to_tempfile__client="$3"
+  download_to_tempfile__url="$4"
+  download_to_tempfile__file="$5"
+  download_to_tempfile__process_hook="$6"
   download_to_tempfile__content=
 
   source_msg "${download_to_tempfile__index}" "${download_to_tempfile__url}" "Downloading..."
@@ -495,17 +558,57 @@ download_to_tempfile() {
   )")"
 
   if [ -z "${download_to_tempfile__content}" ]; then
+    claim_lock || {
+      error_msg 'Unable to claim lockfile: %s' "${LOCK_OWNER}"
+      return 1
+    }
+    move_cursor_upwards "$((download_to_tempfile__max - download_to_tempfile__index + 1))"
     source_err_msg "${download_to_tempfile__index}" "${download_to_tempfile__url}" \
       "Failed to download."
+    move_cursor_downwards "$((download_to_tempfile__max - download_to_tempfile__index))"
+
+    release_lock || {
+      error_msg 'Unable to claim lockfile: %s' "${LOCK_OWNER}"
+      return 1
+    }
+
     return 1
   fi
 
   # Guarantee an empty file
   printf -- '%s\n' "${download_to_tempfile__content}" >"${download_to_tempfile__file}"
 
+  claim_lock || {
+    error_msg 'Unable to claim lockfile: %s' "${LOCK_OWNER}"
+    return 1
+  }
+
+  move_cursor_upwards "$((download_to_tempfile__max - download_to_tempfile__index + 1))"
+  source_msg "${download_to_tempfile__index}" "${download_to_tempfile__url}" "Download complete!"
+  move_cursor_downwards "$((download_to_tempfile__max - download_to_tempfile__index))"
+
+  release_lock || {
+    error_msg 'Unable to claim lockfile: %s' "${LOCK_OWNER}"
+    return 1
+  }
+
   # Run after download processing hook
   "${download_to_tempfile__process_hook}" "${download_to_tempfile__index}" \
     "${download_to_tempfile__file}" "${download_to_tempfile__url}"
+
+  claim_lock || {
+    error_msg 'Unable to claim lockfile: %s' "${LOCK_OWNER}"
+    return 1
+  }
+
+  move_cursor_upwards "$((download_to_tempfile__max - download_to_tempfile__index + 1))"
+  source_msg "${download_to_tempfile__index}" "${download_to_tempfile__url}" "Processing complete!"
+  move_cursor_downwards "$((download_to_tempfile__max - download_to_tempfile__index))"
+
+  release_lock || {
+    error_msg 'Unable to claim lockfile: %s' "${LOCK_OWNER}"
+    return 1
+  }
 
   unset download_to_tempfile__client
   unset download_to_tempfile__process_hook
@@ -533,6 +636,35 @@ download_sources() {
   IFS="
 "
 
+  download_sources__max=0
+  for download_sources__url in ${download_sources__sources}; do
+    # Set the IFS back to normal
+    IFS="${download_sources__old_ifs}"
+
+    # Trim spaces and strip comments
+    download_sources__url="$(printf -- "%s" "${download_sources__url}" |
+      sed 's/^[[:blank:]]*//; s/[[:blank:]]*$//; s/#.*$//g')"
+    if [ -n "${download_sources__url}" ]; then
+      case "${download_sources__url}" in
+      \#*)
+        # Comments are skipped
+        continue
+        ;;
+      *)
+        download_sources__max="$((download_sources__max + 1))"
+        ;;
+      esac
+    fi
+
+    # Set the IFS back to weird
+    IFS="
+"
+  done
+
+  # Set the IFS to newlines only
+  IFS="
+"
+
   download_sources__i=0
   for download_sources__url in ${download_sources__sources}; do
     # Set the IFS back to normal
@@ -554,8 +686,8 @@ download_sources() {
         # Add the tempfile to list of temporary files
         __temp_files="${download_sources__tempfile} "${__temp_files}
 
-        download_to_tempfile "${download_sources__i}" "${download_sources__client}" \
-          "${download_sources__url}" "${download_sources__tempfile}" \
+        download_to_tempfile "${download_sources__i}" "${download_sources__max}" \
+          "${download_sources__client}" "${download_sources__url}" "${download_sources__tempfile}" \
           "${download_sources__process_hook}" &
 
         # Add the pid to list of pids
@@ -605,6 +737,9 @@ download_sources() {
     unset f
     unset download_sources__tempfile_content
   done
+
+  printf -- '\n'
+  action_msg "All Sources Downloaded!"
 
   unset download_sources__client
   unset download_sources__sources
@@ -1360,6 +1495,8 @@ cleanup() {
 # performs cleanup and then exits the script
 cancel_sudoloop() {
   [ -e "${SUDOLOCK}" ] && rm -f "${SUDOLOCK}"
+  [ -e "${LOCKFILE}" ] && rm -f "${LOCKFILE}"
+  [ -e "${LOCK_OWNER}" ] && rm -f "${LOCK_OWNER}"
   cleanup
 
   # Exit point
@@ -1437,7 +1574,7 @@ main_blocklist() {
   download_sources "$(decide_dl_client)" "${HOSTS_SOURCES}" "process_hosts_sources" || return 1
 
   # Parse
-  printf -- '\n'
+  action_msg "Creating blocklist"
   apply_whitelist "${HOSTS_WHITELIST}" || return 1
   apply_blacklist "${HOSTS_BLACKLIST}" || return 1
   sort_entries || return 1
@@ -1551,7 +1688,7 @@ main_ipset() {
   download_sources "$(decide_dl_client)" "${IPSET_SOURCES}" "process_ipset_sources" || return 1
 
   # Parse
-  printf -- '\n'
+  action_msg "Creating ipset blocklist"
   apply_whitelist "${IPSET_WHITELIST}" || return 1
   apply_blacklist "${IPSET_BLACKLIST}" || return 1
   sort_entries || return 1
@@ -2305,6 +2442,7 @@ readonly IPSET_BLACKLIST='
 __temp_files="" # Leave blank
 __pids=""       # Leave blank
 __blocklist=""  # Leave blank
+__owns_lock=0
 
 main "$@" || {
   cancel_sudoloop 1
