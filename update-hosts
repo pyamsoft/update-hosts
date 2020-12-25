@@ -631,6 +631,9 @@ download_sources() {
   download_sources__sources="$2"
   download_sources__process_hook="$3"
 
+  action_msg "Begin source downloads..."
+  printf -- '\n'
+
   # Set the IFS to newlines only
   download_sources__old_ifs="${IFS}"
   IFS="
@@ -740,6 +743,7 @@ download_sources() {
 
   printf -- '\n'
   action_msg "All Sources Downloaded!"
+  printf -- '\n'
 
   unset download_sources__client
   unset download_sources__sources
