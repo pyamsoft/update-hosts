@@ -1532,8 +1532,8 @@ print_help() {
   hosts                     Output blocklist in hostsfile format
   dnsmasq                   Output blocklist in dnsmasq configuration
   ipset                     Also download ipset sources
-  help                      Display help
-  version                   Display version
+  help | -h | --help        Display help
+  version | -v | --version  Display version
 
 Options:
   -r | --remove             Remove backups
@@ -1820,11 +1820,11 @@ main() {
       output_ipset=1
       shift
       ;;
-    help)
+    help | -h | --help)
       print_help
       return 0
       ;;
-    version)
+    version | -v | --version)
       print_version
       return 0
       ;;
