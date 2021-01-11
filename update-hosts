@@ -31,7 +31,7 @@ LC_ALL=C
 export LC_ALL
 
 readonly APP_NAME="update-hosts"
-readonly VERSION="3.0.0"
+readonly VERSION="3.1.0"
 readonly SUDOLOCK="$(mktemp)"
 readonly LOCKFILE="$(mktemp)"
 readonly LOCK_OWNER="${LOCKFILE}.lock"
