@@ -470,60 +470,37 @@ decide_dl_client() {
 ##
 # Process each temporary Ipset source file
 #
-# $1 Index
-# $2 temporary file location
-# $3 source url
+# $1 temporary file location
 ##
 process_ipset_sources() {
-  process_ipset_sources__index="$1"
-  process_ipset_sources__file="$2"
-  process_ipset_sources__url="$3"
+  process_ipset_sources__file="$1"
 
-  change_eol "${process_ipset_sources__index}" "${process_ipset_sources__file}" \
-    "${process_ipset_sources__url}"
-  remove_comments "${process_ipset_sources__index}" "${process_ipset_sources__file}" \
-    "${process_ipset_sources__url}"
-  trim_whitespace "${process_ipset_sources__index}" "${process_ipset_sources__file}" \
-    "${process_ipset_sources__url}"
-  select_ip_lines "${process_ipset_sources__index}" "${process_ipset_sources__file}" \
-    "${process_ipset_sources__url}"
-  normalize_to_lowercase "${process_ipset_sources__index}" "${process_ipset_sources__file}" \
-    "${process_ipset_sources__url}"
+  change_eol "${process_ipset_sources__file}"
+  remove_comments "${process_ipset_sources__file}"
+  trim_whitespace "${process_ipset_sources__file}"
+  select_ip_lines "${process_ipset_sources__file}"
+  normalize_to_lowercase "${process_ipset_sources__file}"
 
-  unset process_ipset_sources__index
   unset process_ipset_sources__file
-  unset process_ipset_sources__url
   return 0
 }
 
 ##
 # Process each temporary hosts source file
 #
-# $1 Index
-# $2 temporary file location
-# $3 source url
+# $1 temporary file location
 ##
 process_hosts_sources() {
-  process_hosts_sources__index="$1"
-  process_hosts_sources__file="$2"
-  process_hosts_sources__url="$3"
+  process_hosts_sources__file="$1"
 
-  change_eol "${process_hosts_sources__index}" "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
-  remove_comments "${process_hosts_sources__index}" "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
-  trim_whitespace "${process_hosts_sources__index}" "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
-  select_host_lines "${process_hosts_sources__index}" "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
-  remove_untrusted_domain "${process_hosts_sources__index}" "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
-  normalize_to_lowercase "${process_hosts_sources__index}" "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
-  remove_local_entries "${process_hosts_sources__index}" "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
-  remove_invalid_entries "${process_hosts_sources__index}" "${process_hosts_sources__file}" \
-    "${process_hosts_sources__url}"
+  change_eol "${process_hosts_sources__file}"
+  remove_comments "${process_hosts_sources__file}"
+  trim_whitespace "${process_hosts_sources__file}"
+  select_host_lines "${process_hosts_sources__file}"
+  remove_untrusted_domain "${process_hosts_sources__file}"
+  normalize_to_lowercase "${process_hosts_sources__file}"
+  remove_local_entries "${process_hosts_sources__file}"
+  remove_invalid_entries "${process_hosts_sources__file}"
 
   unset process_hosts_sources__index
   unset process_hosts_sources__file
@@ -593,8 +570,7 @@ download_to_tempfile() {
   }
 
   # Run after download processing hook
-  "${download_to_tempfile__process_hook}" "${download_to_tempfile__index}" \
-    "${download_to_tempfile__file}" "${download_to_tempfile__url}"
+  "${download_to_tempfile__process_hook}" "${download_to_tempfile__file}"
 
   claim_lock || {
     error_msg 'Unable to claim lockfile: %s' "${LOCK_OWNER}"
@@ -754,60 +730,44 @@ download_sources() {
 ##
 # Change EOL from DOS to Unix format
 #
-# $1 Index
-# $2 file location
-# $3 source url
+# $1 file location
 ##
 change_eol() {
-  change_eol__index="$1"
-  change_eol__file="$2"
-  change_eol__url="$3"
+  change_eol__file="$1"
 
   # Use tr instead of GNU sed extension
   change_eol__contents="$(tr -d '\r' <"${change_eol__file}")"
   printf -- '%s\n' "${change_eol__contents}" >"${change_eol__file}"
 
   unset change_eol__contents
-  unset change_eol__index
   unset change_eol__file
-  unset change_eol__url
   return 0
 }
 
 ##
 # Remove comments from files
 #
-# $1 Index
-# $2 file location
-# $3 source url
+# $1 file location
 ##
 remove_comments() {
-  remove_comments__index="$1"
-  remove_comments__file="$2"
-  remove_comments__url="$3"
+  remove_comments__file="$1"
 
   # Removes comments from files
   remove_comments__contents="$(sed 's/#.*$//g' <"${remove_comments__file}")"
   printf -- '%s\n' "${remove_comments__contents}" >"${remove_comments__file}"
 
   unset remove_comments__contents
-  unset remove_comments__index
   unset remove_comments__file
-  unset remove_comments__url
   return 0
 }
 
 ##
 # Remove whitespace from files
 #
-# $1 Index
-# $2 file location
-# $3 source url
+# $1 file location
 ##
 trim_whitespace() {
-  trim_whitespace__index="$1"
-  trim_whitespace__file="$2"
-  trim_whitespace__url="$3"
+  trim_whitespace__file="$1"
 
   # Trim whitespace from lines
   trim_whitespace__contents="$(sed 's/[[:blank:]]*$//g; s/^[[:blank:]]*//g' \
@@ -818,23 +778,17 @@ trim_whitespace() {
   printf -- '%s\n' "${trim_whitespace__contents}" >"${trim_whitespace__file}"
 
   unset trim_whitespace__contents
-  unset trim_whitespace__index
   unset trim_whitespace__file
-  unset trim_whitespace__url
   return 0
 }
 
 ##
 # Only select lines which contain a host, do not select comments/other
 #
-# $1 Index
-# $2 file location
-# $3 source url
+# $1 file location
 ##
 select_host_lines() {
-  select_host_lines__index="$1"
-  select_host_lines__file="$2"
-  select_host_lines__url="$3"
+  select_host_lines__file="$1"
 
   # Technically this does not check that the actual digits are valid IP addresses
   # but that is alright because the IP addresses themselves will be replaced
@@ -850,8 +804,6 @@ select_host_lines() {
   printf -- "%s" "${select_host_lines__content}" >"${select_host_lines__file}"
 
   unset select_host_lines__file
-  unset select_host_lines__index
-  unset select_host_lines__url
   unset select_host_lines__content
   return 0
 }
@@ -859,14 +811,10 @@ select_host_lines() {
 ##
 # Only select lines which contain an ip, do not select comments/other
 #
-# $1 Index
-# $2 file location
-# $3 source url
+# $1 file location
 ##
 select_ip_lines() {
-  select_ip_lines__index="$1"
-  select_ip_lines__file="$2"
-  select_ip_lines__url="$3"
+  select_ip_lines__file="$1"
 
   # Use awk to emulate grep -oE
   # we pass the regex in as a regex constant so that it is not evaulated wrongly by the shell
@@ -879,23 +827,17 @@ select_ip_lines() {
   printf -- "%s" "${select_ip_lines__content}" >"${select_ip_lines__file}"
 
   unset select_ip_lines__content
-  unset select_ip_lines__index
   unset select_ip_lines__file
-  unset select_ip_lines__url
   return 0
 }
 
 ##
 # Remove any predefined destinations, as they may be untrustworthy
 #
-# $1 Index
-# $2 file
-# $3 url
+# $1 file
 ##
 remove_untrusted_domain() {
-  remove_untrusted_domain__index="$1"
-  remove_untrusted_domain__file="$2"
-  remove_untrusted_domain__url="$3"
+  remove_untrusted_domain__file="$1"
 
   # Remove any domain that may be included in the downloaded file
   remove_untrusted_domain__content="$(sed 's/^.\{1,\}[[:blank:]]\{1,\}//g' \
@@ -903,31 +845,23 @@ remove_untrusted_domain() {
   printf -- "%s" "${remove_untrusted_domain__content}" >"${remove_untrusted_domain__file}"
 
   unset remove_untrusted_domain__content
-  unset remove_untrusted_domain__index
   unset remove_untrusted_domain__file
-  unset remove_untrusted_domain__url
   return 0
 }
 
 ##
 # Normalize all entries to lowercase strings
 #
-# $1 Index
-# $2 file
-# $3 url
+# $1 file
 ##
 normalize_to_lowercase() {
-  normalize_to_lowercase__index="$1"
-  normalize_to_lowercase__file="$2"
-  normalize_to_lowercase__url="$3"
+  normalize_to_lowercase__file="$1"
 
   normalize_to_lowercase__content="$(tr '[:upper:]' '[:lower:]' \
     <"${normalize_to_lowercase__file}")"
   printf -- "%s" "${normalize_to_lowercase__content}" >"${normalize_to_lowercase__file}"
 
   unset normalize_to_lowercase__file
-  unset normalize_to_lowercase__index
-  unset normalize_to_lowercase__url
   unset normalize_to_lowercase__content
   return 0
 }
@@ -936,14 +870,10 @@ normalize_to_lowercase() {
 # Remove any entries containing the localhost, as it will be added by
 # the hosts_header later on
 #
-# $1 Index
-# $2 file
-# $3 url
+# $1 file
 ##
 remove_local_entries() {
-  remove_local_entries__index="$1"
-  remove_local_entries__file="$2"
-  remove_local_entries__url="$3"
+  remove_local_entries__file="$1"
 
   # Remove any lines which include things like localhost, or localhost.localdomain
   readonly LOCAL_DOMAIN_REGEX='/\.\localdomain[[:blank:]]*$/d; /\.\local[[:blank:]]*$/d'
@@ -952,9 +882,7 @@ remove_local_entries() {
   printf -- "%s" "${remove_local_entries__content}" >"${remove_local_entries__file}"
 
   unset remove_local_entries__content
-  unset remove_local_entries__index
   unset remove_local_entries__file
-  unset remove_local_entries__url
   return 0
 }
 
@@ -966,14 +894,10 @@ remove_local_entries() {
 # **.-**
 # **--**
 #
-# $1 Index
-# $2 file
-# $3 url
+# $1 file
 ##
 remove_invalid_entries() {
-  remove_invalid_entries__index="$1"
-  remove_invalid_entries__file="$2"
-  remove_invalid_entries__url="$3"
+  remove_invalid_entries__file="$1"
 
   # Remove any lines which include things like -. or .- or --
   readonly INVALID_DOMAIN_REGEX='/.*\.\-.*/d; /.*\-\..*/d; /.*\-\-.*/d;'
@@ -983,9 +907,7 @@ remove_invalid_entries() {
   printf -- "%s" "${remove_invalid_entries__content}" >"${remove_invalid_entries__file}"
 
   unset remove_invalid_entries__content
-  unset remove_invalid_entries__index
   unset remove_invalid_entries__file
-  unset remove_invalid_entries__url
   return 0
 }
 
@@ -2029,8 +1951,10 @@ readonly BASE_HOSTS_SOURCES='
   https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
   https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
   https://gitlab.com/ZeroDot1/CoinBlockerLists/raw/master/hosts
-  https://blokada.org/blocklists/ddgtrackerradar/standard/hosts.txt
   http://winhelp2002.mvps.org/hosts.txt
+  https://blokada.org/blocklists/ddgtrackerradar/standard/hosts.txt
+  https://blokada.org/mirror/v5/exodusprivacy/standard/hosts.txt
+  https://hosts.anudeep.me/mirror/adservers.txt
 
   # I think the site has been taken down
   # https://hosts-file.net/ad_servers.txt
