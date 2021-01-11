@@ -2020,7 +2020,6 @@ unset machine_hostname
 # only a minimal amount of sites
 readonly BASE_HOSTS_SOURCES='
   https://someonewhocares.org/hosts/hosts
-  https://mirror1.malwaredomains.com/files/immortal_domains.txt
   https://adaway.org/hosts.txt
   https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext
   https://pgl.yoyo.org/adservers/admiral-domains.txt
